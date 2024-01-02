@@ -14,8 +14,9 @@ Each article directory contains three subdirectories:
 * &#9744; [IV. Dylibs]()
 
 ## TOOLS
+### [CrimsonUroboros](I.%20Mach-O/python/CrimsonUroboros.py)
 ![alt](img/CrimsonUroboros.jpg)
-[CrimsonUroboros](I.%20Mach-O/python/CrimsonUroboros.py) - core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
+Core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
 * Usage
 ```console
 usage: CrimsonUroboros [-h] -p PATH [--file_type] [--header_flags] [--endian]
@@ -84,7 +85,9 @@ CODE SIGNING ARGS:
 ```bash
 CrimsonUroboros.py -p PATH --info
 ```
-[MachOFileFinder](I.%20Mach-O/python/MachOFileFinder.py) - designed to find ARM64 Mach-O binaries within a specified directory and print their file type.
+***
+### [MachOFileFinder](I.%20Mach-O/python/MachOFileFinder.py)
+Designed to find ARM64 Mach-O binaries within a specified directory and print their file type.
 * Usage:
 ```bash
 python MachOFileFinder.py PATH
@@ -96,8 +99,9 @@ EXECUTE:/Users/karmaz95/t/pingsender
 DYLIB:/Users/karmaz95/t/dylibs/use_dylib_app/customs/custom.dylib
 BUNDLE:/Users/karmaz95/t/bundles/MyBundle
 ```
-
-[TrustCacheParser](II.%20Code%20Signing/python/TrustCacheParser.py) - designed to parse trust caches and print it in human readable form (based on [PyIMG4](https://github.com/m1stadev/PyIMG4) and [trustcache](https://github.com/CRKatri/trustcache))
+***
+### [TrustCacheParser](II.%20Code%20Signing/python/TrustCacheParser.py)
+Designed to parse trust caches and print it in human readable form (based on [PyIMG4](https://github.com/m1stadev/PyIMG4) and [trustcache](https://github.com/CRKatri/trustcache))
 * Usage:
 ```console
 usage: TrustCacheParser [-h] [--dst DST] [--parse_img] [--parse_tc] [--print_tc] [--all]
@@ -114,7 +118,9 @@ options:
                      directory and ends with .trust_cache)
   --all              parse_img -> parse_tc -> print_tc
 ```
-[SignatureReader](II.%20Code%20Signing/python/SignatureReader.py) - designed to parse extracted cms sginature from Mach-O files.
+***
+### [SignatureReader](II.%20Code%20Signing/python/SignatureReader.py)
+Designed to parse extracted cms sginature from Mach-O files.
 * Usage:
 ```bash
 # First extract CMS Signature using CrimsonUroboros 
@@ -149,13 +155,14 @@ options:
 SignatureReader --extract_signature cms_sign --human
 0x25ca80ad5f11be197dc7a2d53f3db5b6bf463a38224db8c0a17fa4b8fd5ad7e0c60f2be8e8849cf2e581272290991c0db40b0d452b2d2dbf230c0ccab3a6d78e0230bca7bccbc50d379372bcddd8d8542add5ec59180bc3409b2df3bd8995301b9ba1e65ac62420c75104f12cb58b430fde8a177a1cd03940d4b0e77a9d875d65552cf96f03cb63b437c36d9bab12fa727e17603da49fcb870edaec115f90def1ac2ad12c2e9349a5470b5ed2f242b5566cd7ddee785eff8ae5484f145a8464d4dc3891b10a3b2981e9add1e4c0aec31fa80320eb5494d9623400753adf24106efdd07ad657035ed2876e9460219944a4730b0b620954961350ddb1fcf0ea539
 ```
-
-[extract_cms.sh](II.%20Code%20Signing/custom/extract_cms.sh) - designed to extract cms sginature from Mach-O files (bash alternative to `SingatureReader --extract_signature`).
+***
+### [extract_cms.sh](II.%20Code%20Signing/custom/extract_cms.sh)
+Designed to extract cms sginature from Mach-O files (bash alternative to `SingatureReader --extract_signature`).
 * Example:
 ```
 ./extract_cms.sh target_binary cms_sign
 ```
-
+***
 ## INSTALL
 ```
 pip -r requirements.txt
