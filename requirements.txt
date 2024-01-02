@@ -1,0 +1,10 @@
+lief
+uuid
+argparse
+subprocess
+os
+sys
+asn1crypto
+glob
+shutil
+pyimg4
