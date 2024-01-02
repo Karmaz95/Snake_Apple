@@ -14,7 +14,7 @@ Each article directory contains three subdirectories:
 * &#9744; [IV. Dylibs]()
 
 ## TOOLS
-### [CrimsonUroboros](I.%20Mach-O/python/CrimsonUroboros.py)
+### [CrimsonUroboros](II.%20Code%20Signing//python/CrimsonUroboros.py)
 ![alt](img/CrimsonUroboros.jpg)
 Core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
 * Usage
