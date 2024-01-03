@@ -8,8 +8,8 @@ Each article directory contains three subdirectories:
 
 ## ARTICLES
 ![alt](img/Snake_Apple.jpg)
-* &#9745; [I. Mach-O](https://medium.com/p/a8eda4b87263)
-* &#9744; [II. Code Signing]()
+* &#9745; [I. Mach-O](https://karol-mazurek95.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
+* &#9745; [II. Code Signing](https://karol-mazurek95.medium.com/snake-apple-ii-code-signing-f0a9967b7f02?sk=v2%2Fbbc87007-89ca-4135-91d6-668b5d2fe9ae)
 * &#9744; [III. Checksec]()
 * &#9744; [IV. Dylibs]()
 
