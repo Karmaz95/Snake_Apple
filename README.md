@@ -14,7 +14,7 @@ Each article directory contains three subdirectories:
 * &#9744; [IV. Dylibs]()
 
 ## TOOLS
-### [CrimsonUroboros](II.%20Code%20Signing//python/CrimsonUroboros.py)
+### [CrimsonUroboros](III.%20Checksec/python/CrimsonUroboros.py)
 ![alt](img/CrimsonUroboros.jpg)
 Core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
 * Usage
@@ -163,6 +163,55 @@ Designed to extract cms sginature from Mach-O files (bash alternative to `Singat
 ./extract_cms.sh target_binary cms_sign
 ```
 ***
+### [ModifyMachOFlags](III.%20Checksec/python/ModifyMachOFlags.py)
+Designed to change Mach-O header flags.
+* Usage:
+```console
+usage: ModifyMachOFlags [-h] -i INPUT -o OUT [--flag FLAG] [--sign_binary [adhoc|identity_number]]
+
+Modify the Mach-O binary flags.
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        Path to the Mach-O file.
+  -o OUT, --out OUT     Where to save a modified file.
+  --flag FLAG           Specify the flag constant name and value (e.g., NO_HEAP_EXECUTION=1). Can be used multiple times. Available
+                        flags: NOUNDEFS, INCRLINK, DYLDLINK, BINDATLOAD, PREBOUND, SPLIT_SEGS, LAZY_INIT, TWOLEVEL, FORCE_FLAT,
+                        NOMULTIDEFS, NOFIXPREBINDING, PREBINDABLE, ALLMODSBOUND, SUBSECTIONS_VIA_SYMBOLS, CANONICAL, WEAK_DEFINES,
+                        BINDS_TO_WEAK, ALLOW_STACK_EXECUTION, ROOT_SAFE, SETUID_SAFE, NO_REEXPORTED_DYLIBS, PIE,
+                        DEAD_STRIPPABLE_DYLIB, HAS_TLV_DESCRIPTORS, NO_HEAP_EXECUTION, APP_EXTENSION_SAFE,
+                        NLIST_OUTOFSYNC_WITH_DYLDINFO, SIM_SUPPORT, DYLIB_IN_CACHE
+  --sign_binary [adhoc|identity_number]
+                        Sign binary using specified identity - use : 'security find-identity -v -p codesigning' to get the
+                        identity. (default: adhoc)
+```
+* Example:
+```bash
+ModifyMachOFlags -i hello -o hello_modified --flag NO_HEAP_EXECUTION=1 --sign_binary
+```
+***
+### [LCFinder](III.%20Checksec/python/LCFinder.py)
+Designed to find if specified Load Command exist in the binary or list of binaries.
+* Usage:
+```console
+usage: LCFinder [-h] [--path PATH] [--list_path LIST_PATH] --lc LC
+
+Check for a specific load command in Mach-O binaries.
+
+options:
+  -h, --help            show this help message and exit
+  --path PATH, -p PATH  Absolute path to the valid MachO binary.
+  --list_path LIST_PATH, -l LIST_PATH
+                        Path to a wordlist file containing absolute paths.
+  --lc LC               The load command to check for.
+```
+* Example:
+```bash
+LCFinder -l macho_paths.txt --lc SEGMENT_64 2>/dev/null
+LCFinder -p hello --lc lc_segment_64 2>/dev/null
+```
+***
 ## INSTALL
 ```
 pip -r requirements.txt
@@ -182,3 +231,10 @@ I will write the code for each article as a class SnakeX, where X will be the ar
 * [Apple Open Source](https://opensource.apple.com/releases/)
 * [XNU](https://github.com/apple-oss-distributions/xnu)
 * [dyld](https://github.com/apple-oss-distributions/dyld)
+
+## TODO
+* DER Entitlements converter method - currently, only the `convert_xml_entitlements_to_dict()` method exists. I need to create a Python parser for DER-encoded entitlements.
+* SuperBlob parser - to find other blobs in Code Signature.
+* Entitlements Blob parser - to check if XML and DER blobs exist.
+* Every method in the Snake class that use Entitlements should parse first XML > DER (currently, only XML parser exists)
+* After making a SuperBlob parser and CodeDirectory blob parser, modify hasHardenedRuntime to check Runtime flag by using bitmask, instead of string.
