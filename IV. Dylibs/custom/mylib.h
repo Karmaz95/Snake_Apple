@@ -1,0 +1,1 @@
+void my_function(); // Declare the function prototype

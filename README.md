@@ -23,17 +23,18 @@ Each article directory contains three subdirectories:
 Core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
 * Usage
 ```console
-usage: CrimsonUroboros [-h] -p PATH [--file_type] [--header_flags] [--endian]
-                       [--header] [--load_commands] [--segments] [--sections]
-                       [--symbols] [--chained_fixups] [--exports_trie] [--uuid]
-                       [--main] [--strings_section] [--all_strings]
-                       [--save_strings all_strings.txt] [--info]
-                       [--verify_signature] [--cd_info] [--cd_requirements]
-                       [--entitlements [human|xml|var]]
-                       [--extract_cms cms_signature.der]
-                       [--extract_certificates certificate_name]
-                       [--remove_sig unsigned_binary]
-                       [--sign_binary [adhoc|identity_number]]
+usage: CrimsonUroboros [-h] -p PATH [--file_type] [--header_flags] [--endian] [--header] [--load_commands] [--segments]
+                       [--sections] [--symbols] [--chained_fixups] [--exports_trie] [--uuid] [--main]
+                       [--encryption_info [(optional) save_path.bytes]] [--strings_section] [--all_strings]
+                       [--save_strings all_strings.txt] [--info] [--verify_signature] [--cd_info] [--cd_requirements]
+                       [--entitlements [human|xml|var]] [--extract_cms cms_signature.der]
+                       [--extract_certificates certificate_name] [--remove_sig unsigned_binary]
+                       [--sign_binary [adhoc|identity_number]] [--has_pie] [--has_arc] [--is_stripped] [--has_canary]
+                       [--has_nx_stack] [--has_nx_heap] [--has_xn] [--is_notarized] [--is_encrypted] [--has_restrict]
+                       [--is_hr] [--is_as] [--is_fort] [--has_rpath] [--checksec] [--dylibs] [--rpaths] [--rpaths_u]
+                       [--dylibs_paths] [--dylibs_paths_u] [--broken_relative_paths]
+                       [--dylibtree [cache_path,output_path,is_extracted]] [--dylib_id] [--reexport_paths] [--hijack_sec]
+                       [--dylib_hijacking [cache_path]] [--prepare_dylib [target_dylib_path]]
 
 Mach-O files parser for binary analysis
 
@@ -54,36 +55,77 @@ MACH-O ARGS:
   --exports_trie        Print Export Trie information
   --uuid                Print UUID
   --main                Print entry point and stack size
+  --encryption_info [(optional) save_path.bytes]
+                        Print encryption info if any. Optionally specify an output path to dump the encrypted data (if
+                        cryptid=0, data will be in plain text)
   --strings_section     Print strings from __cstring section
   --all_strings         Print strings from all sections
   --save_strings all_strings.txt
-                        Parse all sections, detect strings, and save them to a
-                        file
-  --info                Print header, load commands, segments, sections,
-                        symbols, and strings
+                        Parse all sections, detect strings, and save them to a file
+  --info                Print header, load commands, segments, sections, symbols, and strings
 
 CODE SIGNING ARGS:
-  --verify_signature    Code Signature verification (if the contents of the
-                        binary have been modified)
+  --verify_signature    Code Signature verification (if the contents of the binary have been modified)
   --cd_info             Print Code Signature information
   --cd_requirements     Print Code Signature Requirements
   --entitlements [human|xml|var]
-                        Print Entitlements in a human-readable, XML, or DER
-                        format (default: human)
+                        Print Entitlements in a human-readable, XML, or DER format (default: human)
   --extract_cms cms_signature.der
-                        Extract CMS Signature from the Code Signature and save
-                        it to a given file
+                        Extract CMS Signature from the Code Signature and save it to a given file
   --extract_certificates certificate_name
-                        Extract Certificates and save them to a given file. To
-                        each filename will be added an index at the end: _0 for
-                        signing, _1 for intermediate, and _2 for root CA
-                        certificate
+                        Extract Certificates and save them to a given file. To each filename will be added an index at
+                        the end: _0 for signing, _1 for intermediate, and _2 for root CA certificate
   --remove_sig unsigned_binary
                         Save the new file on a disk with removed signature
   --sign_binary [adhoc|identity_number]
-                        Sign binary using specified identity - use : 'security
-                        find-identity -v -p codesigning' to get the identity.
-                        (default: adhoc)
+                        Sign binary using specified identity - use : 'security find-identity -v -p codesigning' to get
+                        the identity (default: adhoc)
+
+CHECKSEC ARGS:
+  --has_pie             Check if Position-Independent Executable (PIE) is set
+  --has_arc             Check if Automatic Reference Counting (ARC) is in use (can be false positive)
+  --is_stripped         Check if binary is stripped
+  --has_canary          Check if Stack Canary is in use (can be false positive)
+  --has_nx_stack        Check if stack is non-executable (NX stack)
+  --has_nx_heap         Check if heap is non-executable (NX heap)
+  --has_xn              Check if binary is protected by eXecute Never (XN) ARM protection
+  --is_notarized        Check if the application is notarized and can pass the Gatekeeper verification
+  --is_encrypted        Check if the application is encrypted (has LC_ENCRYPTION_INFO(_64) and cryptid set to 1)
+  --has_restrict        Check if binary has __RESTRICT segment
+  --is_hr               Check if the Hardened Runtime is in use
+  --is_as               Check if the App Sandbox is in use
+  --is_fort             Check if the binary is fortified
+  --has_rpath           Check if the binary utilise any @rpath variables
+  --checksec            Run all checksec module options on the binary
+
+DYLIBS ARGS:
+  --dylibs              Print shared libraries used by specified binary with compatibility and the current version
+                        (loading paths unresolved, like @rpath/example.dylib)
+  --rpaths              Print all paths (resolved) that @rpath can be resolved to
+  --rpaths_u            Print all paths (unresolved) that @rpath can be resolved to
+  --dylibs_paths        Print absolute dylib loading paths (resolved @rpath|@executable_path|@loader_path) in order they
+                        are searched for
+  --dylibs_paths_u      Print unresolved dylib loading paths.
+  --broken_relative_paths
+                        Print 'broken' relative paths from the binary (cases where the dylib source is specified for an
+                        executable directory without @executable_path)
+  --dylibtree [cache_path,output_path,is_extracted]
+                        Print the dynamic dependencies of a Mach-O binary recursively. You can specify the Dyld Shared
+                        Cache path in the first argument, the output directory as the 2nd argument, and if you have
+                        already extracted DSC in the 3rd argument (0 or 1). The output_path will be used as a base for
+                        dylibtree. For example, to not extract DSC, use: --dylibs ",,1", or to extract from default to
+                        default use just --dylibs or --dylibs ",,0" which will extract DSC to extracted_dyld_share_cache/
+                        in the current directory
+  --dylib_id            Print path from LC_ID_DYLIB
+  --reexport_paths      Print paths from LC_REEXPORT_DLIB
+  --hijack_sec          Check if binary is protected against Dylib Hijacking
+  --dylib_hijacking [cache_path]
+                        Check for possible Direct and Indirect Dylib Hijacking loading paths. (optional) Specify the path
+                        to the Dyld Shared Cache
+  --prepare_dylib [target_dylib_path]
+                        Compile rogue dylib. (optional) Specify target_dylib_path, it will search for the imported
+                        symbols from it in the dylib specified in the --path argument and automatically add it to the
+                        source code of the rogue lib. Example: --path lib1.dylib --prepare_dylib /path/to/lib2.dylib
 ```
 * Example:
 ```bash
@@ -216,17 +258,28 @@ LCFinder -l macho_paths.txt --lc SEGMENT_64 2>/dev/null
 LCFinder -p hello --lc lc_segment_64 2>/dev/null
 ```
 ***
+### [MachODylibLoadCommandsFinder](IV.%20Dylibs/python/MachODylibLoadCommandsFinder.py)
+Designed to Recursively crawl the system and parse Mach-O files to find DYLIB related load commands.
+Print the total Mach-O files analyzed and how many DYLIB-related LCs existed
+* Usage:
+```console
+MachODylibLoadCommandsFinder 2>/dev/null
+```
+
 ## INSTALL
 ```
 pip -r requirements.txt
-python3 -m pip install pyimg4
 wget https://github.com/CRKatri/trustcache/releases/download/v2.0/trustcache_macos_arm64 -O /usr/local/bin/trustcache
 chmod +x /usr/local/bin/trustcache
 xattr -d com.apple.quarantine /usr/local/bin/trustcache
+brew install keith/formulae/dyld-shared-cache-extractor
 ```
 
 ## LIMITATIONS
 * Codesigning module(codesign wrapper) works only on macOS.
+* `--dylib_hijacking` needs [ipsw](https://github.com/blacktop/ipsw) to be installed.
+* `--dylibtree` needs the [dyld-shared-cache-extractor](https://github.com/keith/dyld-shared-cache-extractor) to be installed.
+
 
 ## WHY UROBOROS? 
 I will write the code for each article as a class SnakeX, where X will be the article number. To make it easier for the audience to follow. Each Snake class will be a child of the previous one and infinitely "eat itself" (inherit methods of the previous class), like Uroboros.
@@ -236,9 +289,12 @@ I will write the code for each article as a class SnakeX, where X will be the ar
 * [XNU](https://github.com/apple-oss-distributions/xnu)
 * [dyld](https://github.com/apple-oss-distributions/dyld)
 
-## TODO
+## TODO - IDEAS / IMPROVES
 * DER Entitlements converter method - currently, only the `convert_xml_entitlements_to_dict()` method exists. I need to create a Python parser for DER-encoded entitlements.
 * SuperBlob parser - to find other blobs in Code Signature.
 * Entitlements Blob parser - to check if XML and DER blobs exist.
 * Every method in the Snake class that use Entitlements should parse first XML > DER (currently, only XML parser exists)
 * After making a SuperBlob parser and CodeDirectory blob parser, modify hasHardenedRuntime to check Runtime flag by using bitmask, instead of string.
+* Build Dyld Shared Cache parser and extractor to make SnakeIV independant of dyld-shared-cache-extractor.
+* Add check for `CS_RESTRICT` (`0x800`) in --`checksec` to `RESTRICTED`
+* Add check for `DYLIB HIJACKING` to --`checksec`
