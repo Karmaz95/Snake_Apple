@@ -273,6 +273,7 @@ wget https://github.com/CRKatri/trustcache/releases/download/v2.0/trustcache_mac
 chmod +x /usr/local/bin/trustcache
 xattr -d com.apple.quarantine /usr/local/bin/trustcache
 brew install keith/formulae/dyld-shared-cache-extractor
+brew install blacktop/tap/ipsw
 ```
 
 ## LIMITATIONS
