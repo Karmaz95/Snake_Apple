@@ -1101,15 +1101,24 @@ class SnakeIV(SnakeIII):
 
     def parseDylibHijackingScannerResults(self, all_results):
         '''Print the dylibHijackingScanner results in a nice format.'''
+        first_iteration = True
+        
         for current_path, result in all_results.items():
-            if result['is_protected']:
-                print(f"{current_path}: \033[92mPROTECTED\033[0m")
+            if first_iteration:
+                if result['is_protected']:
+                    print(f"\033[92mROOT BINARY PROTECTED\033[0m: {current_path}")
+                else:
+                    print(f"\033[91mROOT BINARY NOT PROTECTED\033[0m: {current_path}")
+                first_iteration = False
             else:
-                print(f"{current_path}: \033[91mNOT PROTECTED\033[0m")
+                if result['is_protected']:
+                    print(f"\033[92mPROTECTED\033[0m: {current_path}")
+                else:
+                    print(f"\033[91mNOT PROTECTED\033[0m: {current_path}")
             if result['writeable_existing_paths']:
-                print(f"\033[91m[!] WRITEABLE EXISTING PATHS\033[0m: {', '.join(map(str, result['writeable_existing_paths']))}")
+                print(f"\033[91mWRITEABLE EXISTING PATHS\033[0m: {', '.join(map(str, result['writeable_existing_paths']))}")
             if result['writeable_missing_paths']:
-                print(f"\033[91m[!] WRITEABLE MISSING PATHS\033[0m: {', '.join(map(str, result['writeable_missing_paths']))}")
+                print(f"\033[91mWRITEABLE MISSING PATHS\033[0m: {', '.join(map(str, result['writeable_missing_paths']))}")
             print("-"*28)
 
     def getReExportLoadCommands(self):
