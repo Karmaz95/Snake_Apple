@@ -268,7 +268,7 @@ MachODylibLoadCommandsFinder 2>/dev/null
 
 ## INSTALL
 ```
-pip -r requirements.txt
+pip3 install -r requirements.txt
 wget https://github.com/CRKatri/trustcache/releases/download/v2.0/trustcache_macos_arm64 -O /usr/local/bin/trustcache
 chmod +x /usr/local/bin/trustcache
 xattr -d com.apple.quarantine /usr/local/bin/trustcache
