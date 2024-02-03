@@ -13,28 +13,27 @@ Each article directory contains three subdirectories:
 * &#9745; [II. Code Signing](https://karol-mazurek95.medium.com/snake-apple-ii-code-signing-f0a9967b7f02?sk=v2%2Fbbc87007-89ca-4135-91d6-668b5d2fe9ae)
 * &#9745; [III. Checksec](https://karol-mazurek95.medium.com/snake-apple-iii-checksec-ed64a4b766c1?sk=v2%2Fb4b8d637-e906-4b6b-8088-ca1f893cd787)
 * &#9745; [IV. Dylibs](https://karol-mazurek.medium.com/snake-apple-iv-dylibs-2c955439b94e?sk=v2%2Fdef72b7a-121a-47a1-af89-7bf53aed1ea2)
+* &#9744; [V. Dyld]()
+  * &#9745; [DYLD — Do You Like Death? (I)](https://karol-mazurek.medium.com/dyld-do-you-like-death-i-8199faad040e?sk=v2%2F359b081f-d944-409b-9e7c-95f7c171b969)
+  * &#9744; [DYLD — Do You Like Death? (II)]()
 
 ## TOOLS
-[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder)
+[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder)
 ***
 
-### [CrimsonUroboros](IV.%20Dylibs/python/CrimsonUroboros.py)
+### [CrimsonUroboros](tests/CrimsonUroboros.py)
 ![alt](img/CrimsonUroboros.jpg)
 Core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
 * Usage
 ```console
-usage: CrimsonUroboros [-h] -p PATH [--file_type] [--header_flags] [--endian] [--header] [--load_commands] [--segments]
-                       [--sections] [--symbols] [--chained_fixups] [--exports_trie] [--uuid] [--main]
-                       [--encryption_info [(optional) save_path.bytes]] [--strings_section] [--all_strings]
-                       [--save_strings all_strings.txt] [--info] [--verify_signature] [--cd_info] [--cd_requirements]
-                       [--entitlements [human|xml|var]] [--extract_cms cms_signature.der]
-                       [--extract_certificates certificate_name] [--remove_sig unsigned_binary]
-                       [--sign_binary [adhoc|identity_number]] [--has_pie] [--has_arc] [--is_stripped] [--has_canary]
-                       [--has_nx_stack] [--has_nx_heap] [--has_xn] [--is_notarized] [--is_encrypted] [--has_restrict]
-                       [--is_hr] [--is_as] [--is_fort] [--has_rpath] [--checksec] [--dylibs] [--rpaths] [--rpaths_u]
-                       [--dylibs_paths] [--dylibs_paths_u] [--broken_relative_paths]
-                       [--dylibtree [cache_path,output_path,is_extracted]] [--dylib_id] [--reexport_paths] [--hijack_sec]
-                       [--dylib_hijacking [cache_path]] [--prepare_dylib [target_dylib_path]]
+usage: CrimsonUroboros [-h] -p PATH [--file_type] [--header_flags] [--endian] [--header] [--load_commands] [--segments] [--sections] [--symbols] [--chained_fixups] [--exports_trie]
+                       [--uuid] [--main] [--encryption_info [(optional) save_path.bytes]] [--strings_section] [--all_strings] [--save_strings all_strings.txt] [--info]
+                       [--verify_signature] [--cd_info] [--cd_requirements] [--entitlements [human|xml|var]] [--extract_cms cms_signature.der]
+                       [--extract_certificates certificate_name] [--remove_sig unsigned_binary] [--sign_binary [adhoc|identity_number]] [--has_pie] [--has_arc] [--is_stripped]
+                       [--has_canary] [--has_nx_stack] [--has_nx_heap] [--has_xn] [--is_notarized] [--is_encrypted] [--has_restrict] [--is_hr] [--is_as] [--is_fort] [--has_rpath]
+                       [--has_lv] [--checksec] [--dylibs] [--rpaths] [--rpaths_u] [--dylibs_paths] [--dylibs_paths_u] [--broken_relative_paths]
+                       [--dylibtree [cache_path,output_path,is_extracted]] [--dylib_id] [--reexport_paths] [--hijack_sec] [--dylib_hijacking [cache_path]]
+                       [--dylib_hijacking_a [cache_path]] [--prepare_dylib [target_dylib_path]]
 
 Mach-O files parser for binary analysis
 
@@ -56,8 +55,7 @@ MACH-O ARGS:
   --uuid                Print UUID
   --main                Print entry point and stack size
   --encryption_info [(optional) save_path.bytes]
-                        Print encryption info if any. Optionally specify an output path to dump the encrypted data (if
-                        cryptid=0, data will be in plain text)
+                        Print encryption info if any. Optionally specify an output path to dump the encrypted data (if cryptid=0, data will be in plain text)
   --strings_section     Print strings from __cstring section
   --all_strings         Print strings from all sections
   --save_strings all_strings.txt
@@ -73,13 +71,12 @@ CODE SIGNING ARGS:
   --extract_cms cms_signature.der
                         Extract CMS Signature from the Code Signature and save it to a given file
   --extract_certificates certificate_name
-                        Extract Certificates and save them to a given file. To each filename will be added an index at
-                        the end: _0 for signing, _1 for intermediate, and _2 for root CA certificate
+                        Extract Certificates and save them to a given file. To each filename will be added an index at the end: _0 for signing, _1 for intermediate, and _2 for root CA
+                        certificate
   --remove_sig unsigned_binary
                         Save the new file on a disk with removed signature
   --sign_binary [adhoc|identity_number]
-                        Sign binary using specified identity - use : 'security find-identity -v -p codesigning' to get
-                        the identity (default: adhoc)
+                        Sign binary using specified identity - use : 'security find-identity -v -p codesigning' to get the identity (default: adhoc)
 
 CHECKSEC ARGS:
   --has_pie             Check if Position-Independent Executable (PIE) is set
@@ -96,36 +93,33 @@ CHECKSEC ARGS:
   --is_as               Check if the App Sandbox is in use
   --is_fort             Check if the binary is fortified
   --has_rpath           Check if the binary utilise any @rpath variables
+  --has_lv              Check if the binary has Library Validation (protection against Dylib Hijacking)
   --checksec            Run all checksec module options on the binary
 
 DYLIBS ARGS:
-  --dylibs              Print shared libraries used by specified binary with compatibility and the current version
-                        (loading paths unresolved, like @rpath/example.dylib)
+  --dylibs              Print shared libraries used by specified binary with compatibility and the current version (loading paths unresolved, like @rpath/example.dylib)
   --rpaths              Print all paths (resolved) that @rpath can be resolved to
   --rpaths_u            Print all paths (unresolved) that @rpath can be resolved to
-  --dylibs_paths        Print absolute dylib loading paths (resolved @rpath|@executable_path|@loader_path) in order they
-                        are searched for
+  --dylibs_paths        Print absolute dylib loading paths (resolved @rpath|@executable_path|@loader_path) in order they are searched for
   --dylibs_paths_u      Print unresolved dylib loading paths.
   --broken_relative_paths
-                        Print 'broken' relative paths from the binary (cases where the dylib source is specified for an
-                        executable directory without @executable_path)
+                        Print 'broken' relative paths from the binary (cases where the dylib source is specified for an executable directory without @executable_path)
   --dylibtree [cache_path,output_path,is_extracted]
-                        Print the dynamic dependencies of a Mach-O binary recursively. You can specify the Dyld Shared
-                        Cache path in the first argument, the output directory as the 2nd argument, and if you have
-                        already extracted DSC in the 3rd argument (0 or 1). The output_path will be used as a base for
-                        dylibtree. For example, to not extract DSC, use: --dylibs ",,1", or to extract from default to
-                        default use just --dylibs or --dylibs ",,0" which will extract DSC to extracted_dyld_share_cache/
-                        in the current directory
+                        Print the dynamic dependencies of a Mach-O binary recursively. You can specify the Dyld Shared Cache path in the first argument, the output directory as the
+                        2nd argument, and if you have already extracted DSC in the 3rd argument (0 or 1). The output_path will be used as a base for dylibtree. For example, to not
+                        extract DSC, use: --dylibs ",,1", or to extract from default to default use just --dylibs or --dylibs ",,0" which will extract DSC to
+                        extracted_dyld_share_cache/ in the current directory
   --dylib_id            Print path from LC_ID_DYLIB
   --reexport_paths      Print paths from LC_REEXPORT_DLIB
   --hijack_sec          Check if binary is protected against Dylib Hijacking
   --dylib_hijacking [cache_path]
-                        Check for possible Direct and Indirect Dylib Hijacking loading paths. (optional) Specify the path
-                        to the Dyld Shared Cache
+                        Check for possible Direct and Indirect Dylib Hijacking loading paths. The output is printed to console and saved in JSON format to
+                        /tmp/dylib_hijacking_log.json(append mode). (optional)Specify the path to the Dyld Shared Cache
+  --dylib_hijacking_a [cache_path]
+                        Like --dylib_hijacking, but shows only possible vectors (without protected binaries)
   --prepare_dylib [target_dylib_path]
-                        Compile rogue dylib. (optional) Specify target_dylib_path, it will search for the imported
-                        symbols from it in the dylib specified in the --path argument and automatically add it to the
-                        source code of the rogue lib. Example: --path lib1.dylib --prepare_dylib /path/to/lib2.dylib
+                        Compile rogue dylib. (optional) Specify target_dylib_path, it will search for the imported symbols from it in the dylib specified in the --path argument and
+                        automatically add it to the source code of the rogue lib. Example: --path lib1.dylib --prepare_dylib /path/to/lib2.dylib
 ```
 * Example:
 ```bash
@@ -297,5 +291,5 @@ I will write the code for each article as a class SnakeX, where X will be the ar
 * Every method in the Snake class that use Entitlements should parse first XML > DER (currently, only XML parser exists)
 * After making a SuperBlob parser and CodeDirectory blob parser, modify hasHardenedRuntime to check Runtime flag by using bitmask, instead of string.
 * Build Dyld Shared Cache parser and extractor to make SnakeIV independant of dyld-shared-cache-extractor.
-* Add check for `CS_RESTRICT` (`0x800`) in --`checksec` to `RESTRICTED`
-* Add check for `DYLIB HIJACKING` to --`checksec`
+* Make testing branch and implement tests, before pushing new updates.
+* Create `RottenApple.app` in another repository and use it for testing.

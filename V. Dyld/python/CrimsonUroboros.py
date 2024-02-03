@@ -34,7 +34,7 @@ class MachOProcessor:
             exit() # Exit if not
 
         global snake_instance # Must be globall for further processors classes.
-        snake_instance = SnakeIV(binaries, self.file_path) # Initialize the latest Snake class
+        snake_instance = SnakeV(binaries, self.file_path) # Initialize the latest Snake class
 
         if args.file_type: # Print binary file type
             print(f'File type: {snake_instance.getFileType()}')
@@ -1370,6 +1370,66 @@ class SnakeIV(SnakeIII):
 
         SourceCodeManager.clangCompilerWrapper(file_name_c, source_code, output_filename, flag_list)
 
+### --- V. DYLD --- ###
+class DyldProcessor:
+    def __init__(self):
+        '''This class contains part of the code from the main() for the SnakeV: Dyld.'''
+        pass
+    
+    def process(self):
+            if args.is_built_for_sim: # Check if binary is build for a simulator
+                snake_instance.printIsBuiltForSimulator()
+
+class SnakeV(SnakeIV):
+    def __init__(self, binaries, file_path):
+        super().__init__(binaries, file_path)
+        self.platforms = {
+            1: 'PLATFORM_MACOS',
+            2: 'PLATFORM_IOS',
+            3: 'PLATFORM_TVOS',
+            4: 'PLATFORM_WATCHOS',
+            5: 'PLATFORM_BRIDGEOS',
+            6: 'PLATFORM_MACCATALYST',
+            7: 'PLATFORM_IOSSIMULATOR',
+            8: 'PLATFORM_TVOSSIMULATOR',
+            9: 'PLATFORM_WATCHOSSIMULATOR',
+            10: 'PLATFORM_DRIVERKIT'
+        } # https://github.com/Karmaz95/Snake_Apple/blob/main/IV.%20Dylibs/macos/loader.h#L1275
+
+    def isBuiltForSimulator(self):
+        '''
+            Function for --is_built_for_sim flag.
+            https://lief-project.github.io/doc/stable/api/python/macho.html#lief.MachO.BuildVersion.PLATFORMS
+            Returns True if platform is in :
+            #define PLATFORM_IOSSIMULATOR 7
+            #define PLATFORM_TVOSSIMULATOR 8
+            #define PLATFORM_WATCHOSSIMULATOR 9.
+        '''
+        simulator_platforms = [7,8,9]
+        platform_value = self.binary.build_version.platform.value
+        if platform_value in simulator_platforms:
+            return True, platform_value
+        elif platform_value > 10:
+            return None, platform_value
+        else:
+            return False, platform_value
+
+    def printIsBuiltForSimulator(self):
+        '''
+            Print text instead of True|False from the isBuiltForSimulator return.
+            Example outputs:
+                test platform is PLATFORM_IOSSIMULATOR -> built for simulator.
+                executable platform is PLATFORM_MACOS -> not built for simulator
+        '''
+        name = os.path.basename(self.file_path)
+        platform_check, platform_value = self.isBuiltForSimulator()
+        if platform_check == True:
+            print(f'{name} platform is \033[94m{self.platforms[platform_value]}\033[0m\033[91m -> built for simulator\033[0m. ')
+        elif platform_check == None:
+            print(f'{name} is build for UNKNOWN platform -> \033[94m{platform_value}\033[0m')
+        else:
+            print(f'{name} platform is \033[94m{self.platforms[platform_value]}\033[0m\033[92m -> not built for simulator\033[0m')
+
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
     def __init__(self):
@@ -1380,6 +1440,7 @@ class ArgumentParser:
         self.addCodeSignArgs()
         self.addChecksecArgs()
         self.addDylibsArgs()
+        self.addDyldArgs()
 
     def addGeneralArgs(self):
         self.parser.add_argument('-p', '--path', required=True, help="Path to the Mach-O file")
@@ -1451,6 +1512,11 @@ class ArgumentParser:
         dylibs_group.add_argument('--dylib_hijacking_a', metavar='cache_path' ,nargs="?", const="default", help="Like --dylib_hijacking, but shows only possible vectors (without protected binaries)")
         dylibs_group.add_argument('--prepare_dylib', metavar='(optional) target_dylib_name', nargs="?", const='', help="Compile rogue dylib. Optionally, specify target_dylib_path, it will search for the imported symbols from it in the dylib specified in the --path argument and automatically add it to the source code of the rogue lib. Example: --path lib1.dylib --prepare_dylib /path/to/lib2.dylib")
 
+    def addDyldArgs(self):
+        dyld_group = self.parser.add_argument_group('DYLD ARGS')
+        dyld_group.add_argument('--is_built_for_sim', action='store_true', default=False, help="Check if binary is built for simulator platform.")
+        
+        
     def parseArgs(self):
         return self.parser.parse_args()
 
@@ -1486,7 +1552,7 @@ void myconstructor(int argc, const char **argv)
 
         # Compile the source code using clang
         clang_command = ["clang", file_name_c, "-o", output_filename, *flag_list]
-        subprocess.run(clang_command, check=True)   
+        subprocess.run(clang_command, check=True)
 
 if __name__ == "__main__":
     arg_parser = ArgumentParser()
@@ -1509,3 +1575,7 @@ if __name__ == "__main__":
     ### --- IV. DYLIBS --- ###
     dylibs_processor = DylibsProcessor()
     dylibs_processor.process()
+
+    ### --- V. DYLD --- ###
+    dyld_processor = DyldProcessor()
+    dyld_processor.process()

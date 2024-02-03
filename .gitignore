@@ -1,2 +1,11 @@
+# Exclude .DS_Store files
 **/.DS_Store
-**/.vscode
+
+# Exclude .vscode directory
+**/.vscode/
+
+# Exclude __pycache__ directories
+__pycache__/
+
+# Exclude pytest_cache directories
+.pytest_cache/
