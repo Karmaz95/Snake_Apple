@@ -1,3 +1,4 @@
+// clang -fobjc-arc -framework Foundation example.m -o arc_example
 #import <Foundation/Foundation.h>
 
 @interface Person : NSObject

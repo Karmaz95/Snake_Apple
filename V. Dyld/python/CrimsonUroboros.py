@@ -21,19 +21,20 @@ class MachOProcessor:
         '''Return Fat Binary object.'''
         return lief.MachO.parse(self.file_path)
 
-    def process(self):
+    def process(self, args):
         '''Executes the code for the SnakeI: Mach-O.'''
         if not os.path.exists(self.file_path): # Check if file_path specified in the --path argument exists.
             print(f'The file {self.file_path} does not exist.')
             exit()
 
-        global binaries # It must be global, becuase after the class is destructed, the snake_instance would point to invalid memory ("binary" is dependant on "binaries").
+        global binaries # It must be global, becuase after the MachOProcessor object is destructed, the snake_instance would point to invalid memory ("binary" is dependant on "binaries").
+        global snake_instance # Must be global for further processors classes.
+        
         binaries = self.parseFatBinary()
 
         if binaries == None:
             exit() # Exit if not
 
-        global snake_instance # Must be globall for further processors classes.
         snake_instance = SnakeV(binaries, self.file_path) # Initialize the latest Snake class
 
         if args.file_type: # Print binary file type
@@ -356,21 +357,21 @@ class CodeSigningProcessor:
         '''This class contains part of the code from the main() for the SnakeII: Code Signing.'''
         pass
 
-    def process(self):
+    def process(self, args):
         if args.verify_signature: # Verify if Code Signature match the binary content ()
-            if snake_instance.isSigValid(file_path):
+            if snake_instance.isSigValid(snake_instance.file_path):
                 print("Valid Code Signature (matches the content)")
             else:
                 print("Invalid Code Signature (does not match the content)")
 
         if args.cd_info: # Print Code Signature information
-            print(snake_instance.getCodeSignature(file_path).decode('utf-8'))
+            print(snake_instance.getCodeSignature(snake_instance.file_path).decode('utf-8'))
 
         if args.cd_requirements: # Print Requirements.
-            print(snake_instance.getCodeSignatureRequirements(file_path).decode('utf-8'))
+            print(snake_instance.getCodeSignatureRequirements(snake_instance.file_path).decode('utf-8'))
 
         if args.entitlements: # Print Entitlements.
-            print(snake_instance.getEntitlementsFromCodeSignature(file_path,args.entitlements))
+            print(snake_instance.getEntitlementsFromCodeSignature(snake_instance.file_path, args.entitlements))
 
         if args.extract_cms: # Extract the CMS Signature and save it to a given file.
             cms_signature = snake_instance.extractCMS()
@@ -436,21 +437,21 @@ class SnakeII(SnakeI):
 
     def extractCertificatesFromCodeSignature(self, cert_name):
         '''Extracts certificates from the CMS Signature and saves them to a file with _0, _1, _2 indexes at the end of the file names.'''
-        subprocess.run(["codesign", "-d", f"--extract-certificates={cert_name}_", file_path], capture_output=True)
+        subprocess.run(["codesign", "-d", f"--extract-certificates={cert_name}_", self.file_path], capture_output=True)
 
     def removeCodeSignature(self, new_name):
         '''Save new file on a disk with removed signature.'''
         self.binary.remove_signature()
         self.binary.write(new_name)
 
-    def signBinary(self,security_identity=None):
+    def signBinary(self, security_identity=None):
         '''Sign binary using pseudo identity (adhoc) or specified identity.'''
         if security_identity == 'adhoc' or security_identity == None:
-            result = subprocess.run(["codesign", "-s", "-", "-f", file_path], capture_output=True)
+            result = subprocess.run(["codesign", "-s", "-", "-f", self.file_path], capture_output=True)
             return result.stdout.decode('utf-8')
         else:
             try:
-                result = subprocess.run(["codesign", "-s", security_identity, "-f", file_path], capture_output=True)
+                result = subprocess.run(["codesign", "-s", security_identity, "-f", self.file_path], capture_output=True)
             except Exception as e:
                 print(f"An error occurred during Code Signing using {security_identity}\n {e}")
 
@@ -460,7 +461,7 @@ class ChecksecProcessor:
         '''This class contains part of the code from the main() for the SnakeIII: Checksec.'''
         pass
 
-    def process(self):
+    def process(self, args):
         if args.has_pie: # Check if PIE is set in the header flags
             print("PIE: " + str(snake_instance.hasPIE()))
 
@@ -713,7 +714,7 @@ class DylibsProcessor:
         '''This class contains part of the code from the main() for the SnakeIV: Dylibs.'''
         pass
 
-    def process(self):
+    def process(self, args):
             if args.dylibs: # Shared dylibs with unresolved paths
                 snake_instance.printDylibs()
 
@@ -744,7 +745,7 @@ class DylibsProcessor:
                 print(*snake_instance.getReExportPaths(), sep="\n")
 
             if args.hijack_sec: # Check Dylib Hijacking protection on binary
-                print("DYLIB HIJACKIG PROTECTION: " + str(snake_instance.checkDylibHijackingProtections(file_path)))
+                print("DYLIB HIJACKIG PROTECTION: " + str(snake_instance.checkDylibHijackingProtections(snake_instance.file_path)))
 
             if args.dylib_hijacking: # Direct & Indirect Dylib Hijacking check
                 if args.dylib_hijacking == 'default':
@@ -1376,7 +1377,7 @@ class DyldProcessor:
         '''This class contains part of the code from the main() for the SnakeV: Dyld.'''
         pass
     
-    def process(self):
+    def process(self, args):
             if args.is_built_for_sim: # Check if binary is build for a simulator
                 snake_instance.printIsBuiltForSimulator()
 
@@ -1562,20 +1563,20 @@ if __name__ == "__main__":
 
     ### --- I. MACH-O --- ###
     macho_processor = MachOProcessor(file_path)
-    macho_processor.process()
+    macho_processor.process(args)
 
     ### --- II. CODE SIGNING --- ###
     code_signing_processor = CodeSigningProcessor()
-    code_signing_processor.process()
+    code_signing_processor.process(args)
 
     ### --- III. CHECKSEC --- ###
     checksec_processor = ChecksecProcessor()
-    checksec_processor.process()
+    checksec_processor.process(args)
 
     ### --- IV. DYLIBS --- ###
     dylibs_processor = DylibsProcessor()
-    dylibs_processor.process()
+    dylibs_processor.process(args)
 
     ### --- V. DYLD --- ###
     dyld_processor = DyldProcessor()
-    dyld_processor.process()
+    dyld_processor.process(args)

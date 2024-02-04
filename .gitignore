@@ -9,3 +9,6 @@ __pycache__/
 
 # Exclude pytest_cache directories
 .pytest_cache/
+
+# Exclude changes_release.md
+changes_release.md
