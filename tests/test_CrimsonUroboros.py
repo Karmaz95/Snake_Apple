@@ -465,9 +465,11 @@ class TestSnakeI():
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
-        expected_output_1 = 'b\'Hello, World!'
+        expected_output_1 = 'Hello, World!'
+        expected_output_2 = '__cstring'
         
         assert expected_output_1 in uroboros_output
+        assert expected_output_2 in uroboros_output
     
     def test_all_strings(self):
         '''Test the --all_strings flag of SnakeI.'''

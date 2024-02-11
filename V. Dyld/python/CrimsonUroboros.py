@@ -64,7 +64,7 @@ class MachOProcessor:
         
         if args.symbols: # Print symbols
             for symbol in snake_instance.getSymbols():
-                print(symbol.name)
+                print(f"0x{symbol.value:016X} {symbol.name}")
 
         if args.imported_symbols:
             snake_instance.printImportedSymbols()
@@ -114,7 +114,7 @@ class MachOProcessor:
                 print(section)
             print('\n<=== SYMBOLS  ===>')
             for symbol in snake_instance.getSymbols():
-                print(symbol.name)
+                print(f"{(symbol.name).ljust(32)} {hex(symbol.value)}")
             print('\n<=== STRINGS ===>')
             print('Strings from __cstring section:')
             print('-------------------------------')
@@ -286,7 +286,9 @@ class SnakeI:
         extracted_strings = set()
         for section in self.binary.sections:
             if section.type == lief.MachO.SECTION_TYPES.CSTRING_LITERALS:
-                extracted_strings.update(section.content.tobytes().split(b'\x00'))
+                strings_bytes = section.content.tobytes()
+                strings = strings_bytes.decode('utf-8', errors='ignore')  # Adjust the encoding as per your requirements
+                extracted_strings.update(strings.split('\x00'))
         return extracted_strings
 
     def findAllStringsInBinary(self):
@@ -1380,6 +1382,9 @@ class DyldProcessor:
     def process(self, args):
             if args.is_built_for_sim: # Check if binary is build for a simulator
                 snake_instance.printIsBuiltForSimulator()
+                
+            if args.get_dyld_env: # Extract DYLD environment variables from the binary
+                snake_instance.printDyldEnv()
 
 class SnakeV(SnakeIV):
     def __init__(self, binaries, file_path):
@@ -1430,6 +1435,29 @@ class SnakeV(SnakeIV):
             print(f'{name} is build for UNKNOWN platform -> \033[94m{platform_value}\033[0m')
         else:
             print(f'{name} platform is \033[94m{self.platforms[platform_value]}\033[0m\033[92m -> not built for simulator\033[0m')
+
+    def getDyldEnv(self):
+        '''Return a list of DYLD environment variables from the binary.'''
+        dyld_env = []
+        strings_from_CSTRING = self.getStringSection()
+        for s in strings_from_CSTRING:
+            if s.startswith('DYLD_') and '/' not in s:
+                # Exclude DYLD_$ paths (that starts and ends with DYLD_)
+                if s.endswith('DYLD_'):
+                    continue
+                # Remove spaces and all after the first occurrence of space
+                s = s.split(' ')[0].strip()
+                if s not in dyld_env:
+                    dyld_env.append(s)
+        return dyld_env
+
+    def printDyldEnv(self):
+        '''Print DYLD environment variables from the binary.'''
+        dyld_env = self.getDyldEnv()
+        if dyld_env:
+            print(*dyld_env, sep='\n')
+        else:
+            print("No DYLD environment variables found.")
 
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
@@ -1516,6 +1544,7 @@ class ArgumentParser:
     def addDyldArgs(self):
         dyld_group = self.parser.add_argument_group('DYLD ARGS')
         dyld_group.add_argument('--is_built_for_sim', action='store_true', default=False, help="Check if binary is built for simulator platform.")
+        dyld_group.add_argument('--get_dyld_env', action='store_true', default=False, help="Extract Dyld-specific environment variables from the binary.")
         
         
     def parseArgs(self):
