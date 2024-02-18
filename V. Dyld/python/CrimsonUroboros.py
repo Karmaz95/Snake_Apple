@@ -1388,6 +1388,12 @@ class DyldProcessor:
 
             if args.compiled_with_dyld_env: # Print Environment variables from the LC_DYLD_ENVIRONMENT
                 snake_instance.printDyldEnvLoadCommands()
+            
+            if args.has_interposing: # Print if binary has interposing sections
+                print("INTERPOSING: " + str(snake_instance.hasInterposing()))
+                
+            if args.interposing_symbols: # Print all replacement symbols from the __interpose section
+                snake_instance.printInterposingSymbols()
 
 class SnakeV(SnakeIV):
     def __init__(self, binaries, file_path):
@@ -1480,7 +1486,50 @@ class SnakeV(SnakeIV):
             for cmd in all_dyld_env:
                 print(cmd.value)
 
+    def hasInterposing(self):
+        '''Check if binary has interposing sections.'''
+        for section in self.binary.sections:
+            if section.name == "__interpose":
+                return True
+        return False
 
+    def getInterposingSymbolsAddresses(self):
+        '''Get replacement symbols addresses from the __interpose section.'''
+        interposing_symbols_addresses = []
+        bit_mask = 0xffffffff
+        
+        if self.hasInterposing():
+            for section in self.binary.sections:
+                if section.name == "__interpose":
+                    for i in range(0, len(section.content), 16):
+                        address = int.from_bytes(section.content[i:i+8], byteorder=self.endianess)
+                        interposing_symbols_addresses.append(address)
+            
+            # Remove binary virtual address base to get the symbol offset only ['0x3f54'] instead of ['0x10000000003f54']
+            i = 0
+            for addr in interposing_symbols_addresses:
+                interposing_symbols_addresses[i] = addr & bit_mask
+                i+=1
+
+            return interposing_symbols_addresses
+
+    def getInterposingSymbols(self):
+        '''Get all replacement symbols from the __interpose section.'''
+        interposing_symbols_addresses = self.getInterposingSymbolsAddresses()
+        interposing_symbols_names = []
+        
+        if interposing_symbols_addresses:
+            for symbol in self.getSymbols():
+                if symbol.value in interposing_symbols_addresses:
+                    interposing_symbols_names.append(symbol.name)
+
+        return interposing_symbols_names, interposing_symbols_addresses
+    
+    def printInterposingSymbols(self):
+        '''Print all replacement symbols from the __interpose section.'''
+        symbol_names, symbol_addrs = self.getInterposingSymbols()
+        for symbol_name, symbol_addrs in zip(symbol_names, symbol_addrs):
+            print(f"{(symbol_name).ljust(32)} {hex(symbol_addrs)}")
 
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
@@ -1569,6 +1618,9 @@ class ArgumentParser:
         dyld_group.add_argument('--is_built_for_sim', action='store_true', default=False, help="Check if binary is built for simulator platform.")
         dyld_group.add_argument('--get_dyld_env', action='store_true', default=False, help="Extract Dyld environment variables from the loader binary.")
         dyld_group.add_argument('--compiled_with_dyld_env', action='store_true', default=False, help="Check if binary was compiled with -dyld_env flag and print the environment variables and its values.")
+        dyld_group.add_argument('--has_interposing', action='store_true', default=False, help="Check if binary has interposing sections.")
+        dyld_group.add_argument('--interposing_symbols', action='store_true', default=False, help="Print interposing symbols if any.")
+        
 
     def parseArgs(self):
         return self.parser.parse_args()
