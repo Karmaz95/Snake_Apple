@@ -1382,9 +1382,12 @@ class DyldProcessor:
     def process(self, args):
             if args.is_built_for_sim: # Check if binary is build for a simulator
                 snake_instance.printIsBuiltForSimulator()
-                
-            if args.get_dyld_env: # Extract DYLD environment variables from the binary
+
+            if args.get_dyld_env: # Extract DYLD environment variables from the loader binary
                 snake_instance.printDyldEnv()
+
+            if args.compiled_with_dyld_env: # Print Environment variables from the LC_DYLD_ENVIRONMENT
+                snake_instance.printDyldEnvLoadCommands()
 
 class SnakeV(SnakeIV):
     def __init__(self, binaries, file_path):
@@ -1458,6 +1461,24 @@ class SnakeV(SnakeIV):
             print(*dyld_env, sep='\n')
         else:
             print("No DYLD environment variables found.")
+
+    def enumDyldEnvLoadCommands(self):
+        '''Check if binary has DYLD_ENVIRONMENT load commands.'''
+        all_dyld_env = []
+
+        for cmd in self.load_commands:
+            if cmd.command.name == 'DYLD_ENVIRONMENT':
+                all_dyld_env.append(cmd)
+
+        return all_dyld_env
+
+    def printDyldEnvLoadCommands(self):
+        '''Print DYLD_ENVIRONMENT load commands.'''
+        all_dyld_env = self.enumDyldEnvLoadCommands()
+
+        if all_dyld_env:
+            for cmd in all_dyld_env:
+                print(cmd.value)
 
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
@@ -1544,9 +1565,9 @@ class ArgumentParser:
     def addDyldArgs(self):
         dyld_group = self.parser.add_argument_group('DYLD ARGS')
         dyld_group.add_argument('--is_built_for_sim', action='store_true', default=False, help="Check if binary is built for simulator platform.")
-        dyld_group.add_argument('--get_dyld_env', action='store_true', default=False, help="Extract Dyld-specific environment variables from the binary.")
-        
-        
+        dyld_group.add_argument('--get_dyld_env', action='store_true', default=False, help="Extract Dyld environment variables from the loader binary.")
+        dyld_group.add_argument('--compiled_with_dyld_env', action='store_true', default=False, help="Check if binary was compiled with -dyld_env flag and print the environment variables and its values.")
+
     def parseArgs(self):
         return self.parser.parse_args()
 
