@@ -1325,14 +1325,18 @@ class TestSnakeV():
     def setup_class(cls):
         # Set up the compilation process
         cls.compiler = Compiler()
-        cls.compiler.compileIt("../I.\ Mach-O/custom/hello.c", "hello_5", ["-arch", "arm64"])
+        cls.compiler.compileIt("../I.\ Mach-O/custom/hello.c", "hello_5", ["-arch", "arm64", "-Wl,-dyld_env,DYLD_LIBRARY_PATH='@executable_path/dylibs'"])
         assert os.path.exists("hello_5")
+        
+        cls.compiler.compileIt("../V.\ Dyld/custom/interpose.c", "libinterpose.dylib", ["-dynamiclib", "-arch", "arm64"])
+        assert os.path.exists("libinterpose.dylib")
 
     @classmethod
     def teardown_class(cls):
         # Purge the compiled files
         cls.compiler.purgeCompiledFiles()
         assert not os.path.exists("hello_5")
+        assert not os.path.exists("libinterpose.dylib")
 
     def test_is_built_for_sim(self):
         '''Test the --is_built_for_sim flag of SnakeV.'''
@@ -1347,5 +1351,89 @@ class TestSnakeV():
 
         uroboros_output = executeCodeBlock(code_block)
         expected_output = 'PLATFORM_MACOS'
+
+        assert expected_output in uroboros_output
+
+    def test_get_dyld_env(self):
+        '''Test the --get_dyld_env flag of SnakeV.'''
+        args_list = ['-p', '/usr/lib/dyld', '--get_dyld_env']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            dyld_processor = DyldProcessor()
+            dyld_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output_1 = 'DYLD_SHARED_CACHE_DIR'
+        expected_output_2 = 'DYLD_IN_CACHE'
+        expected_output_3 = 'DYLD_PRINT_SEGMENTS'
+        expected_output_4 = 'DYLD_AMFI_FAKE'
+        expected_output_5 = 'DYLD_FALLBACK_FRAMEWORK_PATH'
+
+        assert expected_output_1 in uroboros_output
+        assert expected_output_2 in uroboros_output
+        assert expected_output_3 in uroboros_output
+        assert expected_output_4 in uroboros_output
+        assert expected_output_5 in uroboros_output
+    
+    def test_compiled_with_dyld_env(self):
+        '''Test the --compiled_with_dyld_env flag of SnakeV.'''
+        args_list = ['-p', 'hello_5', '--compiled_with_dyld_env']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            dyld_processor = DyldProcessor()
+            dyld_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'DYLD_LIBRARY_PATH'
+
+        assert expected_output in uroboros_output
+        
+    def test_has_interposing(self):
+        '''Test the --has_interposing flag of SnakeV.'''
+        args_list = ['-p', 'hello_5', '--has_interposing']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            dyld_processor = DyldProcessor()
+            dyld_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'INTERPOSING: False'
+
+        assert expected_output in uroboros_output
+        
+        args_list = ['-p', 'libinterpose.dylib', '--has_interposing']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            dyld_processor = DyldProcessor()
+            dyld_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'INTERPOSING: True'
+
+    def test_interposing_symbols(self):
+        '''Test the --interposing_symbols flag of SnakeV.'''
+        args_list = ['-p', 'libinterpose.dylib', '--interposing_symbols']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            dyld_processor = DyldProcessor()
+            dyld_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = '_my_printf'
 
         assert expected_output in uroboros_output
