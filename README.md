@@ -31,14 +31,11 @@ Each article directory contains three subdirectories:
 Core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
 * Usage
 ```console
-usage: CrimsonUroboros [-h] -p PATH [--file_type] [--header_flags] [--endian] [--header] [--load_commands] [--segments] [--sections] [--symbols] [--chained_fixups] [--exports_trie]
-                       [--uuid] [--main] [--encryption_info [(optional) save_path.bytes]] [--strings_section] [--all_strings] [--save_strings all_strings.txt] [--info]
-                       [--verify_signature] [--cd_info] [--cd_requirements] [--entitlements [human|xml|var]] [--extract_cms cms_signature.der]
-                       [--extract_certificates certificate_name] [--remove_sig unsigned_binary] [--sign_binary [adhoc|identity_number]] [--has_pie] [--has_arc] [--is_stripped]
-                       [--has_canary] [--has_nx_stack] [--has_nx_heap] [--has_xn] [--is_notarized] [--is_encrypted] [--has_restrict] [--is_hr] [--is_as] [--is_fort] [--has_rpath]
-                       [--has_lv] [--checksec] [--dylibs] [--rpaths] [--rpaths_u] [--dylibs_paths] [--dylibs_paths_u] [--broken_relative_paths]
-                       [--dylibtree [cache_path,output_path,is_extracted]] [--dylib_id] [--reexport_paths] [--hijack_sec] [--dylib_hijacking [cache_path]]
-                       [--dylib_hijacking_a [cache_path]] [--prepare_dylib [target_dylib_path]]
+usage: CrimsonUroboros [-h] -p PATH [--file_type] [--header_flags] [--endian] [--header] [--load_commands] [--segments] [--sections] [--symbols] [--imported_symbols] [--chained_fixups] [--exports_trie] [--uuid] [--main] [--encryption_info [(optional) save_path.bytes]] [--strings_section] [--all_strings]
+                       [--save_strings all_strings.txt] [--info] [--verify_signature] [--cd_info] [--cd_requirements] [--entitlements [human|xml|var]] [--extract_cms cms_signature.der] [--extract_certificates certificate_name] [--remove_sig unsigned_binary] [--sign_binary [adhoc|identity]] [--has_pie] [--has_arc]
+                       [--is_stripped] [--has_canary] [--has_nx_stack] [--has_nx_heap] [--has_xn] [--is_notarized] [--is_encrypted] [--is_restricted] [--is_hr] [--is_as] [--is_fort] [--has_rpath] [--has_lv] [--checksec] [--dylibs] [--rpaths] [--rpaths_u] [--dylibs_paths] [--dylibs_paths_u]
+                       [--broken_relative_paths] [--dylibtree [cache_path,output_path,is_extracted]] [--dylib_id] [--reexport_paths] [--hijack_sec] [--dylib_hijacking [(optional) cache_path]] [--dylib_hijacking_a [cache_path]] [--prepare_dylib [(optional) target_dylib_name]] [--is_built_for_sim] [--get_dyld_env]
+                       [--compiled_with_dyld_env] [--has_interposing] [--interposing_symbols]
 
 Mach-O files parser for binary analysis
 
@@ -55,6 +52,7 @@ MACH-O ARGS:
   --segments            Print binary segments in human-friendly form
   --sections            Print binary sections in human-friendly form
   --symbols             Print all binary symbols
+  --imported_symbols    Print symbols imported from external libraries
   --chained_fixups      Print Chained Fixups information
   --exports_trie        Print Export Trie information
   --uuid                Print UUID
@@ -76,11 +74,10 @@ CODE SIGNING ARGS:
   --extract_cms cms_signature.der
                         Extract CMS Signature from the Code Signature and save it to a given file
   --extract_certificates certificate_name
-                        Extract Certificates and save them to a given file. To each filename will be added an index at the end: _0 for signing, _1 for intermediate, and _2 for root CA
-                        certificate
+                        Extract Certificates and save them to a given file. To each filename will be added an index at the end: _0 for signing, _1 for intermediate, and _2 for root CA certificate
   --remove_sig unsigned_binary
                         Save the new file on a disk with removed signature
-  --sign_binary [adhoc|identity_number]
+  --sign_binary [adhoc|identity]
                         Sign binary using specified identity - use : 'security find-identity -v -p codesigning' to get the identity (default: adhoc)
 
 CHECKSEC ARGS:
@@ -93,7 +90,7 @@ CHECKSEC ARGS:
   --has_xn              Check if binary is protected by eXecute Never (XN) ARM protection
   --is_notarized        Check if the application is notarized and can pass the Gatekeeper verification
   --is_encrypted        Check if the application is encrypted (has LC_ENCRYPTION_INFO(_64) and cryptid set to 1)
-  --has_restrict        Check if binary has __RESTRICT segment
+  --is_restricted       Check if binary has __RESTRICT segment or CS_RESTRICT flag set
   --is_hr               Check if the Hardened Runtime is in use
   --is_as               Check if the App Sandbox is in use
   --is_fort             Check if the binary is fortified
@@ -110,21 +107,26 @@ DYLIBS ARGS:
   --broken_relative_paths
                         Print 'broken' relative paths from the binary (cases where the dylib source is specified for an executable directory without @executable_path)
   --dylibtree [cache_path,output_path,is_extracted]
-                        Print the dynamic dependencies of a Mach-O binary recursively. You can specify the Dyld Shared Cache path in the first argument, the output directory as the
-                        2nd argument, and if you have already extracted DSC in the 3rd argument (0 or 1). The output_path will be used as a base for dylibtree. For example, to not
-                        extract DSC, use: --dylibs ",,1", or to extract from default to default use just --dylibs or --dylibs ",,0" which will extract DSC to
-                        extracted_dyld_share_cache/ in the current directory
+                        Print the dynamic dependencies of a Mach-O binary recursively. You can specify the Dyld Shared Cache path in the first argument, the output directory as the 2nd argument, and if you have already extracted DSC in the 3rd argument (0 or 1). The output_path will be used as a base for
+                        dylibtree. For example, to not extract DSC, use: --dylibs ",,1", or to extract from default to default use just --dylibs or --dylibs ",,0" which will extract DSC to extracted_dyld_share_cache/ in the current directory
   --dylib_id            Print path from LC_ID_DYLIB
   --reexport_paths      Print paths from LC_REEXPORT_DLIB
   --hijack_sec          Check if binary is protected against Dylib Hijacking
-  --dylib_hijacking [cache_path]
-                        Check for possible Direct and Indirect Dylib Hijacking loading paths. The output is printed to console and saved in JSON format to
-                        /tmp/dylib_hijacking_log.json(append mode). (optional)Specify the path to the Dyld Shared Cache
+  --dylib_hijacking [(optional) cache_path]
+                        Check for possible Direct and Indirect Dylib Hijacking loading paths. The output is printed to console and saved in JSON format to /tmp/dylib_hijacking_log.json(append mode). Optionally, specify the path to the Dyld Shared Cache
   --dylib_hijacking_a [cache_path]
                         Like --dylib_hijacking, but shows only possible vectors (without protected binaries)
-  --prepare_dylib [target_dylib_path]
-                        Compile rogue dylib. (optional) Specify target_dylib_path, it will search for the imported symbols from it in the dylib specified in the --path argument and
-                        automatically add it to the source code of the rogue lib. Example: --path lib1.dylib --prepare_dylib /path/to/lib2.dylib
+  --prepare_dylib [(optional) target_dylib_name]
+                        Compile rogue dylib. Optionally, specify target_dylib_path, it will search for the imported symbols from it in the dylib specified in the --path argument and automatically add it to the source code of the rogue lib. Example: --path lib1.dylib --prepare_dylib /path/to/lib2.dylib
+
+DYLD ARGS:
+  --is_built_for_sim    Check if binary is built for simulator platform.
+  --get_dyld_env        Extract Dyld environment variables from the loader binary.
+  --compiled_with_dyld_env
+                        Check if binary was compiled with -dyld_env flag and print the environment variables and its values.
+  --has_interposing     Check if binary has interposing sections.
+  --interposing_symbols
+                        Print interposing symbols if any.
 ```
 * Example:
 ```bash
