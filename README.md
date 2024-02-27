@@ -13,14 +13,15 @@ Each article directory contains three subdirectories:
 * &#9745; [II. Code Signing](https://karol-mazurek95.medium.com/snake-apple-ii-code-signing-f0a9967b7f02?sk=v2%2Fbbc87007-89ca-4135-91d6-668b5d2fe9ae)
 * &#9745; [III. Checksec](https://karol-mazurek95.medium.com/snake-apple-iii-checksec-ed64a4b766c1?sk=v2%2Fb4b8d637-e906-4b6b-8088-ca1f893cd787)
 * &#9745; [IV. Dylibs](https://karol-mazurek.medium.com/snake-apple-iv-dylibs-2c955439b94e?sk=v2%2Fdef72b7a-121a-47a1-af89-7bf53aed1ea2)
-* &#9744; [V. Dyld]()
-  * &#9745; [DYLD — Do You Like Death? (I)](https://karol-mazurek.medium.com/dyld-do-you-like-death-i-8199faad040e?sk=v2%2F359b081f-d944-409b-9e7c-95f7c171b969)
-  * &#9745; [DYLD — Do You Like Death? (II)](https://karol-mazurek.medium.com/dyld-do-you-like-death-ii-b74360b8af47?sk=v2%2Ff0cff71c-5345-4228-a639-653325fc979d)
-  * &#9745; [DYLD — Do You Like Death? (III)](https://karol-mazurek.medium.com/dyld-do-you-like-death-iii-af77701a3034?sk=v2%2F06c92503-2db9-40e2-b139-c9ae0a35e7b3)
-  * &#9745; [DYLD — Do You Like Death? (IV)](https://karol-mazurek.medium.com/dyld-do-you-like-death-iv-ede6b157752c?sk=v2%2F87ebe38d-004c-41a6-bc1f-43898494a512)
-  * &#9744; [DYLD — Do You Like Death? (V)]()
 * &#9745; [V. Dyld](https://karol-mazurek.medium.com/snake-apple-v-dyld-8b36b674cc44?sk=v2%2F4acb16f8-fa88-41f0-8d7c-1362f4060010)
+  * &#9745; [DYLD — Do You Like Death? (I)](https://karol-mazurek.medium.com/dyld-do-you-like-death-i-8199faad040e?sk=v2%2F359b081f-d944-409b-9e7c-95f7c171b969) - Startup | kernArgs | rebaseSelf | initializeLibc | task_self_trap | stack_guard | findArgv | findEnvp | findApple
+  * &#9745; [DYLD — Do You Like Death? (II)](https://karol-mazurek.medium.com/dyld-do-you-like-death-ii-b74360b8af47?sk=v2%2Ff0cff71c-5345-4228-a639-653325fc979d) - handleDyldInCache| isBuiltForSimulator | isTranslated | crossarch_trap | Calling Convention on ARM64v8 | __unused attribute | Dyld Shared Region | thisDyldUuid | hasExistingDyldCache | shared_region_check_np | Carry flag | dynamic data header | dyldInCacheMH
+  * &#9745; [DYLD — Do You Like Death? (III)](https://karol-mazurek.medium.com/dyld-do-you-like-death-iii-af77701a3034?sk=v2%2F06c92503-2db9-40e2-b139-c9ae0a35e7b3) - handleDyldInCache | DYLD_IN_CACHE | restartWithDyldInCache | dyld_all_image_infos | calculating offset for debugging Dyld in Cache
+  * &#9745; [DYLD — Do You Like Death? (IV)](https://karol-mazurek.medium.com/dyld-do-you-like-death-iv-ede6b157752c?sk=v2%2F87ebe38d-004c-41a6-bc1f-43898494a512) - RuntimeLocks | MemoryManager | dyld_hw_tpro | Lambda Capture | withWritableMemory | PAC | arm64e_preview_abi | __ptrauth_dyld_tpro0 | WriteProtectionState | previousState | os_compiler_barrier | 
+  * &#9745; [DYLD — Do You Like Death? (V)](https://karol-mazurek.medium.com/dyld-do-you-like-death-v-c40a267573cb?sk=v2%2F4c9f16b2-59bd-406a-945d-10a1fba1001b) - Linker Standard Library | EphemeralAllocator | Dyld Private Memory | PersistentAllocator | vm_allocate | vm_protect | _kernelrpc_mach_vm_allocate_trap | _kernelrpc_mach_vm_protect_trap 
+  * &#9744; [DYLD — Do You Like Death? (VI)]() - ProcessConfig | AMFI 
 * &#9744; [VI. AMFI]()
+
 
 ## TOOLS
 [CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder)
