@@ -1620,7 +1620,7 @@ class ArgumentParser:
         dyld_group.add_argument('--compiled_with_dyld_env', action='store_true', default=False, help="Check if binary was compiled with -dyld_env flag and print the environment variables and its values.")
         dyld_group.add_argument('--has_interposing', action='store_true', default=False, help="Check if binary has interposing sections.")
         dyld_group.add_argument('--interposing_symbols', action='store_true', default=False, help="Print interposing symbols if any.")
-        
+
 
     def parseArgs(self):
         return self.parser.parse_args()
