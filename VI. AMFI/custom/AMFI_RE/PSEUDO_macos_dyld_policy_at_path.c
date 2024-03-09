@@ -20,10 +20,10 @@ macos_dyld_policy_at_path(proc *process, amfi_dyld_policy_state_t *policy_state)
                 log("RPL: 0, HR: 0, RP: 0, LV: 0");
             }
         } else {
-            // 0x40 == CS_EXECSEG_JIT used ?? (not sure aobut it)
+            // Check if 0x40 == CS_EXECSEG_JIT is used ?? (not sure about it)
             if ((flags & 0x40) != 0) {
 
-                // (macOS Only) Page invalidation allowed by task port policy (CS_INVALID_ALLOWED == 0x20) not used
+                // Check if (macOS Only) Page invalidation allowed by task port policy (CS_INVALID_ALLOWED == 0x20) is not used
                 if ((flags & 0x20) == 0) { 
                     
                     // Check if process does not use Library Validation

@@ -284,9 +284,9 @@ brew install blacktop/tap/ipsw
 * `--dylib_hijacking` needs [ipsw](https://github.com/blacktop/ipsw) to be installed.
 * `--dylibtree` needs the [dyld-shared-cache-extractor](https://github.com/keith/dyld-shared-cache-extractor) to be installed.
 
-
 ## WHY UROBOROS? 
-I will write the code for each article as a class SnakeX, where X will be the article number. To make it easier for the audience to follow. Each Snake class will be a child of the previous one and infinitely "eat itself" (inherit methods of the previous class), like Uroboros.
+I will write the code for each article as a class SnakeX, where X will be the article number, to make it easier for the audience to follow. 
+Each Snake class will be a child of the previous one and infinitely "eat itself" (inherit methods of the previous class), like Uroboros.
 
 ## ADDITIONAL LINKS
 * [Apple Open Source](https://opensource.apple.com/releases/)
@@ -302,3 +302,5 @@ I will write the code for each article as a class SnakeX, where X will be the ar
 * Build Dyld Shared Cache parser and extractor to make SnakeIV independant of dyld-shared-cache-extractor.
 * Make testing branch and implement tests, before pushing new updates.
 * Create `RottenApple.app` in another repository and use it for testing.
+* Add Dyld Closure chapter to Snake&Apple V - Dyld
+* Move `dumpPrelink_info` and `dumpPrelink_text` to Snake & Apple chapter about Kernel Extensions when ready.

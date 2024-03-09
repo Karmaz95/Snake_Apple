@@ -23,8 +23,8 @@ macos_dyld_policy_collect_state(calling_process, param_2, amfi_dyld_policy_state
     // Check if forced library validation is enabled (required by Hardened System Policy)
     has_CS_FORCED_LV = check_forced_library_validation(calling_process);
 
-    // Check macOS platform (hardware)
-    platform = get_platform();
+    // Check if binary is inside trust cache (CS_PLATFORM_BINARY == 0x4000000 | CS_DYLD_PLATFORM == 0x2000000) 
+    platform = is_platform_binary();
 
     // Check if Hardened Runtime is enabled
     has_HR = check_hardened_runtime(calling_process);
@@ -73,6 +73,5 @@ macos_dyld_policy_collect_state(calling_process, param_2, amfi_dyld_policy_state
     // Log collected data
     log_dyld_policy_data(calling_process, param_2, amfi_dyld_policy_state);
 }
-
 
 
