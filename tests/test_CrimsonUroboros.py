@@ -193,6 +193,15 @@ def executeCodeBlock(func):
 
     return output
 
+def decompressKernelcache():
+    command = 'ipsw kernel dec $(ls /System/Volumes/Preboot/*/boot/*/System/Library/Caches/com.apple.kernelcaches/kernelcache) -o kernelcache'
+    return os.system(command)
+
+def run_and_get_stdout(command):
+    command_with_stdout = f"{command} 2>&1"
+    return os.popen(command_with_stdout).read().strip()
+
+
 class TestSnakeI():
     '''Testing I. MACH-O'''
     @classmethod
@@ -1437,3 +1446,58 @@ class TestSnakeV():
         expected_output = '_my_printf'
 
         assert expected_output in uroboros_output
+
+class TestSnakeVI():
+    '''Testing VI. AMFI'''
+    @classmethod
+    def setup_class(cls):
+        # Set up the compilation process
+        cls.compiler = Compiler()
+        cls.compiler.compileIt("../I.\ Mach-O/custom/hello.c", "hello_6", ["-arch", "arm64"])
+        assert os.path.exists("hello_6")
+
+        # Decompress KernelCache
+        result = decompressKernelcache()
+        assert result == 0
+        assert os.path.exists("kernelcache")
+        cls.kernelcache_path = run_and_get_stdout('ls kernelcache/System/Volumes/Preboot/*/boot/*/System/Library/Caches/com.apple.kernelcaches/kernelcache.decompressed')
+
+    @classmethod
+    def teardown_class(cls):
+        # Purge the compiled files
+        cls.compiler.purgeCompiledFiles()
+        assert not os.path.exists("hello_6")
+
+        # Purge kernelcache directory
+        os.system("rm -rf kernelcache")
+        assert not os.path.exists("kernelcache")
+    
+    def test_dumpPrelink_info(self):
+        '''Test the --dump_prelink_info flag of SnakeVI.'''
+        args_list = ['-p', self.kernelcache_path, '--dump_prelink_info']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+
+        assert os.path.exists('PRELINK_info.txt')
+
+    def test_dumpPrelink_text(self):
+        '''Test the --dump_prelink_info flag of SnakeVI.'''
+        args_list = ['-p', self.kernelcache_path, '--dump_prelink_text']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+
+        assert os.path.exists('PRELINK_text.txt')
