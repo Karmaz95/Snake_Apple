@@ -201,7 +201,6 @@ def run_and_get_stdout(command):
     command_with_stdout = f"{command} 2>&1"
     return os.popen(command_with_stdout).read().strip()
 
-
 class TestSnakeI():
     '''Testing I. MACH-O'''
     @classmethod
@@ -315,6 +314,20 @@ class TestSnakeI():
         
         assert expected_output in uroboros_output
     
+    def test_has_cmd(self):
+        '''Test the --has_cmd flag of SnakeI.'''
+        args_list = ['-p', 'hello_1', '--has_cmd', 'LC_MAIN']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'hello_1 has LC_MAIN'
+        
+        assert expected_output in uroboros_output
+    
     def test_segments(self):
         '''Test the --segments flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--segments']
@@ -335,6 +348,20 @@ class TestSnakeI():
         assert expected_output_3 in uroboros_output
         assert expected_output_4 in uroboros_output
     
+    def test_has_segment(self):
+        '''Test the --has_segment flag of SnakeI.'''
+        args_list = ['-p', 'hello_1', '--has_segment', '__TEXT']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'hello_1 has __TEXT'
+        
+        assert expected_output in uroboros_output
+        
     def test_sections(self):
         '''Test the --sections flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--sections']
@@ -356,7 +383,21 @@ class TestSnakeI():
         assert expected_output_3 in uroboros_output
         assert expected_output_4 in uroboros_output
         assert expected_output_5 in uroboros_output
-    
+
+    def test_has_section(self):
+        '''Test the --has_section flag of SnakeI.'''
+        args_list = ['-p', 'hello_1', '--has_section', '__TEXT,__text']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'hello_1 has __TEXT,__text'
+        
+        assert expected_output in uroboros_output
+ 
     def test_symbols(self):
         '''Test the --symbols flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--symbols']
@@ -536,6 +577,40 @@ class TestSnakeI():
         assert expected_output_3 in uroboros_output
         assert expected_output_4 in uroboros_output
         assert expected_output_5 in uroboros_output
+
+    def test_dump_data(self):
+        '''Test the --dump_data flag of SnakeI.'''
+        args_list = ['-p', 'hello_1', '--dump_data', '0x00,0x08,hello_1_header_dump.bin']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+
+        executeCodeBlock(code_block)
+
+        assert os.path.exists('hello_1_header_dump.bin')
+
+        with open('hello_1_header_dump.bin', 'rb') as file:
+            file_output = file.read()
+        expected_output = b'\xcf\xfa\xed\xfe\x0c\x00\x00\x01'
+
+        assert expected_output in file_output
+        os.remove('hello_1_header_dump.bin')
+
+    def test_calc_offset(self):
+        '''Test the --calc_offset flag of SnakeI.'''
+        args_list = ['-p', 'hello_1', '--calc_offset', "0x0000000100003f20"]
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = "0x0000000100003f20 : 0x3f20"
+
+        assert expected_output in uroboros_output
 
 class TestSnakeII():
     '''Testing II. CODE SIGNING'''
@@ -1472,7 +1547,7 @@ class TestSnakeVI():
         os.system("rm -rf kernelcache")
         assert not os.path.exists("kernelcache")
     
-    def test_dumpPrelink_info(self):
+    def test_dump_prelink_info(self):
         '''Test the --dump_prelink_info flag of SnakeVI.'''
         args_list = ['-p', self.kernelcache_path, '--dump_prelink_info']
         args, file_path = argumentWrapper(args_list)
@@ -1483,12 +1558,13 @@ class TestSnakeVI():
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
 
-        uroboros_output = executeCodeBlock(code_block)
+        executeCodeBlock(code_block)
 
         assert os.path.exists('PRELINK_info.txt')
+        os.remove('PRELINK_info.txt')
 
-    def test_dumpPrelink_text(self):
-        '''Test the --dump_prelink_info flag of SnakeVI.'''
+    def test_dump_prelink_text(self):
+        '''Test the --dump_prelink_text flag of SnakeVI.'''
         args_list = ['-p', self.kernelcache_path, '--dump_prelink_text']
         args, file_path = argumentWrapper(args_list)
         
@@ -1498,6 +1574,87 @@ class TestSnakeVI():
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
 
-        uroboros_output = executeCodeBlock(code_block)
+        executeCodeBlock(code_block)
 
         assert os.path.exists('PRELINK_text.txt')
+        os.remove('PRELINK_text.txt')
+    
+    def test_dump_prelink_kext(self):
+        '''Test the --dump_prelink_kext flag of SnakeVI.'''
+        args_list = ['-p', self.kernelcache_path, '--dump_prelink_kext', 'amfi']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        executeCodeBlock(code_block)
+
+        assert os.path.exists('prelinked_amfi.bin')
+        os.remove('prelinked_amfi.bin')
+    
+    def test_kext_prelinkinfo(self):
+        '''Test the --kext_prelinkinfo flag of SnakeVI.'''
+        args_list = ['-p', self.kernelcache_path, '--kext_prelinkinfo', 'amfi']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = '_PrelinkBundlePath: /System/Library/Extensions/AppleMobileFileIntegrity.kext'
+
+        assert expected_output in uroboros_output
+
+    def test_kmod_info(self):
+        '''Test the --kmod_info flag of SnakeVI.'''
+        args_list = ['-p', self.kernelcache_path, '--kmod_info', 'amfi']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'name            : com.apple.driver.AppleMobileFileIntegrity'
+
+        assert expected_output in uroboros_output
+
+    def test_kext_entry(self):
+        '''Test the --kext_entry flag of SnakeVI.'''
+        args_list = ['-p', self.kernelcache_path, '--kext_entry', 'amfi']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'amfi entrypoint:'
+
+        assert expected_output in uroboros_output
+
+    def test_kext_exit(self):
+        '''Test the --kext_exit flag of SnakeVI.'''
+        args_list = ['-p', self.kernelcache_path, '--kext_exit', 'amfi']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'amfi exitpoint:'
+
+        assert expected_output in uroboros_output

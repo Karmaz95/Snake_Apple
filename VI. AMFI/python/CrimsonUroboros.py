@@ -10,6 +10,7 @@ import plistlib
 import json
 import sys
 import treelib
+import ctypes
 
 ### --- I. MACH-O --- ###
 class MachOProcessor:
@@ -53,18 +54,33 @@ class MachOProcessor:
         if args.load_commands: # Print binary load commands
             load_commands_list = snake_instance.getLoadCommands()
             print("Load Commands:", " ".join(load_command.command.name for load_command in load_commands_list))
-        
+
+        if args.has_cmd: # Check if LC exist
+            snake_instance.printHasLoadCommand(args.has_cmd)
+            
         if args.segments: # Print binary segments in human friendly form
             for segment in snake_instance.getSegments():
                 print(segment)
 
+        if args.has_segment: # Check if binary has given __SEGMENT
+            snake_instance.printHasSegment(args.has_segment)
+        
         if args.sections: # Print binary sections in human friendly form
             for section in snake_instance.getSections():
                 print(section)
         
+        if args.has_section: # Check if binary has given __SEGMENT,__section
+            snake_instance.printHasSection(args.has_section)
+
         if args.symbols: # Print symbols
             for symbol in snake_instance.getSymbols():
                 print(f"0x{symbol.value:016X} {symbol.name}")
+
+        if args.imports: # Print imported symbols
+            snake_instance.printImports()
+
+        if args.exports: # Print exported symbols
+            snake_instance.printExports()
 
         if args.imported_symbols:
             snake_instance.printImportedSymbols()
@@ -130,6 +146,12 @@ class MachOProcessor:
             print('\n<=== ENTRYPOINT ===>')
             snake_instance.printMain()
 
+        if args.dump_data: # Dump {size} bytes starting from {offset} to a given {filename}.
+            snake_instance.dumpDataArgParser(args.dump_data)
+
+        if args.calc_offset: # Calculate the real address of the Virtual Memory in the file.
+            snake_instance.printCalcRealAddressFromVM(args.calc_offset)
+
 class SnakeI:
     def __init__(self, binaries, file_path):
         '''
@@ -157,6 +179,19 @@ class SnakeI:
         0x4: 'SG_NORELOC',
         0x8: 'SG_PROTECTED_VERSION_1',
         0x10: 'SG_READ_ONLY',
+        }
+        self.symbol_types = {
+            'N_STAB': 0xE0,  # DEBUG SYMBOL
+            'N_PEXT': 0x10,  # PRIVATE EXTERNAL SYMBOL
+            'N_TYPE': 0x0E,  # CHECK N_TYPES
+            'N_EXT' : 0x01,  # EXTERNAL SYMBOL
+            'N_TYPES': {
+                'N_UNDF': 0x00, # UNDEFINED
+                'N_ABS':  0x02, # ABSOLUTE
+                'N_SECT': 0x0E, # DEFINED IN SECTION
+                'N_PBUD': 0x0C, # PREBOUND UNDEFINED (in dylib)
+                'N_INDR': 0x0A, # INDIRECT
+            }
         }
 
     def mapProtection(self, numeric_protection):
@@ -207,6 +242,15 @@ class SnakeI:
         '''https://lief-project.github.io/doc/stable/api/python/macho.html#loadcommand'''
         return self.binary.commands
 
+    def getSegment(self, segment_name):
+        ''' Return segment object for the given {segment_name} __SEGMENT. '''
+        segment_name = segment_name.lower()
+        
+        for segment in self.binary.segments:
+            if (segment.name).lower() == segment_name:
+                return segment
+        return None
+
     def getSegments(self):
         '''Extract segmenents from binary and return a human readable string: https://lief-project.github.io/doc/stable/api/python/macho.html#lief.MachO.SegmentCommand'''
         segment_info = []
@@ -225,6 +269,18 @@ class SnakeI:
                 segment_info.append(f'{name.ljust(16)}{init_prot}/{max_prot.ljust(8)} VM: {va_start}-{va_end.ljust(24)} FILE: {file_start}-{file_end}')                
         return segment_info
 
+    def hasSegment(self, segment_name):
+        ''' Check if binary has given segment {segment_name}. '''
+        for segment in self.binary.segments:
+            if segment.name == segment_name:
+                return True
+        return False
+
+    def printHasSegment(self, segment_name):
+        ''' Printing function for --has_segment. '''
+        if self.hasSegment(segment_name):
+            print(f'{self.file_path} has {segment_name}')
+    
     def calcSectionRange(self, section):
         '''
             The function calculates a section's start and end offset by adding the FAT slide in case of fat binary.
@@ -247,6 +303,18 @@ class SnakeI:
                     section_offset_start, section_offset_end = self.calcSectionRange(section)
                     return section_offset_start, section_offset_end
         return False, False
+
+    def getSection(self, segment_section):
+        ''' Return segment object for the given {segment_section} __SEGMENT,__section. '''
+        segment_section = segment_section.lower()
+
+        for section in self.binary.sections:
+            current_segment_section = f'{section.segment_name},{section.name}'.lower()
+
+            if current_segment_section == segment_section:
+                return section
+
+        return None
 
     def getSections(self):
         '''Extract sections from binary and return in human readable format: https://lief-project.github.io/doc/stable/api/python/macho.html#lief.MachO.Section'''
@@ -272,6 +340,38 @@ class SnakeI:
         '''Get all symbols from the binary (LC_SYMTAB, Chained Fixups, Exports Trie): https://lief-project.github.io/doc/stable/api/python/macho.html#symbol'''
         return self.binary.symbols
 
+    def getImports(self):
+        ''' Imported symbols are undefined and external. '''
+        imported_symbols = []
+
+        for symbol in self.getSymbols():
+            if (symbol.type & self.symbol_types['N_EXT']):
+                if (symbol.type & self.symbol_types['N_TYPE']) == self.symbol_types['N_TYPES']['N_UNDF']:
+                    imported_symbols.append(symbol)
+
+        return(imported_symbols)
+
+    def printImports(self):
+        ''' Printing only imported symbol names. '''
+        for symbol in self.getImports():
+            print(symbol.name)
+
+    def getExports(self):
+        ''' Exported symbols are external but not undefined or private. '''
+        exported_symbols = []
+
+        for symbol in self.getSymbols():
+            if (symbol.type & self.symbol_types['N_EXT']):
+                if (symbol.type & self.symbol_types['N_TYPE']) != self.symbol_types['N_TYPES']['N_UNDF']:
+                    exported_symbols.append(symbol)
+
+        return(exported_symbols)
+
+    def printExports(self):
+        ''' Printing only exported symbol names. '''
+        for symbol in self.getExports():
+            print(symbol.name)
+        
     def getChainedFixups(self):
         '''Return Chained Fixups information: https://lief-project.github.io/doc/latest/api/python/macho.html#chained-binding-info'''
         return self.binary.dyld_chained_fixups
@@ -293,17 +393,29 @@ class SnakeI:
         return uuid_string
 
     def getMain(self):
-        '''Determine the entry point of an executable.'''
-        return self.binary.main_command
+        '''Determine the entry point of an executable (LC_MAIN or LC_THREAD or LC_UNIXTHREAD)'''
+        LC_MAIN = self.binary.main_command
+
+        if LC_MAIN:
+            return LC_MAIN
+
+        LC_UNIXTHREAD = self.binary.thread_command
+        return LC_UNIXTHREAD
 
     def printMain(self):
-        '''Prints entry point and stack size if exists.'''
+        '''Prints entry point and stack size or Thread flavor if exists.'''
         entry_point = self.getMain()
-        if entry_point:
-            print(f'Entry point: {hex(self.getMain().entrypoint)}')
-            print(f'Stack size: {hex(self.getMain().stack_size)}')
+
+        if entry_point and hasattr(entry_point, 'entrypoint'):
+            print(f'Entry point: {hex(entry_point.entrypoint)}')
+            print(f'Stack size: {hex(entry_point.stack_size)}')
+
+        elif entry_point and hasattr(entry_point, 'pc'):
+            print(f'Entry point (PC): {hex(entry_point.pc)}')
+            print(f'Thread flavor: {hex(entry_point.flavor)}')
+
         else:
-            print(f"{self.file_path} has no entry point.") 
+            print(f"{self.file_path} has no entry point (LC_MAIN or LC_THREAD or LC_UNIXTHREAD).")
 
     def getStringSection(self):
         '''Return strings from the __cstring (string table).'''
@@ -372,18 +484,79 @@ class SnakeI:
             extracted_bytes = file.read(size)
         return extracted_bytes
 
-    def saveEcryptedData(self,output_path):
+    def saveBytesToFile(self, data, filename):
+        ''' Save bytes to a file. '''
+        with open(filename, 'wb') as file:
+            file.write(data)
+
+    def readBytesFromFile(self, filename):
+        ''' Read bytes from a file. '''
+        with open(filename, 'rb') as file:
+            data = file.read()
+
+        return data
+
+    def dumpData(self, offset, size, filename):
+        ''' Extract {size} bytes starting from {offset} to a given {filename}. '''
+        extracted_bytes = self.extractBytesAtOffset(offset, size)
+        
+        if extracted_bytes:
+            self.saveBytesToFile(extracted_bytes, filename)
+
+    def dumpDataArgParser(self, args):
+        ''' Parse comma separated values for dumpData from --dump_data 'offset,size,filename'. '''
+        offset, size, filename = args.split(',')
+
+        offset = offset.strip().lower()
+        if offset.startswith("0x"):
+            offset = int(offset, 16)
+
+        size = size.strip().lower()
+        if size.startswith("0x"):
+            size = int(size, 16)
+
+        filename = filename.strip()
+
+        self.dumpData(offset, size, filename)
+
+    def saveEcryptedData(self, output_path):
         '''Method for saving encrypted data sector to specified file.'''
         _, cryptoff, cryptsize = self.getEncryptionInfo()
         self.saveBytesToFile(self.extractBytesAtOffset(cryptoff + self.fat_offset, cryptsize), output_path)
+
+    def hasSection(self, segment_section):
+        ''' 
+            Takes "__SEGMENT,__section" as an input.
+            Return True if it exists.
+        '''
+        segment_section = segment_section.lower()
+
+        for section in self.binary.sections:
+            current_segment_section = f'{section.segment_name},{section.name}'.lower()
+
+            if current_segment_section == segment_section:
+                return True
+
+        return False
+
+    def printHasSection(self, segment_section):
+        ''' Printing function for --has_section. '''
+        if self.hasSection(segment_section):
+            print(f'{self.file_path} has {segment_section}')
 
     def extractSection(self, segment_name, section_name):
         '''
             As argument takes segment name (e.g. "__PRELINK_INFO") and section name that is a part of the segment (e.g. '__text').
             Return data (bytes) stored in a given section.
-            If section was not found, return False.
+            If section was not found or is empty -> return False.
         '''
+        segment_section = f'{segment_name},{section_name}' 
+
+        if not self.hasSection(segment_section): # If section was not found, break.
+            return False
+
         section_offset_start, section_offset_end = self.getSectionRange(segment_name, section_name)
+
         if section_offset_start and section_offset_end:
             size = section_offset_end - section_offset_start
             extracted_bytes = self.extractBytesAtOffset(section_offset_start, size)
@@ -400,6 +573,57 @@ class SnakeI:
             self.saveBytesToFile(extracted_bytes, filename)
             return True
         return False
+
+    def hasLoadCommand(self, load_command):
+        ''' Check if the given Load Command exists in the binary. '''
+        if load_command.startswith("LC_"):
+            load_command = load_command[3:]
+        load_command = load_command.lower()
+
+        for cmd in self.load_commands:
+            cmd = str(cmd.command.name).lower()
+            if load_command == cmd:
+                return True
+        return False
+
+    def printHasLoadCommand(self, load_command):
+        ''' Printing function for has_cmd. '''
+        original_user_input = load_command
+        if self.hasLoadCommand(load_command):
+            print(f'{self.file_path} has {original_user_input}')
+
+    def getVirtualMemoryStartingAddress(self):
+        ''' Get start VM base addr of the __TEXT segment '''
+        vm_base = 0
+        if self.hasSegment('__TEXT'):
+            for segment in self.binary.segments:
+                if segment.name == '__TEXT':
+                    vm_base = segment.virtual_address + self.fat_offset
+        return vm_base
+
+    def calcRealAddressFromVM(self, vm_offset):
+        ''' 
+            Calculate the real address of the Virtual Memory in the file.
+                vm_start == __TEXT segment
+                vm_offset == your address
+                real = vm_offset - vm_start
+        '''
+        # Handling strings and hexes
+        if type(vm_offset) is not int:
+            if (vm_offset.lower()).startswith("0x"):
+                vm_offset = int(vm_offset, 16)
+            else:
+                vm_offset = int(vm_offset)
+
+        vm_base = self.getVirtualMemoryStartingAddress()
+        vm_offset = vm_offset - vm_base
+        return vm_offset
+
+    def printCalcRealAddressFromVM(self, vm_offset):
+        ''' Printing function for --calc_offset '''
+        real_offset = self.calcRealAddressFromVM(vm_offset)
+        real_offset_hex = hex(real_offset)
+        print(f'{vm_offset} : {real_offset_hex}')
 
 ### --- II. CODE SIGNING --- ### 
 class CodeSigningProcessor:
@@ -479,11 +703,6 @@ class SnakeII(SnakeI):
         cms_len_in_int = int.from_bytes(cms_len_in_bytes, byteorder='big')
         cms_signature = cs_content[offset + 8:offset + 8 + cms_len_in_int]
         return cms_signature
-
-    def saveBytesToFile(self, data, filename):
-        '''Save bytes to a file.'''
-        with open(filename, 'wb') as file:
-            file.write(data)
 
     def extractCertificatesFromCodeSignature(self, cert_name):
         '''Extracts certificates from the CMS Signature and saves them to a file with _0, _1, _2 indexes at the end of the file names.'''
@@ -1584,7 +1803,7 @@ class AMFIProcessor:
     def __init__(self):
         '''This class contains part of the code from the main() for the SnakeVI: AMFI.'''
         pass
-    
+
     def process(self, args):
         if args.dump_prelink_info is not None: # nargs="?", const='PRELINK_info.txt' # Dump '__PRELINK_INFO,__info' to a given file (default: 'PRELINK_info.txt')
             snake_instance.dumpPrelink_info(args.dump_prelink_info)
@@ -1592,12 +1811,63 @@ class AMFIProcessor:
         if args.dump_prelink_text is not None: # Dump '__PRELINK_TEXT,__text' to a given file (default: 'PRELINK_text.txt')
             snake_instance.dumpPrelink_text(args.dump_prelink_text)
 
+        if args.dump_prelink_kext is not None: # Dump prelinked KEXT from decompressed Kernel Cache to a file named: prelinked_{kext_name}.bin
+            snake_instance.dumpKernelExtensionFromPRELINK_TEXT(args.dump_prelink_kext)
+
+        if args.kext_prelinkinfo: # Print _Prelink properties from PRELINK_INFO,__info for a give kext
+            snake_instance.printParsedPRELINK_INFO_plist(args.kext_prelinkinfo)
+
+        if args.kmod_info: # Print parsed kmod_info for the given kext
+            snake_instance.printParsedkmod_info(args.kmod_info)
+        
+        if args.kext_entry: # Print kext entrypoint
+            snake_instance.printKextEntryPoint(args.kext_entry)
+        
+        if args.kext_exit: # Print kext exitpoint
+            snake_instance.printKextExitPoint(args.kext_exit)
+
         if args.amfi:
-            pass
+            snake_instance.printExports()
 
 class SnakeVI(SnakeV):
     def __init__(self, binaries, file_path):
         super().__init__(binaries, file_path)
+        # This map is just a helper for --dump_kext so the user can specify different names for the same kext. 
+        # For instance, amfi instead of AppleMobileFileIntegrity.kext
+        self.kext_map = {
+            'amfi' : 'applemobilefileintegrity',
+            'com.apple.driver.applemobilefileintegrity' : 'applemobilefileintegrity',
+            'applemobilefileintegrity.kext' : 'applemobilefileintegrity',
+        }
+
+    def loadPRELINK_INFOFromFile(self, prelink_info_filename): # Not used yet.
+        ''' 
+            Read PRELINK_INFO,__info section from file (with alignment).
+            The last line in the dumped section plist is broken, because of alignment.
+            This function remove it so the plistlib.loads work.
+            It returns loaded PLIST {prelink_info_plist}.
+        '''
+        prelink_info_plist_bytes = self.readBytesFromFile(prelink_info_filename)
+        prelink_as_bytes_without_last_line = self.removeNullBytesAlignment(prelink_info_plist_bytes)
+        prelink_info_plist = plistlib.loads(prelink_as_bytes_without_last_line)
+        return prelink_info_plist
+    
+    def calcTwoComplement64(self, value):
+        ''' Convert negative int to hex representation. '''
+        return hex((value + (1 << 64)) % (1 << 64))
+
+    def removeNullBytesAlignment(self, string_as_bytes):
+        ''' 
+            The last line in the PLISTs and other files dumped from memory will almost always be aligned with 0x00 bytes. 
+            This function:
+                Detects lines in a given bytes {string_as_bytes}.
+                Removes the last line.
+                Returns a new {string_as_bytes}.
+        '''
+        decoded_string = string_as_bytes.decode('utf-8')
+        decoded_string_without_last_line = decoded_string[:decoded_string.rfind('\n')]
+        string_as_bytes_without_last_line = decoded_string_without_last_line.encode()
+        return string_as_bytes_without_last_line
 
     def dumpPrelink_info(self, filename):
         ''' Dump '__PRELINK_INFO,__info' to a given file (default: 'PRELINK_info.txt') '''
@@ -1611,6 +1881,141 @@ class SnakeVI(SnakeV):
         section_name = '__text'
         self.dumpSection(segment_name, section_name, filename)
 
+    def extractPRELINK_INFO_plist(self):
+        ''' Extract '__PRELINK_INFO,__info' and return it. '''
+        segment_name = '__PRELINK_INFO'
+        section_name = '__info'
+        extracted_bytes = self.extractSection(segment_name, section_name)
+        return extracted_bytes
+
+    def parsePRELINK_INFO_plist(self, kext_name):
+        ''' Extract PLIST properties values from '__PRELINK_INFO,__info' section for the given {kext_name}: 
+                _PrelinkBundlePath
+                _PrelinkExecutableLoadAddr
+                _PrelinkExecutableRelativePath
+                _PrelinkExecutableSize
+                _PrelinkExecutableSourceAddr
+                _PrelinkKmodInfo
+        '''
+        #prelink_info_plist = self.loadPRELINK_INFO(prelink_info_filename) # For loading PRELINK_INFO from file
+        prelink_as_bytes = self.extractPRELINK_INFO_plist()
+        prelink_as_bytes_without_last_line = self.removeNullBytesAlignment(prelink_as_bytes)
+        prelink_info_plist = plistlib.loads(prelink_as_bytes_without_last_line)
+
+        kext_name = kext_name.lower()
+        if kext_name in self.kext_map:
+            kext_name = self.kext_map[kext_name]
+
+        # Iterate over the parsed dictionary
+        for item in prelink_info_plist['_PrelinkInfoDictionary']:
+            PrelinkExecutableRelativePath = item.get('_PrelinkExecutableRelativePath', '').lower()
+
+            # Check if the '_PrelinkExecutableRelativePath' contains {kext_name} in its path
+            if  kext_name in PrelinkExecutableRelativePath:
+                # Extract the desired keys and their corresponding values
+                bundle_path = item.get('_PrelinkBundlePath')
+
+                executable_load_addr = str(item.get('_PrelinkExecutableLoadAddr')).lower()
+                if executable_load_addr.startswith("0x"):
+                    executable_load_addr = int(executable_load_addr, 16)
+                elif executable_load_addr.startswith("-"):
+                    executable_load_addr = self.calcTwoComplement64(int(executable_load_addr))
+                    
+                executable_relative_path = item.get('_PrelinkExecutableRelativePath')
+                
+                executable_size = str(item.get('_PrelinkExecutableSize')).lower()
+                if executable_size.startswith("0x"):
+                    executable_size = int(executable_size, 16)
+                elif executable_size.startswith("-"):
+                    executable_size = self.calcTwoComplement64(int(executable_size))
+                
+                source_addr = str(item.get('_PrelinkExecutableSourceAddr')).lower()
+                if source_addr.startswith("0x"):
+                    source_addr = int(source_addr, 16)
+                elif source_addr.startswith("-"):
+                    source_addr = self.calcTwoComplement64(int(source_addr))
+                
+                kmod_info = str(item.get('_PrelinkKmodInfo')).lower()
+                if kmod_info.startswith("0x"):
+                    kmod_info = int(kmod_info, 16)
+                elif kmod_info.startswith("-"):
+                    kmod_info = self.calcTwoComplement64(int(kmod_info))
+ 
+                return bundle_path, executable_load_addr, executable_relative_path, executable_size, source_addr, kmod_info
+
+    def printParsedPRELINK_INFO_plist(self, kext_name):
+        ''' Print extracted properties for PRELINK_INFO Plist for a given kext. '''
+        bundle_path, executable_load_addr, executable_relative_path, executable_size, source_addr, kmod_info = self.parsePRELINK_INFO_plist(kext_name)
+        print(f'_PrelinkBundlePath: {bundle_path}')
+        print(f'_PrelinkExecutableLoadAddr: {executable_load_addr}')
+        print(f'_PrelinkExecutableRelativePath: {executable_relative_path}')
+        print(f'_PrelinkExecutableSize: {hex(int(executable_size))}')
+        print(f'_PrelinkExecutableSourceAddr: {source_addr}')
+        print(f'_PrelinkKmodInfo: {kmod_info}')
+
+    def dumpKernelExtensionFromPRELINK_TEXT(self, kext_name):
+        ''' Dump prelinked KEXT {kext_name} from decompressed Kernel Cache PRELINK_TEXT segment -p {file_path} to a file named: prelinked_{kext_name}.bin '''
+        segment_section = '__PRELINK_TEXT,__text'
+
+        if not self.hasSection(segment_section): # If segment does not exist - break
+            print(f'Specified binary file does not have {segment_section} - the extension was not dumped.')
+            return False
+
+        _, kext_load_addr, _, kext_size, source_addr, _ = self.parsePRELINK_INFO_plist(kext_name)
+        kext_load_addr = int(kext_load_addr, 16)
+        kext_size = int(kext_size, 16)
+        output_path = f'prelinked_{kext_name}.bin'
+
+        kext_offset = self.calcRealAddressFromVM(kext_load_addr)
+        self.dumpData(kext_offset, kext_size, output_path)
+
+    def parsekmod_info(self, kext_name):
+        ''' Parse kmod_info structure for the given {kext_name} from Kernel Cache '''
+        _, _, _, _, _, kmod_info_vm_addr = self.parsePRELINK_INFO_plist(kext_name)
+        kmod_info_in_file = self.calcRealAddressFromVM(kmod_info_vm_addr)
+        kmod_info_size = ctypes.sizeof(AppleStructuresManager.kmod_info)
+        extracted_kmod_info_bytes = self.extractBytesAtOffset(kmod_info_in_file, kmod_info_size)
+        # debug +
+        #Utils.printQuadWordsLittleEndian64(extracted_kmod_info_bytes)
+        # debug -
+        kmod_info_as_dict = AppleStructuresManager.parsekmod_info(extracted_kmod_info_bytes)
+        return kmod_info_as_dict
+    
+    def printParsedkmod_info(self, kext_name):
+        ''' Printing function for --kmod_info '''
+        kmod_info_as_dict = self.parsekmod_info(kext_name)
+        for k, v in kmod_info_as_dict.items():
+                print(f'{k.ljust(16)}: {v}')
+
+    def calcKextEntryPoint(self, kext_name):
+        ''' Calculate the __start for the given {kext_name} Kernel Extension '''
+        kmod_info_as_dict = self.parsekmod_info(kext_name)
+        start = int(kmod_info_as_dict['start'], 16) & 0xFFFFFFFF
+        
+        kernelcache_text_segment = self.getSegment('__TEXT')
+        kernelcache_text_segment_base = kernelcache_text_segment.virtual_address
+        
+        return start + kernelcache_text_segment_base
+
+    def printKextEntryPoint(self, kext_name):
+        ''' Printing function for --kext_entry flag. '''
+        kext_entrypoint = hex(self.calcKextEntryPoint(kext_name))
+        print(f'{kext_name} entrypoint: {kext_entrypoint}')
+
+    def calcKextExitPoint(self, kext_name):
+        ''' Calculate the __stop for the given {kext_name} Kernel Extension '''
+        kmod_info_as_dict = self.parsekmod_info(kext_name)
+        stop = int(kmod_info_as_dict['stop'], 16) & 0xFFFFFFFF
+
+        kernelcache_text_segment = self.getSegment('__TEXT')
+        kernelcache_text_segment_base = kernelcache_text_segment.virtual_address
+
+        return stop + kernelcache_text_segment_base
+
+    def printKextExitPoint(self, kext_name):
+        ''' Printing function for --kext_exit flag. '''
+        kext_exitpoint = hex(self.calcKextEntryPoint(kext_name))
+        print(f'{kext_name} exitpoint: {kext_exitpoint}')
 
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
@@ -1635,10 +2040,15 @@ class ArgumentParser:
         macho_group.add_argument('--endian', action='store_true', help="Print binary endianess")
         macho_group.add_argument('--header', action='store_true', help="Print binary header")
         macho_group.add_argument('--load_commands', action='store_true', help="Print binary load commands names")
+        macho_group.add_argument('--has_cmd', metavar='LC_MAIN', help="Check of binary has given load command")
         macho_group.add_argument('--segments', action='store_true', help="Print binary segments in human-friendly form")
+        macho_group.add_argument('--has_segment', help="Check if binary has given '__SEGMENT'", metavar='__SEGMENT')
         macho_group.add_argument('--sections', action='store_true', help="Print binary sections in human-friendly form")
+        macho_group.add_argument('--has_section', help="Check if binary has given '__SEGMENT,__section'", metavar='__SEGMENT,__section')
         macho_group.add_argument('--symbols', action='store_true', help="Print all binary symbols")
-        macho_group.add_argument('--imported_symbols', action='store_true', help="Print symbols imported from external libraries")
+        macho_group.add_argument('--imports', action='store_true', help="Print imported symbols")
+        macho_group.add_argument('--exports', action='store_true', help="Print exported symbols")
+        macho_group.add_argument('--imported_symbols', action='store_true', help="Print symbols imported from external libraries with dylib names")
         macho_group.add_argument('--chained_fixups', action='store_true', help="Print Chained Fixups information")
         macho_group.add_argument('--exports_trie', action='store_true', help="Print Export Trie information")
         macho_group.add_argument('--uuid', action='store_true', help="Print UUID")
@@ -1648,6 +2058,8 @@ class ArgumentParser:
         macho_group.add_argument('--all_strings', action='store_true', help="Print strings from all sections")
         macho_group.add_argument('--save_strings', help="Parse all sections, detect strings, and save them to a file", metavar='all_strings.txt')
         macho_group.add_argument('--info', action='store_true', default=False, help="Print header, load commands, segments, sections, symbols, and strings")
+        macho_group.add_argument('--dump_data', help="Dump {size} bytes starting from {offset} to a given {filename} (e.g. '0x1234,0x1000,out.bin')", metavar=('offset,size,output_path'), nargs="?")
+        macho_group.add_argument('--calc_offset', help="Calculate the real address (file on disk) of the given Virtual Memory {vm_offset} (e.g. 0xfffffe000748f580)", metavar='vm_offset')
 
     def addCodeSignArgs(self):
         codesign_group = self.parser.add_argument_group('CODE SIGNING ARGS')
@@ -1692,7 +2104,7 @@ class ArgumentParser:
         dylibs_group.add_argument('--reexport_paths', action='store_true', default=False, help="Print paths from LC_REEXPORT_DLIB")
         dylibs_group.add_argument('--hijack_sec', action='store_true', default=False, help="Check if binary is protected against Dylib Hijacking")
         dylibs_group.add_argument('--dylib_hijacking', metavar='(optional) cache_path' ,nargs="?", const="default", help="Check for possible Direct and Indirect Dylib Hijacking loading paths. The output is printed to console and saved in JSON format to /tmp/dylib_hijacking_log.json(append mode). Optionally, specify the path to the Dyld Shared Cache")
-        dylibs_group.add_argument('--dylib_hijacking_a', metavar='cache_path' ,nargs="?", const="default", help="Like --dylib_hijacking, but shows only possible vectors (without protected binaries)")
+        dylibs_group.add_argument('--dylib_hijacking_a', metavar='cache_path', nargs="?", const="default", help="Like --dylib_hijacking, but shows only possible vectors (without protected binaries)")
         dylibs_group.add_argument('--prepare_dylib', metavar='(optional) target_dylib_name', nargs="?", const='', help="Compile rogue dylib. Optionally, specify target_dylib_path, it will search for the imported symbols from it in the dylib specified in the --path argument and automatically add it to the source code of the rogue lib. Example: --path lib1.dylib --prepare_dylib /path/to/lib2.dylib")
 
     def addDyldArgs(self):
@@ -1707,7 +2119,12 @@ class ArgumentParser:
         dyld_group = self.parser.add_argument_group('AMFI ARGS')
         dyld_group.add_argument('--dump_prelink_info', metavar='(optional) out_name', nargs="?", const='PRELINK_info.txt', help='Dump "__PRELINK_INFO,__info" to a given file (default: "PRELINK_info.txt")')
         dyld_group.add_argument('--dump_prelink_text', metavar='(optional) out_name', nargs="?", const='PRELINK_text.txt', help='Dump "__PRELINK_TEXT,__text" to a given file (default: "PRELINK_text.txt")')
-        dyld_group.add_argument('--amfi', action='store_true', default=False, help="a")
+        dyld_group.add_argument('--dump_prelink_kext', metavar='kext_name', nargs="?", help='Dump prelinked KEXT {kext_name} from decompressed Kernel Cache PRELINK_TEXT segment to a file named: prelinked_{kext_name}.bin')
+        dyld_group.add_argument('--kext_prelinkinfo', metavar='kext_name', nargs="?", help='Print _Prelink properties from PRELINK_INFO,__info for a give {kext_name}')
+        dyld_group.add_argument('--kmod_info', metavar='kext_name', help="Parse kmod_info structure for the given {kext_name} from Kernel Cache")
+        dyld_group.add_argument('--kext_entry', metavar='kext_name', help="Calculate the virtual memory address of the __start (entrpoint) for the given {kext_name} Kernel Extension")
+        dyld_group.add_argument('--kext_exit', metavar='kext_name', help="Calculate the virtual memory address of the __stop (exitpoint) for the given {kext_name} Kernel Extension")
+        dyld_group.add_argument('--amfi', help="a")
 
 
 
@@ -1748,6 +2165,92 @@ void myconstructor(int argc, const char **argv)
         clang_command = ["clang", file_name_c, "-o", output_filename, *flag_list]
         subprocess.run(clang_command, check=True)
 
+### --- APPLE CODE --- ### 
+class AppleStructuresManager:
+    ''' It stores Apple structures and their parsers. '''
+    class kmod_info(ctypes.Structure):
+        ''' REF: https://github.com/apple-oss-distributions/xnu/blob/1031c584a5e37aff177559b9f69dbd3c8c3fd30a/osfmk/mach/kmod.h#L87 '''
+        _pack_ = 1 # Specify the byte order (little-endian)
+        _fields_ = [
+            ("next", ctypes.c_uint64), # Simplifying the structure, it should be: struct kmod_info  * next;
+            ("info_version", ctypes.c_int32),
+            ("id", ctypes.c_uint32),
+            ("name", ctypes.c_char * 64),
+            ("version", ctypes.c_char * 64),
+            ("reference_count", ctypes.c_int32),
+            ("reference_list", ctypes.c_uint64),
+            ("address", ctypes.c_uint64),
+            ("size", ctypes.c_uint64),
+            ("hdr_size", ctypes.c_uint64),
+            ("start", ctypes.c_uint64),
+            ("stop", ctypes.c_uint64)
+        ]
+
+    def parsekmod_info(data):
+        # Create an instance of the kmod_info structure
+        info = AppleStructuresManager.kmod_info()
+        # Cast the binary data to the structure
+        ctypes.memmove(ctypes.byref(info), data, ctypes.sizeof(info))
+
+        # Convert name and version to strings
+        name = info.name.decode('utf-8').rstrip('\x00')
+        version = info.version.decode('utf-8').rstrip('\x00')
+
+        # Return parsed data as a dictionary
+        return {
+            "next": info.next,
+            "info_version": info.info_version,
+            "id": hex(info.id),
+            "name": name,
+            "version": version,
+            "reference_count": info.reference_count,
+            "reference_list": hex(info.reference_list),
+            "address": hex(info.address),
+            "size": hex(info.size),
+            "hdr_size": hex(info.hdr_size),
+            "start": hex(info.start),
+            "stop": hex(info.stop)
+        }
+
+### --- UTILS / DEBUG --- ###
+class Utils:
+    def printQuadWordsLittleEndian64(byte_string, columns=2):
+        ''' Print Q values from given {byte_string} in {columns} columns (default 2) 
+            0000000000000000 FFFFFFFF00000001
+            6C7070612E6D6F63 7265766972642E65
+        '''
+        # Ensure the byte string length is a multiple of 8
+        while len(byte_string) % 8 != 0:
+            byte_string += b'\x00'  # Add padding to make it divisible by 8
+        
+        # Convert the byte string to a list of integers
+        byte_list = list(byte_string)
+        
+        # Group the bytes into 8-byte chunks
+        chunks = [byte_list[i:i+8] for i in range(0, len(byte_list), 8)]
+        
+        # Print the raw bytes in 64-bit little-endian order
+        print("Raw bytes (64-bit little-endian):")
+        i = 1
+        for chunk in chunks:
+            chunk_value = int.from_bytes(chunk, byteorder='little')
+            if i < columns:
+                print(f"{chunk_value:016X}", end=" ")
+            else:
+                print(f"{chunk_value:016X}", end="\n")
+                i = 0
+            i+=1
+        print()
+
+    def printRawHex(byte_string):
+        ''' 
+            Print bytes as raw hexes (without endianess). 
+            01 00 00 00 ff ff ...
+        '''
+        hex_string = ' '.join(f'{byte:02x}' for byte in byte_string)
+        print(hex_string)
+
+        
 if __name__ == "__main__":
     arg_parser = ArgumentParser()
     args = arg_parser.parseArgs()

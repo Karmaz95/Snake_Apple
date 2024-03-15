@@ -303,4 +303,7 @@ Each Snake class will be a child of the previous one and infinitely "eat itself"
 * Make testing branch and implement tests, before pushing new updates.
 * Create `RottenApple.app` in another repository and use it for testing.
 * Add Dyld Closure chapter to Snake&Apple V - Dyld
-* Move `dumpPrelink_info` and `dumpPrelink_text` to Snake & Apple chapter about Kernel Extensions when ready.
+* Move `kext_prelinkinfo`, `dumpPrelink_info` and `dumpPrelink_text` to Snake & Apple chapter about Kernel Extensions when ready.
+* Add kernelcache parser.
+* Add `LC_FILESET_ENTRY` method to `dumpKernelExtension`.
+* Consider moving methods like `removeNullBytesAlignment`, `calcTwoComplement64` etc. to `Utils` class.
