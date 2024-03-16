@@ -1,0 +1,7 @@
+/System/Library/dyld/
+/System/DriverKit/System/Library/dyld/
+/System/Volumes/Preboot/Cryptexes/OS/System/Library/dyld/
+/System/Volumes/Preboot/Cryptexes/Incoming/OS/System/Library/dyld/
+/System/Volumes/Preboot/Cryptexes/OS/System/DriverKit/System/Library/dyld/
+/System/Cryptexes/OS/System/Library/dyld/
+/System/Cryptexes/OS/System/DriverKit/System/Library/dyld/
