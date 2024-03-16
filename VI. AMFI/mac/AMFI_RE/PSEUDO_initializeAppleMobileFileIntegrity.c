@@ -90,10 +90,10 @@ initializeAppleMobileFileIntegrity() {
                 _cred_label_init
                 _cred_label_update_execve
                 _proc_check_inherit_ipc_ports
-                _vnode_check_signature          // Check Code Signature handler
-                _file_check_library_validation  // Check validation of a library file
-                _policy_initbsd                 // Final call from BSD for finalizing initialization of MACF ?
-                _policy_syscall                 // MACF policy syscall handler
+                _vnode_check_signature          // Code Signature validation handler
+                _file_check_library_validation  // Library validation handler
+                _policy_initbsd
+                _policy_syscall                 // MAC policy-multiplexed system call (mpo_policy_syscall_t) handler 
                 _task_id_token_get_task
                 _cred_label_associate_kernel
                 _proc_check_launch_constraints  // Check launch constraints for a process
