@@ -1,0 +1,6 @@
+CFBundleIdentifier    com.apple.driver.AppleMobileFileIntegrity
+IOClass               AppleMobileFileIntegrity
+IOMatchCategory       AppleMobileFileIntegrity
+IOProviderClass       IOResources
+IOResourceMatch       IOBSD
+IOUserClientClass     AppleMobileFileIntegrityUserClient
