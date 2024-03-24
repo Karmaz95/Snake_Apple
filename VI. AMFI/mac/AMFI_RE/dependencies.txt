@@ -1,0 +1,11 @@
+com.apple.iokit.CoreAnalyticsFamily
+com.apple.kec.corecrypto
+com.apple.kext.CoreTrust
+com.apple.kpi.bsd
+com.apple.kpi.dsep
+com.apple.kpi.iokit
+com.apple.kpi.libkern
+com.apple.kpi.mach
+com.apple.kpi.private
+com.apple.kpi.unsupported
+com.apple.security.AppleImage4
