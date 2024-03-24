@@ -612,6 +612,20 @@ class TestSnakeI():
 
         assert expected_output in uroboros_output
 
+    def test_constructors(self):
+        '''Test the --constructors flag of SnakeI.'''
+        args_list = ['-p', 'hello_1', '--constructors']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = ""
+        # todo - this is only negative test, I should also check the file with valid constructors.
+        assert expected_output in uroboros_output
+
 class TestSnakeII():
     '''Testing II. CODE SIGNING'''
     @classmethod
@@ -803,6 +817,38 @@ class TestSnakeII():
         
         binary3 = lief.parse('hello_2_unsigned_binary')
         assert binary3.has_code_signature"""
+
+    def test_cs_offset(self):
+        '''Test the --cs_offset flag of SnakeII.'''
+        args_list = ['-p', 'hello_2', '--cs_offset']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            code_signing_processor = CodeSigningProcessor()
+            code_signing_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'Code Signature offset: 0x8100'
+
+        assert expected_output in uroboros_output
+
+    def test_cs_flags(self):
+        '''Test the --cs_flags flag of SnakeII.'''
+        args_list = ['-p', 'hello_2', '--cs_flags']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            code_signing_processor = CodeSigningProcessor()
+            code_signing_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'CS_FLAGS: 0x2'
+
+        assert expected_output in uroboros_output
 
 class TestSnakeIII():
     '''Testing III. CHECKSEC'''
@@ -1530,6 +1576,19 @@ class TestSnakeVI():
         cls.compiler = Compiler()
         cls.compiler.compileIt("../I.\ Mach-O/custom/hello.c", "hello_6", ["-arch", "arm64"])
         assert os.path.exists("hello_6")
+        
+        # Create copies for some tests
+        os.system("cp hello_6 hello_6_s")
+        os.system("chmod +s hello_6_s")
+        assert os.path.exists("hello_6_s")
+        
+        os.system("cp hello_6 hello_6_g")
+        os.system("chmod g+s hello_6_g")
+        assert os.path.exists("hello_6_g")
+        
+        os.system("cp hello_6 hello_6_sticky")
+        os.system("chmod +t hello_6_sticky")
+        assert os.path.exists("hello_6_sticky")
 
         # Decompress KernelCache
         result = decompressKernelcache()
@@ -1542,6 +1601,14 @@ class TestSnakeVI():
         # Purge the compiled files
         cls.compiler.purgeCompiledFiles()
         assert not os.path.exists("hello_6")
+
+        # Remove samples
+        os.system("rm hello_6_s")
+        assert not os.path.exists("hello_6_s")
+        os.system("rm hello_6_g")
+        assert not os.path.exists("hello_6_g")
+        os.system("rm hello_6_sticky")
+        assert not os.path.exists("hello_6_sticky")
 
         # Purge kernelcache directory
         os.system("rm -rf kernelcache")
@@ -1658,3 +1725,132 @@ class TestSnakeVI():
         expected_output = 'amfi exitpoint:'
 
         assert expected_output in uroboros_output
+
+    def test_mig(self):
+        '''Test the --mig flag of SnakeVI.'''
+        args_list = ['-p', '/usr/libexec/amfid', '--mig']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = '''MIG_subsystem_1000:
+- MIG_msg_1000: 0x100007ea8
+- MIG_msg_1001: 0x1000080dc
+- MIG_msg_1002: 0x0
+- MIG_msg_1003: 0x1000081dc
+- MIG_msg_1004: 0x100008300
+- MIG_msg_1005: 0x100008448
+- MIG_msg_1006: 0x1000084e8
+- MIG_msg_1007: 0x100008588'''
+        assert expected_output in uroboros_output
+
+    def test_has_suid(self):
+        '''Test the --has_suid flag of SnakeVI.'''
+        args_list = ['-p', 'hello_6_s', '--has_suid']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'SUID: True'
+        assert expected_output in uroboros_output
+
+    def test_has_sgid(self):
+        '''Test the --has_sgid flag of SnakeVI.'''
+        args_list = ['-p', 'hello_6_g', '--has_sgid']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'SGID: True'
+        assert expected_output in uroboros_output
+
+    def test_has_sticky(self):
+        '''Test the --has_sticky flag of SnakeVI.'''
+        args_list = ['-p', 'hello_6_sticky', '--has_sticky']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'STICKY: True'
+        assert expected_output in uroboros_output
+
+    def test_injectable_dyld(self):
+        '''Test the --injectable_dyld flag of SnakeVI.'''
+        args_list = ['-p', 'hello_6', '--injectable_dyld']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'Injectable DYLD_INSERT_LIBRARIES: True'
+        assert expected_output in uroboros_output
+
+    def test_test_insert_dylib(self):
+        '''Test the --test_insert_dylib flag of SnakeVI.'''
+        args_list = ['-p', 'hello_6', '--test_insert_dylib']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'DYLD_INSERT_LIBRARIES is allowed: True'
+        assert expected_output in uroboros_output # todo - I should also test for the false case (need to modify pytests to be thread aware).
+        
+    def test_test_prune_dyld(self):
+        '''Test the --test_prune_dyld flag of SnakeVI.'''
+        args_list = ['-p', 'hello_6', '--test_prune_dyld']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'DEV Pruned: False'
+        assert expected_output in uroboros_output
+
+    def test_test_dyld_print_to_file(self):
+        '''Test the --test_dyld_print_to_file flag of SnakeVI.'''
+        args_list = ['-p', 'hello_6', '--test_dyld_print_to_file']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'DYLD_PRINT_TO_FILE allowed: True'
+        assert expected_output in uroboros_output
+    

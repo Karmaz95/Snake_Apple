@@ -17,4 +17,4 @@ set_flags = check_flags(input_value)
 
 if set_flags:
     print("Flags set:")
-    print(*set_flags, sep="\n"
+    print(*set_flags, sep="\n")
