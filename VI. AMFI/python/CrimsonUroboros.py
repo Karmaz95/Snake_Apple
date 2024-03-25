@@ -2266,14 +2266,14 @@ class SnakeVI(SnakeV):
     def checkDyldInsertLibraries(self):
         ''' Check if binary is vulnerable to code injection using DYLD_INSERT_LIBRARIES. '''
         cs_flags = self.getCodeSignatureFlags()
-        if cs_flags & 0x2800:
+        if cs_flags & 0x2800: # CS_RESTRICT | CS_REQUIRE_LV
             return False
 
-        if self.hasSetUID() or self.hasSetGID() or self.hasRestrictSegment():
+        if self.hasSetUID() or self.hasSetGID() or self.hasRestrictSegment(): # SUID | GUID | __RESTRICT,__restrict
             return False
 
         has_insecure_entitlements_combination = self.hasDisableLibraryValidationEntitlement(self.file_path) and self.hasAllowDEV(self.file_path)
-        if (cs_flags & 0x10000) and (not has_insecure_entitlements_combination):
+        if (cs_flags & 0x10000) and (not has_insecure_entitlements_combination): # CS_RUNTIME without disabled LV and allowed DEV through entitlements
             return False
 
         return True
