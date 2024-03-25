@@ -21,7 +21,7 @@ Each article directory contains three subdirectories:
   * &#9745; [DYLD — Do You Like Death? (V)](https://karol-mazurek.medium.com/dyld-do-you-like-death-v-c40a267573cb?sk=v2%2F4c9f16b2-59bd-406a-945d-10a1fba1001b) - Linker Standard Library | EphemeralAllocator | Dyld Private Memory | PersistentAllocator | vm_allocate | vm_protect | _kernelrpc_mach_vm_allocate_trap | _kernelrpc_mach_vm_protect_trap 
   * &#9745; [DYLD — Do You Like Death? (VI)](https://karol-mazurek.medium.com/dyld-do-you-like-death-vi-1013a69118ff?sk=v2%2F37b3a61f-8483-4b38-977d-7f860944862b) - ProcessConfig | Process::Process | Process::Security | csr_check | CSR_ALLOW_APPLE_INTERNAL | csrctl | syscall_csr_check | AMFI | internalInstall | isRestricted | isFairPlayEncrypted | amfiFlags | amfi_check_dyld_policy_self | ___sandbox_ms | ___mac_syscall | mpo_policy_syscall_t | MAC policy | com.apple.driver.AppleMobileFileIntegrity | _policy_syscall | _check_dyld_policy_internal | macos_Dyld_policy_collect_state | logDyldPolicyData | DYLD_AMFI_FAKE | getAMFI | pruneEnvVars | com.apple.security.cs.allow-dyld-environment-variables
   * &#9744; [DYLD — Do You Like Death? (VII)]() - ProcessConfig::Logging::Logging
-* &#9744; [VI. AMFI]()
+* &#9745; [VI. AMFI](https://karol-mazurek.medium.com/snake-apple-vi-amfi-31c48fb92d33?sk=v2%2F8116bf86-e0a7-42be-ada9-5348447c01fd)
 
 
 ## TOOLS
