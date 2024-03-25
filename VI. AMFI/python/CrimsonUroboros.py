@@ -2253,13 +2253,27 @@ class SnakeVI(SnakeV):
     def printStickyBit(self):
         print(f'STICKY: {self.hasStickyBit()}')
 
+    def hasAllowDEV(self, file_path):
+        '''
+            Checks if the binary has com.apple.security.cs.allow-dyld-environment-variables.
+            This allow for Dyld Environment Variables.
+        '''
+        if self.checkIfEntitlementIsUsed('com.apple.security.cs.allow-dyld-environment-variables', 'true', file_path):
+            return True
+
+        return False
+
     def checkDyldInsertLibraries(self):
         ''' Check if binary is vulnerable to code injection using DYLD_INSERT_LIBRARIES. '''
         cs_flags = self.getCodeSignatureFlags()
-        if cs_flags & 0x12800:
+        if cs_flags & 0x2800:
             return False
 
         if self.hasSetUID() or self.hasSetGID() or self.hasRestrictSegment():
+            return False
+
+        has_insecure_entitlements_combination = self.hasDisableLibraryValidationEntitlement(self.file_path) and self.hasAllowDEV(self.file_path)
+        if (cs_flags & 0x10000) and (not has_insecure_entitlements_combination):
             return False
 
         return True
