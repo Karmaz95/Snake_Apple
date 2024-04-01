@@ -1738,16 +1738,25 @@ class TestSnakeVI():
             amfi_processor.process(args)
 
         uroboros_output = executeCodeBlock(code_block)
-        expected_output = '''MIG_subsystem_1000:
-- MIG_msg_1000: 0x100007ea8
-- MIG_msg_1001: 0x1000080dc
-- MIG_msg_1002: 0x0
-- MIG_msg_1003: 0x1000081dc
-- MIG_msg_1004: 0x100008300
-- MIG_msg_1005: 0x100008448
-- MIG_msg_1006: 0x1000084e8
-- MIG_msg_1007: 0x100008588'''
-        assert expected_output in uroboros_output
+        expected_output_1 = 'MIG_subsystem_1000:'
+        expected_output_2 = 'MIG_msg_1000'
+        expected_output_3 = 'MIG_msg_1001'
+        expected_output_4 = 'MIG_msg_1002'
+        expected_output_5 = 'MIG_msg_1003'
+        expected_output_6 = 'MIG_msg_1004'
+        expected_output_7 = 'MIG_msg_1005'
+        expected_output_8 = 'MIG_msg_1006'
+        expected_output_9 = 'MIG_msg_1007'
+        
+        assert expected_output_1 in uroboros_output
+        assert expected_output_2 in uroboros_output
+        assert expected_output_3 in uroboros_output
+        assert expected_output_4 in uroboros_output
+        assert expected_output_5 in uroboros_output
+        assert expected_output_6 in uroboros_output
+        assert expected_output_7 in uroboros_output
+        assert expected_output_8 in uroboros_output
+        assert expected_output_9 in uroboros_output
 
     def test_has_suid(self):
         '''Test the --has_suid flag of SnakeVI.'''

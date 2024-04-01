@@ -34,11 +34,11 @@ class MachOProcessor:
 
         global binaries # It must be global, becuase after the MachOProcessor object is destructed, the snake_instance would point to invalid memory ("binary" is dependant on "binaries").
         global snake_instance # Must be global for further processors classes.
-        
+
         binaries = self.parseFatBinary()
 
-        if binaries == None:
-            exit() # Exit if not
+        if binaries is None:
+            exit() # Exit if the file is not valid macho
 
         snake_instance = SnakeVI(binaries, self.file_path) # Initialize the latest Snake class
 
@@ -47,7 +47,7 @@ class MachOProcessor:
 
         if args.header_flags: # Print binary header flags
             header_flag_list = snake_instance.getHeaderFlags()
-            print("Header flags:", " ".join(header_flag.name for header_flag in header_flag_list))
+            print("Header flags:", " ".join(header_flag.__name__ for header_flag in header_flag_list))
 
         if args.endian: # Print binary endianess
             print(f'Endianess: {snake_instance.getEndianess()}')
@@ -57,7 +57,7 @@ class MachOProcessor:
 
         if args.load_commands: # Print binary load commands
             load_commands_list = snake_instance.getLoadCommands()
-            print("Load Commands:", " ".join(load_command.command.name for load_command in load_commands_list))
+            print("Load Commands:", " ".join(load_command.command.__name__ for load_command in load_commands_list))
 
         if args.has_cmd: # Check if LC exist
             snake_instance.printHasLoadCommand(args.has_cmd)
@@ -239,15 +239,14 @@ class SnakeI:
         '''
         for binary in binaries:
             if binary.header.cpu_type == lief.MachO.CPU_TYPES.ARM64:
-                arm64_bin = binary
-        if arm64_bin == None:
-            print('The specified Mach-O file is not in ARM64 architecture.')
-            exit()
-        return arm64_bin
+                return binary
+
+        print('The specified Mach-O file is not in ARM64 architecture.')
+        exit()
 
     def getFileType(self):
         '''Extract and return the file type from a binary object's header.'''
-        return self.binary.header.file_type.name
+        return self.binary.header.file_type.__name__
 
     def getHeaderFlags(self):
         '''Return binary header flags.'''
@@ -255,7 +254,7 @@ class SnakeI:
 
     def getEndianess(self):
         '''Check the endianness of a binary based on the system and binary's magic number.'''
-        magic = self.binary.header.magic.name
+        magic = self.binary.header.magic.__name__
         endianness = sys.byteorder
         if endianness == 'little' and (magic == 'MAGIC_64' or magic == 'MAGIC' or magic == 'FAT_MAGIC'):
             return 'little'
@@ -327,7 +326,7 @@ class SnakeI:
         '''
         for section in self.binary.sections:
             if segment_name == section.segment_name:
-                if section_name == section.fullname:
+                if section_name == section.fullname.decode():
                     section_offset_start, section_offset_end = self.calcSectionRange(section)
                     return section_offset_start, section_offset_end
         return False, False
@@ -351,15 +350,15 @@ class SnakeI:
         sections_info.append(len(sections_info[0])*"=")
         for section in self.binary.sections:
             segment_name = section.segment_name
-            section_name = section.fullname
-            section_type = section.type.name
+            section_name = section.fullname.decode()
+            section_type = section.type.__name__
             section_va_start = hex(section.virtual_address)
             section_va_end = hex(section.virtual_address + section.offset)
             section_size_start, section_size_end = self.calcSectionRange(section)
             section_size_start = hex(section_size_start)
             section_size_end = hex(section_size_end)
             section_flags_list = section.flags_list
-            flags_strings = [flag.name for flag in section_flags_list]
+            flags_strings = [flag.__name__ for flag in section_flags_list]
             flags = " ".join(flags_strings)
             sections_info.append((f'{segment_name.ljust(14)}{section_name.ljust(20)}{section_type.ljust(28)}{section_va_start}-{section_va_end.ljust(20)}{section_size_start}-{section_size_end}\t\t({flags})'))
         return sections_info
@@ -609,7 +608,7 @@ class SnakeI:
         load_command = load_command.lower()
 
         for cmd in self.load_commands:
-            cmd = str(cmd.command.name).lower()
+            cmd = str(cmd.command.__name__).lower()
             if load_command == cmd:
                 return True
         return False
@@ -1174,7 +1173,7 @@ class SnakeIV(SnakeIII):
         dylib_loading_commands_names = []
 
         for cmd in self.load_commands:
-            cmd_name = cmd.command.name
+            cmd_name = cmd.command.__name__
             if cmd_name in self.dylib_load_commands_names:
                 dylib_loading_commands.append(cmd)
                 dylib_loading_commands_names.append(cmd_name)
@@ -1186,7 +1185,7 @@ class SnakeIV(SnakeIII):
             Return a list of unresolved paths (like @executable_path/Frameworks) from LC_RPATH load commands. Example return:
             ['/usr/lib/swift', '@executable_path/Frameworks', '@loader_path/Frameworks']
         '''
-        return [cmd.path for cmd in self.load_commands if cmd.command.name == 'RPATH']
+        return [cmd.path for cmd in self.load_commands if cmd.command.__name__ == 'RPATH']
 
     def resolveRunPathLoadCommands(self):
         '''
@@ -1363,7 +1362,7 @@ class SnakeIV(SnakeIII):
         I intentionally omit this step to always extract ID.
         '''
         for cmd in self.load_commands:
-            if cmd.command.name == 'ID_DYLIB':
+            if cmd.command.__name__ == 'ID_DYLIB':
                 return cmd
         return None
 
@@ -1641,7 +1640,7 @@ class SnakeIV(SnakeIII):
         '''
         reexport_load_commands = []
         for cmd in self.load_commands:
-            if cmd.command.name == 'REEXPORT_DYLIB':
+            if cmd.command.__name__ == 'REEXPORT_DYLIB':
                 reexport_load_commands.append(cmd)
         return reexport_load_commands
 
@@ -1834,7 +1833,7 @@ class SnakeV(SnakeIV):
         all_dyld_env = []
 
         for cmd in self.load_commands:
-            if cmd.command.name == 'DYLD_ENVIRONMENT':
+            if cmd.command.__name__ == 'DYLD_ENVIRONMENT':
                 all_dyld_env.append(cmd)
 
         return all_dyld_env
@@ -1988,13 +1987,15 @@ class SnakeVI(SnakeV):
         ''' Dump '__PRELINK_INFO,__info' to a given file (default: 'PRELINK_info.txt') '''
         segment_name = '__PRELINK_INFO'
         section_name = '__info'
-        self.dumpSection(segment_name, section_name, filename)
+        if self.dumpSection(segment_name, section_name, filename):
+            print("SUCCESS: __PRELINK_INFO,__info dump")
 
     def dumpPrelink_text(self, filename):
         ''' Dump '__PRELINK_TEXT,__text' to a given file (default: 'PRELINK_text.txt') '''
         segment_name = '__PRELINK_TEXT'
         section_name = '__text'
-        self.dumpSection(segment_name, section_name, filename)
+        if self.dumpSection(segment_name, section_name, filename):
+            print("SUCCESS: __PRELINK_TEXT,__text dump")
 
     def extractPRELINK_INFO_plist(self):
         ''' Extract '__PRELINK_INFO,__info' and return it. '''
