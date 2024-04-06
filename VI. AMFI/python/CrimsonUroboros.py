@@ -1943,6 +1943,9 @@ class AMFIProcessor:
         if args.test_dyld_print_to_file: # INVASIVE check for DYLD_PRINT_TO_FILE
             snake_instance.printTestDyldPrintToFile()
 
+        if args.test_dyld_SLC: # INVASIVE check for DYLD_SHARED_CACHE_DIR
+            snake_instance.printTestDyldSLC()
+
 class SnakeVI(SnakeV):
     def __init__(self, binaries, file_path):
         super().__init__(binaries, file_path)
@@ -2403,6 +2406,32 @@ class SnakeVI(SnakeV):
     def printTestDyldPrintToFile(self):
         print(f'DYLD_PRINT_TO_FILE allowed: {self.testDyldPrintToFile()}')  
 
+    def testDyldSLC(self):
+        ''' Checking if DYLD_SHARED_REGION=private Dyld Environment Variables works and code can be injected using DYLD_SHARED_CACHE_DIR.
+        INVASIVE:
+            1. The binary is executed.
+            2. DYLD_SHARED_CACHE_DIR=/tmp - this should trigger error, as there are no SLC in tmp.
+            3. If there is an error "dyld private shared cache could not be found" the binary is vulnerable.
+        '''
+        test_file_path = '/tmp'
+        env_variable_1 = f'DYLD_SHARED_CACHE_DIR={test_file_path}'
+        env_variable_2 = f'DYLD_SHARED_REGION=private'
+
+        # Execute the command and capture stdout and stderr
+        command = f'{env_variable_1} {env_variable_2} {self.file_path}'
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        stdout, stderr = process.communicate()
+        stdout = stdout.decode('utf-8')
+        stderr = stderr.decode('utf-8')
+
+        if 'dyld private shared cache could not be found' in stderr:
+            return True
+        
+        return False
+
+    def printTestDyldSLC(self):
+        print(f'DYLD_SHARED_CACHE_DIR allowed: {self.testDyldSLC()}')
+
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
     def __init__(self):
@@ -2520,7 +2549,8 @@ class ArgumentParser:
         dyld_group.add_argument('--injectable_dyld', action='store_true', help="Check if the binary is injectable using DYLD_INSERT_LIBRARIES")
         dyld_group.add_argument('--test_insert_dylib', action='store_true', help="Check if it is possible to inject dylib using DYLD_INSERT_LIBRARIES (INVASIVE - the binary is executed)")
         dyld_group.add_argument('--test_prune_dyld', action='store_true', help="Check if Dyld Environment Variables are cleared (using DYLD_PRINT_INITIALIZERS=1) (INVASIVE - the binary is executed)")
-        dyld_group.add_argument('--test_dyld_print_to_file', action='store_true', help="Check if YLD_PRINT_TO_FILE Dyld Environment Variables works (INVASIVE - the binary is executed)")
+        dyld_group.add_argument('--test_dyld_print_to_file', action='store_true', help="Check if DYLD_PRINT_TO_FILE Dyld Environment Variables works (INVASIVE - the binary is executed)")
+        dyld_group.add_argument('--test_dyld_SLC', action='store_true', help="Check if DYLD_SHARED_REGION=private Dyld Environment Variables works and code can be injected using DYLD_SHARED_CACHE_DIR (INVASIVE - the binary is executed)")
 
     def parseArgs(self):
         return self.parser.parse_args()

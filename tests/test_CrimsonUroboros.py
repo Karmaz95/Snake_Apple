@@ -1863,3 +1863,19 @@ class TestSnakeVI():
         expected_output = 'DYLD_PRINT_TO_FILE allowed: True'
         assert expected_output in uroboros_output
     
+    def test_test_dyld_SLC(self):
+        '''Test the --test_dyld_SLC flag of SnakeVI.'''
+        args_list = ['-p', 'hello_6', '--test_dyld_SLC']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            amfi_processor = AMFIProcessor()
+            amfi_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'DYLD_SHARED_CACHE_DIR allowed: True'
+        assert expected_output in uroboros_output
+
+
