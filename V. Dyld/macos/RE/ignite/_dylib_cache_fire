@@ -1,0 +1,138 @@
+0x10007607c <+0>:   pacibsp
+0x100076080 <+4>:   stp    x26, x25, [sp, #-0x50]!
+0x100076084 <+8>:   stp    x24, x23, [sp, #0x10]
+0x100076088 <+12>:  stp    x22, x21, [sp, #0x20]
+0x10007608c <+16>:  stp    x20, x19, [sp, #0x30]
+0x100076090 <+20>:  stp    x29, x30, [sp, #0x40]
+0x100076094 <+24>:  add    x29, sp, #0x40
+0x100076098 <+28>:  sub    sp, sp, #0x440
+0x10007609c <+32>:  mov    x20, x2
+0x1000760a0 <+36>:  mov    x24, x1
+0x1000760a4 <+40>:  mov    x21, x0
+0x1000760a8 <+44>:  adrp   x8, 39
+0x1000760ac <+48>:  ldr    x19, [x8, #0x228]
+0x1000760b0 <+52>:  mov    x0, x2
+0x1000760b4 <+56>:  bl     0x100074f04               ; boot_get_dylib_root
+0x1000760b8 <+60>:  mov    x23, x0
+0x1000760bc <+64>:  add    x0, sp, #0x40
+0x1000760c0 <+68>:  mov    w1, #0x400
+0x1000760c4 <+72>:  bl     0x10000dfa0               ; _platform_bzero
+0x1000760c8 <+76>:  ldr    x8, [x24]
+0x1000760cc <+80>:  cmp    x8, x19
+0x1000760d0 <+84>:  b.lo   0x1000760e8               ; <+108>
+0x1000760d4 <+88>:  tbnz   w23, #0x1f, 0x1000760e8   ; <+108>
+0x1000760d8 <+92>:  mov    w19, #0x55
+0x1000760dc <+96>:  adrp   x25, 28
+0x1000760e0 <+100>: add    x25, x25, #0xfa0          ; "cryptex"
+0x1000760e4 <+104>: b      0x1000760f8               ; <+124>
+0x1000760e8 <+108>: ldr    w23, [x20, #0x10]
+0x1000760ec <+112>: mov    w19, #0x13
+0x1000760f0 <+116>: adrp   x25, 29
+0x1000760f4 <+120>: add    x25, x25, #0x507          ; "system volume"
+0x1000760f8 <+124>: add    x22, sp, #0x40
+0x1000760fc <+128>: add    x0, sp, #0x40
+0x100076100 <+132>: bl     0x100074348               ; ignition_get_shared_cache_directory
+0x100076104 <+136>: ldrb   w8, [sp, #0x41]
+0x100076108 <+140>: cmp    w8, #0x2f
+0x10007610c <+144>: b.eq   0x100076268               ; <+492>
+0x100076110 <+148>: add    x22, x22, #0x1
+0x100076114 <+152>: bl     0x1000110e8               ; getpid
+0x100076118 <+156>: ldr    x8, [x21]
+0x10007611c <+160>: ldr    x9, [x24]
+0x100076120 <+164>: stp    x23, x22, [sp, #0x20]
+0x100076124 <+168>: stp    x25, x9, [sp, #0x10]
+0x100076128 <+172>: stp    x0, x8, [sp]
+0x10007612c <+176>: adrp   x1, 29
+0x100076130 <+180>: add    x1, x1, #0x531            ; "libignition: %d: %12s: finding shared cache on %s: ignition level = %llu, search root fd = %d, subpath = %s\n"
+0x100076134 <+184>: mov    w0, #-0x1
+0x100076138 <+188>: bl     0x100073150               ; dlog
+0x10007613c <+192>: mov    x0, x23
+0x100076140 <+196>: mov    x1, x22
+0x100076144 <+200>: mov    w2, #0x100000
+0x100076148 <+204>: bl     0x10007dda8               ; openat
+0x10007614c <+208>: mov    x23, x0
+0x100076150 <+212>: str    w0, [sp, #0x3c]
+0x100076154 <+216>: bl     0x10000eeac               ; __error
+0x100076158 <+220>: tbnz   w23, #0x1f, 0x100076164   ; <+232>
+0x10007615c <+224>: str    wzr, [x0]
+0x100076160 <+228>: b      0x10007616c               ; <+240>
+0x100076164 <+232>: ldr    w8, [x0]
+0x100076168 <+236>: cbz    w8, 0x100076278           ; <+508>
+0x10007616c <+240>: bl     0x10000eeac               ; __error
+0x100076170 <+244>: ldr    w8, [x0]
+0x100076174 <+248>: cmp    w8, #0x2
+0x100076178 <+252>: b.eq   0x1000761d4               ; <+344>
+0x10007617c <+256>: cbnz   w8, 0x100076208           ; <+396>
+0x100076180 <+260>: ldr    w0, [sp, #0x3c]
+0x100076184 <+264>: adrp   x2, 29
+0x100076188 <+268>: add    x2, x2, #0x5a5            ; "dylib cache path"
+0x10007618c <+272>: add    x19, sp, #0x40
+0x100076190 <+276>: add    x1, sp, #0x40
+0x100076194 <+280>: bl     0x100073d08               ; realpathfd
+0x100076198 <+284>: bl     0x1000110e8               ; getpid
+0x10007619c <+288>: ldr    x8, [x21]
+0x1000761a0 <+292>: stp    x8, x19, [sp, #0x8]
+0x1000761a4 <+296>: str    x0, [sp]
+0x1000761a8 <+300>: adrp   x1, 29
+0x1000761ac <+304>: add    x1, x1, #0x5b6            ; "libignition: %d: %12s: opened shared cache directory: %s\n"
+0x1000761b0 <+308>: mov    w0, #-0x1
+0x1000761b4 <+312>: bl     0x100073150               ; dlog
+0x1000761b8 <+316>: adrp   x1, 39
+0x1000761bc <+320>: add    x1, x1, #0x9d0            ; _boot_root_dylib_cache
+0x1000761c0 <+324>: add    x2, sp, #0x3c
+0x1000761c4 <+328>: mov    x0, x20
+0x1000761c8 <+332>: bl     0x100074df8               ; boot_set_root
+0x1000761cc <+336>: mov    w19, #0x0
+0x1000761d0 <+340>: b      0x1000761f4               ; <+376>
+0x1000761d4 <+344>: bl     0x1000110e8               ; getpid
+0x1000761d8 <+348>: ldr    x8, [x21]
+0x1000761dc <+352>: stp    x25, x22, [sp, #0x10]
+0x1000761e0 <+356>: stp    x0, x8, [sp]
+0x1000761e4 <+360>: adrp   x1, 29
+0x1000761e8 <+364>: add    x1, x1, #0x5f0            ; "libignition: %d: %12s: shared cache not found: root = %s, path = %s\n"
+0x1000761ec <+368>: mov    w0, #-0x1
+0x1000761f0 <+372>: bl     0x100073150               ; dlog
+0x1000761f4 <+376>: adrp   x1, 29
+0x1000761f8 <+380>: add    x1, x1, #0x671            ; "shared cache directory"
+0x1000761fc <+384>: add    x0, sp, #0x3c
+0x100076200 <+388>: bl     0x100073b4c               ; closefd_optional
+0x100076204 <+392>: b      0x100076248               ; <+460>
+0x100076208 <+396>: bl     0x10000eeac               ; __error
+0x10007620c <+400>: ldr    w19, [x0]
+0x100076210 <+404>: bl     0x1000110e8               ; getpid
+0x100076214 <+408>: ldr    x8, [x21]
+0x100076218 <+412>: stp    x22, x19, [sp, #0x10]
+0x10007621c <+416>: stp    x0, x8, [sp]
+0x100076220 <+420>: adrp   x1, 29
+0x100076224 <+424>: add    x1, x1, #0x635            ; "libignition: %d: %12s: failed to open shared cache: %s: %d\n"
+0x100076228 <+428>: mov    w0, #-0x1
+0x10007622c <+432>: bl     0x100073150               ; dlog
+0x100076230 <+436>: adrp   x1, 29
+0x100076234 <+440>: add    x1, x1, #0x671            ; "shared cache directory"
+0x100076238 <+444>: add    x0, sp, #0x3c
+0x10007623c <+448>: bl     0x100073b4c               ; closefd_optional
+0x100076240 <+452>: cmp    w19, #0x6a
+0x100076244 <+456>: b.hs   0x100076294               ; <+536>
+0x100076248 <+460>: mov    x0, x19
+0x10007624c <+464>: add    sp, sp, #0x440
+0x100076250 <+468>: ldp    x29, x30, [sp, #0x40]
+0x100076254 <+472>: ldp    x20, x19, [sp, #0x30]
+0x100076258 <+476>: ldp    x22, x21, [sp, #0x20]
+0x10007625c <+480>: ldp    x24, x23, [sp, #0x10]
+0x100076260 <+484>: ldp    x26, x25, [sp], #0x50
+0x100076264 <+488>: retab
+0x100076268 <+492>: str    x22, [sp]
+0x10007626c <+496>: adrp   x0, 29
+0x100076270 <+500>: add    x0, x0, #0x515            ; "bogus shared cache path: %s"
+0x100076274 <+504>: bl     0x10007662c               ; dyld_halt
+0x100076278 <+508>: sxtw   x8, w23
+0x10007627c <+512>: adrp   x9, 29
+0x100076280 <+516>: add    x9, x9, #0x59e            ; "dycash"
+0x100076284 <+520>: stp    x9, x8, [sp]
+0x100076288 <+524>: adrp   x0, 28
+0x10007628c <+528>: add    x0, x0, #0xa31            ; "errno unset, wrong return value being checked?: %s = %lld"
+0x100076290 <+532>: bl     0x10007662c               ; dyld_halt
+0x100076294 <+536>: str    x19, [sp]
+0x100076298 <+540>: adrp   x0, 28
+0x10007629c <+544>: add    x0, x0, #0xba2            ; "error not set to valid posix code: %d"
+0x1000762a0 <+548>: bl     0x10007662c               ; dyld_halt

@@ -1,0 +1,156 @@
+->  0x100072e38 <+0>:   pacibsp
+    0x100072e3c <+4>:   stp    x28, x27, [sp, #-0x50]!
+    0x100072e40 <+8>:   stp    x24, x23, [sp, #0x10]
+    0x100072e44 <+12>:  stp    x22, x21, [sp, #0x20]
+    0x100072e48 <+16>:  stp    x20, x19, [sp, #0x30]
+    0x100072e4c <+20>:  stp    x29, x30, [sp, #0x40]
+    0x100072e50 <+24>:  add    x29, sp, #0x40
+    0x100072e54 <+28>:  sub    sp, sp, #0x4b0
+    0x100072e58 <+32>:  mov    x19, x2
+    0x100072e5c <+36>:  mov    x22, x1
+    0x100072e60 <+40>:  mov    x20, x0
+    0x100072e64 <+44>:  ldr    w21, [x2, #0x10]
+    0x100072e68 <+48>:  mov    x0, x2
+    0x100072e6c <+52>:  bl     0x100074f04               ; boot_get_dylib_root
+    0x100072e70 <+56>:  mov    x23, x0
+    0x100072e74 <+60>:  add    x24, sp, #0xb0
+    0x100072e78 <+64>:  add    x0, sp, #0xb0
+    0x100072e7c <+68>:  mov    w1, #0x400
+    0x100072e80 <+72>:  bl     0x10000dfa0               ; _platform_bzero
+    0x100072e84 <+76>:  movi.2d v0, #0000000000000000
+    0x100072e88 <+80>:  stp    q0, q0, [sp, #0x90]
+    0x100072e8c <+84>:  stp    q0, q0, [sp, #0x70]
+    0x100072e90 <+88>:  stp    q0, q0, [sp, #0x50]
+    0x100072e94 <+92>:  stp    q0, q0, [sp, #0x30]
+    0x100072e98 <+96>:  str    q0, [sp, #0x20]
+    0x100072e9c <+100>: tbnz   w23, #0x1f, 0x100072edc   ; <+164>
+    0x100072ea0 <+104>: add    x0, sp, #0xb0
+    0x100072ea4 <+108>: bl     0x100074348               ; ignition_get_shared_cache_directory
+    0x100072ea8 <+112>: ldrb   w8, [sp, #0xb1]
+    0x100072eac <+116>: cmp    w8, #0x2f
+    0x100072eb0 <+120>: b.eq   0x100073078               ; <+576>
+    0x100072eb4 <+124>: add    x1, x24, #0x1
+    0x100072eb8 <+128>: add    x2, sp, #0x20
+    0x100072ebc <+132>: mov    x0, x23
+    0x100072ec0 <+136>: mov    w3, #0x0
+    0x100072ec4 <+140>: bl     0x10007a4a8               ; fstatat64
+    0x100072ec8 <+144>: mov    x23, x0
+    0x100072ecc <+148>: bl     0x10000eeac               ; __error
+    0x100072ed0 <+152>: tbnz   w23, #0x1f, 0x100072efc   ; <+196>
+    0x100072ed4 <+156>: str    wzr, [x0]
+    0x100072ed8 <+160>: b      0x100072f04               ; <+204>
+    0x100072edc <+164>: bl     0x1000110e8               ; getpid
+    0x100072ee0 <+168>: ldr    x8, [x20]
+    0x100072ee4 <+172>: stp    x0, x8, [sp]
+    0x100072ee8 <+176>: adrp   x1, 32
+    0x100072eec <+180>: add    x1, x1, #0x91             ; "libignition: %d: %12s: cryptex graft point not present; not using fallback\n"
+    0x100072ef0 <+184>: mov    w0, #-0x1
+    0x100072ef4 <+188>: bl     0x100073150               ; dlog
+    0x100072ef8 <+192>: b      0x100073044               ; <+524>
+    0x100072efc <+196>: ldr    w8, [x0]
+    0x100072f00 <+200>: cbz    w8, 0x10007308c           ; <+596>
+    0x100072f04 <+204>: bl     0x10000eeac               ; __error
+    0x100072f08 <+208>: ldr    w8, [x0]
+    0x100072f0c <+212>: cmp    w8, #0x2
+    0x100072f10 <+216>: b.eq   0x100072f40               ; <+264>
+    0x100072f14 <+220>: cbnz   w8, 0x100072f4c           ; <+276>
+    0x100072f18 <+224>: ldrh   w8, [sp, #0x24]
+    0x100072f1c <+228>: and    w8, w8, #0xf000
+    0x100072f20 <+232>: cmp    w8, #0x4, lsl #12         ; =0x4000
+    0x100072f24 <+236>: b.ne   0x100072f88               ; <+336>
+    0x100072f28 <+240>: bl     0x1000110e8               ; getpid
+    0x100072f2c <+244>: ldr    x8, [x20]
+    0x100072f30 <+248>: stp    x0, x8, [sp]
+    0x100072f34 <+252>: adrp   x1, 32
+    0x100072f38 <+256>: add    x1, x1, #0xfe             ; "libignition: %d: %12s: dylib cache directory present; not overriding\n"
+    0x100072f3c <+260>: b      0x100072f70               ; <+312>
+    0x100072f40 <+264>: adrp   x23, 32
+    0x100072f44 <+268>: add    x23, x23, #0x144          ; "no dylib cache directory"
+    0x100072f48 <+272>: b      0x100072f90               ; <+344>
+    0x100072f4c <+276>: bl     0x1000110e8               ; getpid
+    0x100072f50 <+280>: mov    x21, x0
+    0x100072f54 <+284>: ldr    x23, [x20]
+    0x100072f58 <+288>: bl     0x10000eeac               ; __error
+    0x100072f5c <+292>: ldr    w8, [x0]
+    0x100072f60 <+296>: stp    x23, x8, [sp, #0x8]
+    0x100072f64 <+300>: str    x21, [sp]
+    0x100072f68 <+304>: adrp   x1, 32
+    0x100072f6c <+308>: add    x1, x1, #0x15d            ; "libignition: %d: %12s: failed to stat dylib cache directory: %d\n"
+    0x100072f70 <+312>: mov    w21, #-0x1
+    0x100072f74 <+316>: mov    w0, #-0x1
+    0x100072f78 <+320>: bl     0x100073150               ; dlog
+    0x100072f7c <+324>: adrp   x23, 22
+    0x100072f80 <+328>: add    x23, x23, #0x45           ; ""
+    0x100072f84 <+332>: b      0x100072f90               ; <+344>
+    0x100072f88 <+336>: adrp   x23, 32
+    0x100072f8c <+340>: add    x23, x23, #0xdd           ; "dylib cache path not a directory"
+    0x100072f90 <+344>: ldr    x16, [x22, #0x10]
+    0x100072f94 <+348>: cmp    x16, #0x3
+    0x100072f98 <+352>: b.hi   0x100073000               ; <+456>
+    0x100072f9c <+356>: cmp    x16, #0x3
+    0x100072fa0 <+360>: csel   x16, x16, xzr, ls
+    0x100072fa4 <+364>: adrp   x17, 1
+    0x100072fa8 <+368>: add    x17, x17, #0xa8           ; ___lldb_unnamed_symbol3296
+    0x100072fac <+372>: ldrsw  x16, [x17, x16, lsl #2]
+    0x100072fb0 <+376>: adr    x17, #0x0                 ; <+376>
+    0x100072fb4 <+380>: add    x16, x17, x16
+    0x100072fb8 <+384>: br     x16
+    0x100072fbc <+388>: bl     0x1000110e8               ; getpid
+    0x100072fc0 <+392>: ldr    x8, [x20]
+    0x100072fc4 <+396>: stp    x0, x8, [sp]
+    0x100072fc8 <+400>: adrp   x1, 32
+    0x100072fcc <+404>: add    x1, x1, #0x19e            ; "libignition: %d: %12s: not forcing root fallback\n"
+    0x100072fd0 <+408>: mov    w0, #-0x1
+    0x100072fd4 <+412>: bl     0x100073150               ; dlog
+    0x100072fd8 <+416>: tbz    w21, #0x1f, 0x100073004   ; <+460>
+    0x100072fdc <+420>: b      0x100073044               ; <+524>
+    0x100072fe0 <+424>: ldr    w21, [x19, #0x20]
+    0x100072fe4 <+428>: adrp   x23, 32
+    0x100072fe8 <+432>: add    x23, x23, #0x1d0          ; "boot-arg forced cryptex fallback"
+    0x100072fec <+436>: tbz    w21, #0x1f, 0x100073004   ; <+460>
+    0x100072ff0 <+440>: b      0x100073044               ; <+524>
+    0x100072ff4 <+444>: ldr    w21, [x19, #0x30]
+    0x100072ff8 <+448>: adrp   x23, 32
+    0x100072ffc <+452>: add    x23, x23, #0x1f1          ; "boot-arg forced livefs fallback"
+    0x100073000 <+456>: tbnz   w21, #0x1f, 0x100073044   ; <+524>
+    0x100073004 <+460>: bl     0x1000110e8               ; getpid
+    0x100073008 <+464>: ldr    x8, [x20]
+    0x10007300c <+468>: stp    x8, x23, [sp, #0x8]
+    0x100073010 <+472>: str    x0, [sp]
+    0x100073014 <+476>: adrp   x1, 31
+    0x100073018 <+480>: add    x1, x1, #0x231            ; "libignition: %d: %12s: overriding os cryptex root: %s\n"
+    0x10007301c <+484>: mov    w0, #-0x1
+    0x100073020 <+488>: bl     0x100073150               ; dlog
+    0x100073024 <+492>: adrp   x1, 31
+    0x100073028 <+496>: add    x1, x1, #0x268            ; "fallback root"
+    0x10007302c <+500>: mov    x0, x21
+    0x100073030 <+504>: bl     0x100073bf4               ; dupfd
+    0x100073034 <+508>: str    w0, [sp, #0x1c]
+    0x100073038 <+512>: add    x1, sp, #0x1c
+    0x10007303c <+516>: mov    x0, x19
+    0x100073040 <+520>: bl     0x100074ef4               ; boot_set_dylib_root
+    0x100073044 <+524>: mov    w0, #0x0
+    0x100073048 <+528>: add    sp, sp, #0x4b0
+    0x10007304c <+532>: ldp    x29, x30, [sp, #0x40]
+    0x100073050 <+536>: ldp    x20, x19, [sp, #0x30]
+    0x100073054 <+540>: ldp    x22, x21, [sp, #0x20]
+    0x100073058 <+544>: ldp    x24, x23, [sp, #0x10]
+    0x10007305c <+548>: ldp    x28, x27, [sp], #0x50
+    0x100073060 <+552>: retab
+    0x100073064 <+556>: ldr    w21, [x19, #0x10]
+    0x100073068 <+560>: adrp   x23, 31
+    0x10007306c <+564>: add    x23, x23, #0x211          ; "boot-arg forced rootfs fallback"
+    0x100073070 <+568>: tbz    w21, #0x1f, 0x100073004   ; <+460>
+    0x100073074 <+572>: b      0x100073044               ; <+524>
+    0x100073078 <+576>: add    x8, sp, #0xb0
+    0x10007307c <+580>: str    x8, [sp]
+    0x100073080 <+584>: adrp   x0, 32
+    0x100073084 <+588>: add    x0, x0, #0x515            ; "bogus shared cache path: %s"
+    0x100073088 <+592>: bl     0x10007662c               ; dyld_halt
+    0x10007308c <+596>: sxtw   x8, w23
+    0x100073090 <+600>: adrp   x9, 31
+    0x100073094 <+604>: add    x9, x9, #0xa6b            ; "ret"
+    0x100073098 <+608>: stp    x9, x8, [sp]
+    0x10007309c <+612>: adrp   x0, 31
+    0x1000730a0 <+616>: add    x0, x0, #0xa31            ; "errno unset, wrong return value being checked?: %s = %lld"
+    0x1000730a4 <+620>: bl     0x10007662c               ; dyld_halt

@@ -1,0 +1,90 @@
+0x100073230 <+0>:   pacibsp
+0x100073234 <+4>:   sub    sp, sp, #0x50
+0x100073238 <+8>:   stp    x22, x21, [sp, #0x20]
+0x10007323c <+12>:  stp    x20, x19, [sp, #0x30]
+0x100073240 <+16>:  stp    x29, x30, [sp, #0x40]
+0x100073244 <+20>:  add    x29, sp, #0x40
+0x100073248 <+24>:  mov    x19, x2
+0x10007324c <+28>:  mov    x20, x0
+0x100073250 <+32>:  mov    w8, #-0x1
+0x100073254 <+36>:  str    w8, [sp, #0x18]
+0x100073258 <+40>:  ldr    w0, [x2, #0x10]
+0x10007325c <+44>:  adrp   x8, 42
+0x100073260 <+48>:  ldr    x1, [x8, #0x5c0]
+0x100073264 <+52>:  mov    w2, #0x100000
+0x100073268 <+56>:  bl     0x10007dda8               ; openat
+0x10007326c <+60>:  mov    x21, x0
+0x100073270 <+64>:  str    w0, [sp, #0x1c]
+0x100073274 <+68>:  bl     0x10000eeac               ; __error
+0x100073278 <+72>:  tbnz   w21, #0x1f, 0x100073284   ; <+84>
+0x10007327c <+76>:  str    wzr, [x0]
+0x100073280 <+80>:  b      0x10007328c               ; <+92>
+0x100073284 <+84>:  ldr    w8, [x0]
+0x100073288 <+88>:  cbz    w8, 0x10007337c           ; <+332>
+0x10007328c <+92>:  bl     0x10000eeac               ; __error
+0x100073290 <+96>:  ldr    w8, [x0]
+0x100073294 <+100>: cmp    w8, #0x2
+0x100073298 <+104>: b.eq   0x1000732b8               ; <+136>
+0x10007329c <+108>: cbnz   w8, 0x100073304           ; <+212>
+0x1000732a0 <+112>: ldr    w0, [sp, #0x1c]
+0x1000732a4 <+116>: adrp   x1, 31
+0x1000732a8 <+120>: add    x1, x1, #0x2d4            ; "os cryptex canonical directory"
+0x1000732ac <+124>: bl     0x100073bf4               ; dupfd
+0x1000732b0 <+128>: str    w0, [sp, #0x18]
+0x1000732b4 <+132>: b      0x1000732d4               ; <+164>
+0x1000732b8 <+136>: bl     0x1000110e8               ; getpid
+0x1000732bc <+140>: ldr    x8, [x20]
+0x1000732c0 <+144>: stp    x0, x8, [sp]
+0x1000732c4 <+148>: adrp   x1, 31
+0x1000732c8 <+152>: add    x1, x1, #0x2f3            ; "libignition: %d: %12s: no os cryptex available; continuing\n"
+0x1000732cc <+156>: mov    w0, #-0x1
+0x1000732d0 <+160>: bl     0x100073150               ; dlog
+0x1000732d4 <+164>: adrp   x1, 42
+0x1000732d8 <+168>: add    x1, x1, #0x990            ; _boot_root_canonical_os
+0x1000732dc <+172>: add    x2, sp, #0x1c
+0x1000732e0 <+176>: mov    x0, x19
+0x1000732e4 <+180>: bl     0x100074df8               ; boot_set_root
+0x1000732e8 <+184>: adrp   x1, 42
+0x1000732ec <+188>: add    x1, x1, #0x930            ; _boot_root_cryptex_os
+0x1000732f0 <+192>: add    x2, sp, #0x18
+0x1000732f4 <+196>: mov    x0, x19
+0x1000732f8 <+200>: bl     0x100074df8               ; boot_set_root
+0x1000732fc <+204>: mov    w19, #0x0
+0x100073300 <+208>: b      0x10007332c               ; <+252>
+0x100073304 <+212>: bl     0x10000eeac               ; __error
+0x100073308 <+216>: ldr    w19, [x0]
+0x10007330c <+220>: bl     0x1000110e8               ; getpid
+0x100073310 <+224>: ldr    x8, [x20]
+0x100073314 <+228>: stp    x8, x19, [sp, #0x8]
+0x100073318 <+232>: str    x0, [sp]
+0x10007331c <+236>: adrp   x1, 31
+0x100073320 <+240>: add    x1, x1, #0x32f            ; "libignition: %d: %12s: failed to open os cryptex canonical directory: %d\n"
+0x100073324 <+244>: mov    w0, #-0x1
+0x100073328 <+248>: bl     0x100073150               ; dlog
+0x10007332c <+252>: adrp   x1, 31
+0x100073330 <+256>: add    x1, x1, #0x2d4            ; "os cryptex canonical directory"
+0x100073334 <+260>: add    x0, sp, #0x1c
+0x100073338 <+264>: bl     0x100073b4c               ; closefd_optional
+0x10007333c <+268>: adrp   x1, 31
+0x100073340 <+272>: add    x1, x1, #0x379            ; "os cryptex canonical directory [dup]"
+0x100073344 <+276>: add    x0, sp, #0x18
+0x100073348 <+280>: bl     0x100073b4c               ; closefd_optional
+0x10007334c <+284>: cmp    w19, #0x6a
+0x100073350 <+288>: b.hs   0x10007336c               ; <+316>
+0x100073354 <+292>: mov    x0, x19
+0x100073358 <+296>: ldp    x29, x30, [sp, #0x40]
+0x10007335c <+300>: ldp    x20, x19, [sp, #0x30]
+0x100073360 <+304>: ldp    x22, x21, [sp, #0x20]
+0x100073364 <+308>: add    sp, sp, #0x50
+0x100073368 <+312>: retab
+0x10007336c <+316>: str    x19, [sp]
+0x100073370 <+320>: adrp   x0, 31
+0x100073374 <+324>: add    x0, x0, #0xba2            ; "error not set to valid posix code: %d"
+0x100073378 <+328>: bl     0x10007662c               ; dyld_halt
+0x10007337c <+332>: sxtw   x8, w21
+0x100073380 <+336>: adrp   x9, 31
+0x100073384 <+340>: add    x9, x9, #0x2d0            ; "cnl"
+0x100073388 <+344>: stp    x9, x8, [sp]
+0x10007338c <+348>: adrp   x0, 31
+0x100073390 <+352>: add    x0, x0, #0xa31            ; "errno unset, wrong return value being checked?: %s = %lld"
+0x100073394 <+356>: bl     0x10007662c               ; dyld_halt
