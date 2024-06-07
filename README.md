@@ -459,3 +459,4 @@ Each Snake class will be a child of the previous one and infinitely "eat itself"
 * Consider moving methods like `removeNullBytesAlignment`, `calcTwoComplement64` etc. to `Utils` class.
 * Move `--mig` option to Snake & Apple chapter about Mach Kernel when ready.
 * Make Thread manager class and improve the Threading.thread with tracing methods and `kill()`.
+* Reconsider moving --xattr like args to another Snake class related to filesystem.

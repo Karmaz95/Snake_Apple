@@ -1878,4 +1878,93 @@ class TestSnakeVI():
         expected_output = 'DYLD_SHARED_CACHE_DIR allowed: True'
         assert expected_output in uroboros_output
 
+class TestSnakeVII():
+    '''Testing VII. Antivirus'''
+    @classmethod
+    def setup_class(cls):
+        # Set up the compilation process
+        cls.compiler = Compiler()
+        cls.compiler.compileIt("../I.\ Mach-O/custom/hello.c", "hello_7", ["-arch", "arm64"])
+        assert os.path.exists("hello_7")
+        os.system("xattr -w com.apple.quarantine '0083;00000000;Safari' hello_7")
+
+        # Decompress KernelCache
+        #result = decompressKernelcache()
+        #assert result == 0
+        #assert os.path.exists("kernelcache")
+        #cls.kernelcache_path = run_and_get_stdout('ls kernelcache/System/Volumes/Preboot/*/boot/*/System/Library/Caches/com.apple.kernelcaches/kernelcache.decompressed')
+
+    @classmethod
+    def teardown_class(cls):
+        # Purge the compiled files
+        cls.compiler.purgeCompiledFiles()
+        assert not os.path.exists("hello_6")
+
+        # Purge kernelcache directory
+        #os.system("rm -rf kernelcache")
+        #assert not os.path.exists("kernelcache")
+    
+    def test_xattr(self):
+        '''Test the --xattr flag of SnakeVII.'''
+        args_list = ['-p', "hello_7", '--xattr']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            antivirus_processor = AntivirusProcessor()
+            antivirus_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'com.apple.quarantine'
+
+        assert expected_output in uroboros_output
+
+    def test_xattr_value(self):
+        '''Test the --xattr_value flag of SnakeVII.'''
+        args_list = ['-p', "hello_7", '--xattr_value', 'com.apple.quarantine']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            antivirus_processor = AntivirusProcessor()
+            antivirus_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = '30 30 38 33 3b 30 30 30  30 30 30 30 30 3b 53 61'
+
+        assert expected_output in uroboros_output
+
+    def test_xattr_all(self):
+        '''Test the --xattr_all flag of SnakeVII.'''
+        args_list = ['-p', "hello_7", '--xattr_all']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            antivirus_processor = AntivirusProcessor()
+            antivirus_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = '30 30 38 33 3b 30 30 30  30 30 30 30 30 3b 53 61'
+
+        assert expected_output in uroboros_output
+        
+    def test_has_quarantine(self):
+        '''Test the --has_quarantine flag of SnakeVII.'''
+        args_list = ['-p', "hello_7", '--has_quarantine']
+        args, file_path = argumentWrapper(args_list)
+        
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            antivirus_processor = AntivirusProcessor()
+            antivirus_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'QUARANTINE: True'
+
+        assert expected_output in uroboros_output
 
