@@ -26,9 +26,15 @@ Each article directory contains three subdirectories:
   * &#9745; [DYLD — Do You Like Death? (X)](https://karol-mazurek.medium.com/dyld-do-you-like-death-x-76408570c357?sk=v2%2F8b69c2f1-ce13-4d05-bba1-e0164c3de381) - ExternallyViewableState | externallyViewable.init | dyld_all_image_info | exec_prefault_data | task_info | com.apple.security.get-task-allow | get_dyld_info | lsl:Vector | ProcessSnapshot | compact info | makeUnique | release | setDyldState | setInitialExternallyVisibleState | setShareCacheInfo | setDyld | inDyldCache | DYLD_IN_CACHE | recordFromInfo | FileRecord | Image | addImage | _snapshot | addImageInfo | setInitialImageCount | commit | compactInfoData | RemoteNotificationResponder
   * &#9745; [DYLD — Do You Like Death? (XI)](https://karol-mazurek.medium.com/dyld-do-you-like-death-xi-cef76bc8dc14?sk=v2%2F0b88b392-ae94-43d0-9120-109306051e00) - prepare | APIs | isSimulatorPlatform | state.initializeClosureMode() | PrebuiltLoaders | JustInTimeLoader | PrebuilLoaderSet | dyld3 | dyld4 | Closures | initializeClosureMode | Loaders | validHeader | hasValidMagic | kmagic | dontUsePrebuiltForApp | findLaunchLoaderSet | cachePBLS | hasLaunchLoaderSetWithCDHash | findLaunchLoaderSetWithCDHash | findLaunchLoaderSet | allowOsProgramsToSaveUpdatedClosures | reserve | bit_ceil  | allowNonOsProgramsToSaveUpdatedClosures | DYLD_USE_CLOSURES | reserveExact | getOnDiskBinarySliceOffset | STACK_ALLOC_OVERFLOW_SAFE_ARRAY | topLevelLoaders | loadDependents | notifyDebuggerLoad | notifyDtrace | DOF | addPermamentRanges | STACK_ALLOC_ARRAY | weakDefMap | buildInterposingTables | handleStrongWeakDefOverrides | visibility | applyFixups | applyCachePatches | doSingletonPatching | applyInterposingToDyldCache | Libdyld.dylib | libdyld4Section | allImageInfos | storeProcessInfoPointer | __chkstk_darwin | partitionDelayLoads | DYLD_JUST_BUILD_CLOSURE | prewarming | notifyMonitorNeeded | LC_MAIN | LC_THREAD | getEntry | appMain | restorePreviousState | TPRO | libSystemHelpers | __exit
 * &#9745; [VI. AMFI](https://karol-mazurek.medium.com/snake-apple-vi-amfi-31c48fb92d33?sk=v2%2F8116bf86-e0a7-42be-ada9-5348447c01fd)
+* &#9744; [VII. Antivirus]()
+* &#9744; [VIII. Sandbox]()
+* &#9744; [IX. Process]()
+* &#9744; [X. NU]()
+  * &#9745; [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
+
 
 ## TOOLS
-[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder)
+[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) •[AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh)
 ***
 
 ### [CrimsonUroboros](tests/CrimsonUroboros.py)

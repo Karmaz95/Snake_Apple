@@ -1951,7 +1951,7 @@ class TestSnakeVII():
         expected_output = '30 30 38 33 3b 30 30 30  30 30 30 30 30 3b 53 61'
 
         assert expected_output in uroboros_output
-        
+
     def test_has_quarantine(self):
         '''Test the --has_quarantine flag of SnakeVII.'''
         args_list = ['-p', "hello_7", '--has_quarantine']
@@ -1968,3 +1968,38 @@ class TestSnakeVII():
 
         assert expected_output in uroboros_output
 
+    def test_remove_quarantine(self):
+        '''Test the --remove_quarantine flag of SnakeVII.'''
+        args_list = ['-p', "hello_7", '--remove_quarantine']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            antivirus_processor = AntivirusProcessor()
+            antivirus_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output_1 = ''
+        expected_output_2 = 'com.apple.quarantine:'
+        
+        assert expected_output_1 in uroboros_output
+        assert expected_output_2 not in run_and_get_stdout("xattr -l  hello_7")
+
+    def test_add_quarantine(self):
+        '''Test the --add_quarantine flag of SnakeVII.'''
+        args_list = ['-p', "hello_7", '--add_quarantine']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path)
+            macho_processor.process(args)
+            antivirus_processor = AntivirusProcessor()
+            antivirus_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output_1 = ''
+        expected_output_2 = 'com.apple.quarantine:'
+        
+        assert expected_output_1 in uroboros_output
+        assert expected_output_2 in run_and_get_stdout("xattr -l  hello_7")

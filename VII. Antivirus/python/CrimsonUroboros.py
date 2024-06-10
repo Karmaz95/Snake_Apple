@@ -2452,6 +2452,12 @@ class AntivirusProcessor:
         if args.has_quarantine: # Print if quarantine is set on file
             print("QUARANTINE: " + str(snake_instance.hasQuarantine()))
 
+        if args.remove_quarantine: # Remoe quarantine from a file
+            snake_instance.removeQuarantine()
+        
+        if args.add_quarantine: # Add quarantine to a file
+            snake_instance.addQuarantine()
+
 class SnakeVII(SnakeVI):
     def __init__(self, binaries, file_path):
         super().__init__(binaries, file_path)
@@ -2500,7 +2506,18 @@ class SnakeVII(SnakeVI):
         if "com.apple.quarantine" in all_atributes:
             return True
         return False
-        
+
+    def removeQuarantine(self):
+        ''' Remove com.apple.quarantine extended attribute from the file. '''
+        xattr.removexattr(self.file_path, 'com.apple.quarantine')
+
+    def addQuarantine(self):
+        ''' Add com.apple.quarantine extended attribute to the file. '''
+        value = f'0082;{int(time.time())};CrimsonUroboros;'
+        value_as_bytes = value.encode()
+        xattr.setxattr(self.file_path, 'com.apple.quarantine', value_as_bytes)
+
+
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
     def __init__(self):
@@ -2628,6 +2645,8 @@ class ArgumentParser:
         antivirus_group.add_argument('--xattr_value', metavar='xattr_name', help="Print single extended attribute value")
         antivirus_group.add_argument('--xattr_all', action='store_true', help="Print all extended attributes names and their values")
         antivirus_group.add_argument('--has_quarantine', action='store_true', help="Check if the file has quarantine extended attribute")
+        antivirus_group.add_argument('--remove_quarantine', action='store_true', help="Remove com.apple.quarantine extended attribute from the file")
+        antivirus_group.add_argument('--add_quarantine', action='store_true', help="Add com.apple.quarantine extended attribute to the file")
 
 
 
