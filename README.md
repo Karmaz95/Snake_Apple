@@ -28,7 +28,7 @@ Each article directory contains three subdirectories:
 * &#9745; [VI. AMFI](https://karol-mazurek.medium.com/snake-apple-vi-amfi-31c48fb92d33?sk=v2%2F8116bf86-e0a7-42be-ada9-5348447c01fd)
 * &#9744; [VII. Antivirus]()
 * &#9744; [VIII. Sandbox]()
-* &#9744; [IX. Process]()
+* &#9744; [IX. TCC]()
 * &#9744; [X. NU]()
   * &#9745; [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
 
