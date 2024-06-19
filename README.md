@@ -3,7 +3,7 @@
 The code repository for the `Snake&Apple` article series, which documents my research about macOS security.
 
 Each article directory contains three subdirectories:
-* `mac` - source code of macOS for references.
+* `mac` - source code of macOS for references and copy of presentations.
 * `custom` - code, for example, programs written for articles.
 * `python` - contains the latest CrimsonUroboros and other Python scripts created during research. 
 
