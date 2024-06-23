@@ -29,13 +29,13 @@ intptr_t __fastcall apply_exec_quarantine(
     quarantine_flag_set = 0;
 
     // Retrieve quarantine flags for the vnode
-    quarantine_flags = quarantine_get_flags(file_vnode, 0LL, (__int64)&quarantine_flag_set, (__int64)additional_info, reserved3, reserved4, reserved5, reserved6, reserved_context1, reserved_context2);
-    
-    // Handle specific flags and return values from quarantine_get_flags
-    if (quarantine_flags) {
-        temp_flags = quarantine_flags;
+    quarantine_flags, error_code = quarantine_get_flags(file_vnode, 0LL, (__int64)&quarantine_flag_set, (__int64)additional_info, reserved3, reserved4, reserved5, reserved6, reserved_context1, reserved_context2);
+
+    // If any error during parsing in quarantine_get_flags, enforce quarantine.
+    if (error_code) {
+        temp_error_code= error_code;
         result = 0LL;
-        if (temp_flags == 0x5D)
+        if (temp_error_code == 0x5D)
             return result;
         return 1LL;
     }
