@@ -2513,7 +2513,7 @@ class SnakeVII(SnakeVI):
 
     def addQuarantine(self):
         ''' Add com.apple.quarantine extended attribute to the file. '''
-        value = f'0082;{int(time.time())};CrimsonUroboros;'
+        value = f'0004;{int(time.time())};CrimsonUroboros;'
         value_as_bytes = value.encode()
         xattr.setxattr(self.file_path, 'com.apple.quarantine', value_as_bytes)
 
