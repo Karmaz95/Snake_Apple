@@ -35,7 +35,7 @@ Each article directory contains three subdirectories:
 
 
 ## TOOLS
-[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) •[AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh)
+[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper)
 ***
 
 ### [CrimsonUroboros](tests/CrimsonUroboros.py)
