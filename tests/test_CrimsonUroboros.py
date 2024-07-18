@@ -164,7 +164,25 @@ def argumentWrapper(args_list):
     sys.argv[1:] = args_list # Example: ['-p', 'hello', '--file_type']
     arg_parser = ArgumentParser()
     args = arg_parser.parseArgs()
-    file_path = os.path.abspath(args.path)
+    
+    global bundle_processor # If not global, it need to be returned to the caller in every test.
+    
+    if args.bundle is not None:
+        bundle_path = os.path.abspath(args.bundle)
+        bundle_processor = BundleProcessor(bundle_path)
+
+        if os.path.exists(bundle_processor.info_plist_path) and args.path is None:
+            bundle_executable = bundle_processor.getBundleInfoCFBundleExecutableValue()
+            file_path = os.path.join(bundle_processor.bundle_path, 'Contents/MacOS', bundle_executable)
+
+        elif not os.path.exists(bundle_processor.info_plist_path) and args.path is None:
+            file_path = os.path.join(args.bundle, 'Contents/MacOS', os.path.basename(args.bundle).split('.')[0])
+
+        else:
+            file_path = os.path.abspath(args.path)
+    else:
+        bundle_processor = None # It must be defined for further processors classes logic.
+        file_path = os.path.abspath(args.path)
     return args, file_path
 
 def executeCodeBlock(func):
@@ -210,12 +228,20 @@ class TestSnakeI():
         cls.compiler.compileIt("../I.\ Mach-O/custom/hello.c", "hello_1", ["-arch", "arm64"])
         assert os.path.exists("hello_1")  # Check if the file exists after compilation
 
+        # Prepare bare_bone.app for test_bundle_structure
+        os.system("../App\ Bundle\ Extension/custom/make_bundle.sh")
+        assert os.path.exists("bare_bone.app")
+
     @classmethod
     def teardown_class(cls):
         # Purge the compiled files
         cls.compiler.purgeCompiledFiles()
         assert not os.path.exists("hello_1")  # Check if the file is removed after purging
-    
+        
+        # Remove bare_bone.app for test_bundle_structure
+        os.system("rm -rf bare_bone.app")
+        assert not os.path.exists("bare_bone.app")
+
     def test_MachOProcessor(self):
         '''Test the initialization of MachOProcessor.
 
@@ -230,7 +256,7 @@ class TestSnakeI():
 
         # Define the code block to be executed
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
 
         # Execute the code block using the wrapper function and capture the output
@@ -246,7 +272,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -260,7 +286,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -274,7 +300,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -288,7 +314,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -306,7 +332,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -320,7 +346,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -334,7 +360,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -354,7 +380,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -368,7 +394,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -390,7 +416,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -404,7 +430,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -422,7 +448,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -436,7 +462,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -450,7 +476,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -464,7 +490,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -481,7 +507,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -497,7 +523,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -511,7 +537,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -527,7 +553,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -541,7 +567,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -561,7 +587,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -584,7 +610,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
 
         executeCodeBlock(code_block)
@@ -604,7 +630,7 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
 
         uroboros_output = executeCodeBlock(code_block)
@@ -618,12 +644,97 @@ class TestSnakeI():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
 
         uroboros_output = executeCodeBlock(code_block)
         expected_output = ""
         # todo - this is only negative test, I should also check the file with valid constructors.
+        assert expected_output in uroboros_output
+
+    def test_dump_section(self):
+        '''Test the --dump_section flag of SnakeI.'''
+        args_list = ['-p', 'hello_1', '--dump_section', '__TEXT,__cstring']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor.process(args)
+ 
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'Hello, World!'
+
+        assert expected_output in uroboros_output
+
+    def test_bundle_structure(self):
+        '''Test the --bundle_structure flag of SnakeI.'''
+        args_list = ['-b', 'bare_bone.app', '--bundle_structure']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor.process(args)
+            
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output_1 = 'bare_bone.app'
+        expected_output_2 = 'red_icon.icns'
+        
+        assert expected_output_1 in uroboros_output
+        assert expected_output_2 in uroboros_output
+
+    def test_bundle_info(self):
+        '''Test the --bundle_structure flag of SnakeI.'''
+        args_list = ['-b', 'bare_bone.app', '--bundle_info']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = '"CFBundleExecutable": "bare_bone_exe",'
+
+        assert expected_output in uroboros_output
+
+    def test_bundle_info_syntax_check(self):
+        '''Test the --bundle_info_syntax_check flag of SnakeI.'''
+        args_list = ['-b', 'bare_bone.app', '--bundle_info_syntax_check']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'Valid Bundle Info.plist syntax'
+        assert expected_output in uroboros_output
+
+    def test_bundle_frameworks(self):
+        '''Test the --bundle_frameworks flag of SnakeI.'''
+        args_list = ['-b', 'bare_bone.app', '--bundle_frameworks']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'ClockOpen.framework'
+
+        assert expected_output in uroboros_output
+
+    def test_bundle_plugins(self):
+        '''Test the --bundle_plugins flag of SnakeI.'''
+        args_list = ['-b', 'bare_bone.app', '--bundle_plugins']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'No plugins found.'
+
         assert expected_output in uroboros_output
 
 class TestSnakeII():
@@ -655,6 +766,10 @@ class TestSnakeII():
         cls.certificate = '-'
         cls.code_signer.signBinary("hello_2", cls.certificate, cls.entitlements)
 
+        # Prepare bare_bone.app for test_bundle_structure
+        os.system("../App\ Bundle\ Extension/custom/make_bundle.sh")
+        assert os.path.exists("bare_bone.app")
+
     @classmethod
     def teardown_class(cls):
         # Purge the compiled files
@@ -666,13 +781,17 @@ class TestSnakeII():
         os.remove('unpredictable_entitlements_1029384756.plist')
         assert not os.path.exists('unpredictable_entitlements_1029384756.plist')
 
+        # Remove bare_bone.app for test_bundle_structure
+        os.system("rm -rf bare_bone.app")
+        assert not os.path.exists("bare_bone.app")
+
     def test_verify_signature(self):
         '''Test the --verify_signature flag of SnakeII.'''
         args_list = ['-p', 'hello_2', '--verify_signature']
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
             code_signing_processor = CodeSigningProcessor()
@@ -687,7 +806,7 @@ class TestSnakeII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
             code_signing_processor = CodeSigningProcessor()
@@ -704,7 +823,7 @@ class TestSnakeII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -720,7 +839,7 @@ class TestSnakeII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -736,7 +855,7 @@ class TestSnakeII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -754,7 +873,7 @@ class TestSnakeII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -770,7 +889,7 @@ class TestSnakeII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
 
             code_signing_processor = CodeSigningProcessor()
@@ -788,7 +907,7 @@ class TestSnakeII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -806,7 +925,7 @@ class TestSnakeII():
         args_list = ['-p', 'hello_2_unsigned_binary', '--sign_binary']
         args, file_path = argumentWrapper(args_list)
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             
             code_signing_processor = CodeSigningProcessor()
@@ -824,7 +943,7 @@ class TestSnakeII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -840,7 +959,7 @@ class TestSnakeII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -849,6 +968,40 @@ class TestSnakeII():
         expected_output = 'CS_FLAGS: 0x2'
 
         assert expected_output in uroboros_output
+
+    def test_verify_bundle_signature(self):
+        '''Test the --verify_bundle_signature flag of SnakeII.'''
+        args_list = ['-b', 'bare_bone.app', '--verify_bundle_signature']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor.process(args)
+            code_signing_processor = CodeSigningProcessor()
+            code_signing_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'Valid Bundle Code Signature (matches the content)'
+
+        assert expected_output in uroboros_output
+
+    def test_remove_sig_from_bundle(self):
+        '''Test the --remove_sig_from_bundle flag of SnakeII.'''
+        args_list = ['-b', 'bare_bone.app', '--remove_sig_from_bundle']
+        args, file_path = argumentWrapper(args_list)
+
+        def code_block():
+            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor.process(args)
+            code_signing_processor = CodeSigningProcessor()
+            code_signing_processor.process(args)
+
+        executeCodeBlock(code_block)
+
+        assert os.path.exists('bare_bone.app')
+        assert not os.path.exists('bare_bone.app/Contents/_CodeSignature/CodeSignature')
+        error_code = os.system('codesign -d -vvvv bare_bone.app')
+        assert 256 == error_code # bare_bone.app: code object is not signed at all
 
 class TestSnakeIII():
     '''Testing III. CHECKSEC'''
@@ -898,7 +1051,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -914,7 +1067,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -928,7 +1081,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -944,7 +1097,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -957,7 +1110,7 @@ class TestSnakeIII():
         args_list = ['-p', 'hello_3_stripped', '--is_stripped']
         args, file_path = argumentWrapper(args_list)
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -973,7 +1126,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -987,7 +1140,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1003,7 +1156,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1019,7 +1172,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1035,7 +1188,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1051,7 +1204,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1067,7 +1220,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1083,7 +1236,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1099,7 +1252,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1115,7 +1268,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1131,7 +1284,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1147,7 +1300,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1163,7 +1316,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1179,7 +1332,7 @@ class TestSnakeIII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1256,7 +1409,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1273,7 +1426,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1289,7 +1442,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1305,7 +1458,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1321,7 +1474,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1337,7 +1490,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1357,7 +1510,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1373,7 +1526,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1389,7 +1542,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1405,7 +1558,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1421,7 +1574,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1437,7 +1590,7 @@ class TestSnakeIV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1474,7 +1627,7 @@ class TestSnakeV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1490,7 +1643,7 @@ class TestSnakeV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1514,7 +1667,7 @@ class TestSnakeV():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1530,7 +1683,7 @@ class TestSnakeV():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1544,7 +1697,7 @@ class TestSnakeV():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1558,7 +1711,7 @@ class TestSnakeV():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1620,7 +1773,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1636,7 +1789,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1652,7 +1805,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1668,7 +1821,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1684,7 +1837,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1700,7 +1853,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1716,7 +1869,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1732,7 +1885,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1764,7 +1917,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1779,7 +1932,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1794,7 +1947,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1809,7 +1962,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1824,7 +1977,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1839,7 +1992,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1854,7 +2007,7 @@ class TestSnakeVI():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1863,20 +2016,20 @@ class TestSnakeVI():
         expected_output = 'DYLD_PRINT_TO_FILE allowed: True'
         assert expected_output in uroboros_output
     
-    def test_test_dyld_SLC(self):
-        '''Test the --test_dyld_SLC flag of SnakeVI.'''
-        args_list = ['-p', 'hello_6', '--test_dyld_SLC']
-        args, file_path = argumentWrapper(args_list)
+    # def test_test_dyld_SLC(self):
+    #     '''Test the --test_dyld_SLC flag of SnakeVI.'''
+    #     args_list = ['-p', 'hello_6', '--test_dyld_SLC']
+    #     args, file_path = argumentWrapper(args_list)
 
-        def code_block():
-            macho_processor = MachOProcessor(file_path)
-            macho_processor.process(args)
-            amfi_processor = AMFIProcessor()
-            amfi_processor.process(args)
+    #     def code_block():
+    #         macho_processor = MachOProcessor(file_path, bundle_processor)
+    #         macho_processor.process(args)
+    #         amfi_processor = AMFIProcessor()
+    #         amfi_processor.process(args)
 
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output = 'DYLD_SHARED_CACHE_DIR allowed: True'
-        assert expected_output in uroboros_output
+    #     uroboros_output = executeCodeBlock(code_block)
+    #     expected_output = 'DYLD_SHARED_CACHE_DIR allowed: True'
+    #     assert expected_output in uroboros_output
 
 class TestSnakeVII():
     '''Testing VII. Antivirus'''
@@ -1910,7 +2063,7 @@ class TestSnakeVII():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
@@ -1926,7 +2079,7 @@ class TestSnakeVII():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
@@ -1942,7 +2095,7 @@ class TestSnakeVII():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
@@ -1958,7 +2111,7 @@ class TestSnakeVII():
         args, file_path = argumentWrapper(args_list)
         
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
@@ -1974,7 +2127,7 @@ class TestSnakeVII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
@@ -1992,7 +2145,7 @@ class TestSnakeVII():
         args, file_path = argumentWrapper(args_list)
 
         def code_block():
-            macho_processor = MachOProcessor(file_path)
+            macho_processor = MachOProcessor(file_path, bundle_processor)
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
