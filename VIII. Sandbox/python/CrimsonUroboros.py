@@ -17,29 +17,140 @@ import threading
 import time
 import xattr
 
+### --- APP BUNDLE EXTENSION --- ###
+class BundleProcessor:
+    def __init__(self, bundle_path):
+        '''This class contains part of the code related to the App Bundle Extension.
+        It extends the Snake instance abilities beyond only Mach-O analysis.
+        When -b/--bundle flag is used, it will analyze the App Bundle when an instance of this (BundleProcessor) class is created.
+        Then, it can be communicated from Snake object with the new methods dependent on the files in App Bundle.'''
+        self.bundle_path = os.path.abspath(bundle_path)
+        self.info_plist_path = os.path.join(self.bundle_path, 'Contents/Info.plist')
+        self.info_plist_exists = self.hasInfoPlist()
+        self.frameworks_path = os.path.join(self.bundle_path, 'Contents/Frameworks')
+        self.frameworks_exists = self.hasFrameworks()
+        self.plugins_path = os.path.join(self.bundle_path, 'Contents/PlugIns')
+        self.plugins_exists = self.hasPlugIns()
+
+    def hasInfoPlist(self):
+        ''' Return True if Info.plist exists in the bundle. '''
+        if os.path.exists(self.info_plist_path):
+            return True
+        return False
+
+    def getBundleInfoCFBundleExecutableValue(self):
+        ''' Return the CFBundleExecutable value from the Info.plist file if it exists. Otherwise, return None. '''
+        if self.info_plist_exists:
+            with open(self.info_plist_path, 'rb') as f:
+                plist_data = plistlib.load(f)
+            return plist_data.get('CFBundleExecutable', None)
+        return None
+
+    def getBundleStructure(self):
+        ''' Return the structure of the bundle in tree format, including hidden files and with permissions. '''
+        return os.popen(f"tree -ACp '{self.bundle_path}'").read()
+
+    def getBundleInfo(self):
+        ''' Return the info of the bundle in a more readable JSON format. '''
+        if self.info_plist_exists:
+            with open(self.info_plist_path, 'rb') as f:
+                plist_data = plistlib.load(f)
+            return json.dumps(plist_data, indent=4)
+        return None
+
+    def checkInfoPropertyListSyntaxErrors(self, info_plist_path):
+        ''' Check the named property list file for syntax errors using /usr/bin/plutil .'''
+        plutil_command = ["/usr/bin/plutil", info_plist_path]
+        plutil_result = subprocess.run(plutil_command, capture_output=True)
+        if plutil_result.returncode == 0:
+            return True
+        else:
+            return False
+
+    def checkBundleInfoSyntax(self):
+        if self.info_plist_exists:
+            if self.checkInfoPropertyListSyntaxErrors(self.info_plist_path):
+                return True
+        return False
+
+    def hasFrameworks(self):
+        ''' Return True if Frameworks directory exists in the bundle and contains at least one framework. '''
+        if os.path.exists(self.frameworks_path):
+            if os.listdir(self.frameworks_path):
+                return True
+        return False
+
+    def getFrameworks(self):
+        ''' Return list of frameworks in the Frameworks directory. '''
+        if self.frameworks_exists:
+            return os.listdir(self.frameworks_path)
+        else:
+            return None
+
+    def hasPlugIns(self):
+        ''' Return True if PlugIns directory exists in the bundle and contains at least one plug-in. '''
+        if os.path.exists(self.plugins_path):
+            if os.listdir(self.plugins_path):
+                return True
+        return False
+
+    def getPlugIns(self):
+        ''' Return list of plug-ins in the PlugIns directory. '''
+        if self.plugins_exists:
+            return os.listdir(self.plugins_path)
+        else:
+            return None
+
 ### --- I. MACH-O --- ###
 class MachOProcessor:
-    def __init__(self, file_path):
+    def __init__(self, file_path, bundle_processor):
         '''This class contains part of the code from the main() for the SnakeI: Mach-O part.'''
         self.file_path = os.path.abspath(file_path)
+        self.macho_and_fat_magic_numbers = {
+            0xfeedface,  # 32-bit Mach-O
+            0xfeedfacf,  # 64-bit Mach-O
+            0xcefaedfe,  # 32-bit Mach-O, byte-swapped
+            0xcffaedfe,  # 64-bit Mach-O, byte-swapped
+            0xcafebabe,  # Fat binary
+            0xbebafeca   # Fat binary, byte-swapped
+        }
+        self.bundle_processor = bundle_processor
+
+    def isFileMachO(self, filepath):
+        '''Check if file is Mach-O. '''
+        try:
+            with open(filepath, 'rb') as f:
+                magic = f.read(4)
+                if len(magic) < 4:
+                    return False
+                magic_number = int.from_bytes(magic, byteorder='big')
+                return magic_number in self.macho_and_fat_magic_numbers
+        except Exception:
+            return False
 
     def parseFatBinary(self):
-        '''Return Fat Binary object.'''
-        return lief.MachO.parse(self.file_path)
+        '''Return Fat Binary object if file exists.'''
+        if os.path.exists(self.file_path):
+            if self.isFileMachO(self.file_path):
+                return lief.MachO.parse(self.file_path)
+        else:
+            return None
 
     def process(self, args):
         '''Executes the code for the SnakeI: Mach-O.'''
-        if not os.path.exists(self.file_path): # Check if file_path specified in the --path argument exists.
+        if not os.path.exists(self.file_path) and self.bundle_processor is None: # Check if file_path specified in the --path argument exists and if bundle is not specified.
             print(f'The file {self.file_path} does not exist.')
             exit()
 
         global binaries # It must be global, becuase after the MachOProcessor object is destructed, the snake_instance would point to invalid memory ("binary" is dependant on "binaries").
         global snake_instance # Must be global for further processors classes.
+        global bundle_processor # Same situation as with binaries object.
 
+        bundle_processor = self.bundle_processor # Transfer the bundle_processor to the global scope
         binaries = self.parseFatBinary()
 
-        if binaries is None:
-            exit() # Exit if the file is not valid macho
+        if binaries is None and self.bundle_processor is None:
+            exit() # Exit if the file is not valid macho and bundle is not specified
 
         snake_instance = SnakeVII(binaries, self.file_path) # Initialize the latest Snake class
 
@@ -160,20 +271,39 @@ class MachOProcessor:
         if args.constructors: # Print constructors
             snake_instance.printConstructors()
 
+        if args.dump_section: # Dump section to a stdout
+            snake_instance.dumpSectionToStdout(args.dump_section)
+
+        if args.bundle_structure: # Print bundle structure
+            snake_instance.printBundleStructure()
+        
+        if args.bundle_info: # Print bundle info (XML -> JSON)
+            snake_instance.printBundleInfo()
+
+        if args.bundle_info_syntax_check: # Check if bundle info syntax is valid
+            snake_instance.printBundleInfoSyntax()
+
+        if args.bundle_frameworks: # Print bundle frameworks
+            snake_instance.printBundleFrameworks()
+            
+        if args.bundle_plugins: # Print bundle plugins
+            snake_instance.printBundlePlugIns()
+
 class SnakeI:
     def __init__(self, binaries, file_path):
         '''
             When initiated, the program parses a Universal binary (binaries parameter) and extracts the ARM64 Mach-O. 
             If the file is not in a universal format but is a valid ARM64 Mach-O, it is taken as a binary parameter during initialization.
         '''
-        self.binary = self.parseFatBinary(binaries)
+        if binaries is not None: # Exception for bundles where binaries are not valid Mach-O
+            self.binary = self.parseFatBinary(binaries)
+            self.segments_count, self.file_start, self.file_size, self.file_end = self.getSegmentsInfo()
+            self.load_commands = self.getLoadCommands()
+            self.endianess = self.getEndianess()
+            self.format_specifier = '<I' if self.getEndianess() == 'little' else '>I' # For struct.pack
+            self.reversed_format_specifier = '>I' if self.getEndianess() == 'little' else '<I' # For CS blob which is in Big Endian.
+            self.fat_offset = self.binary.fat_offset # For various calculations, if ARM64 Mach-O extracted from Universal Binary 
         self.file_path = file_path
-        self.segments_count, self.file_start, self.file_size, self.file_end = self.getSegmentsInfo()
-        self.load_commands = self.getLoadCommands()
-        self.endianess = self.getEndianess()
-        self.format_specifier = '<I' if self.getEndianess() == 'little' else '>I' # For struct.pack
-        self.reversed_format_specifier = '>I' if self.getEndianess() == 'little' else '<I' # For CS blob which is in Big Endian.
-        self.fat_offset = self.binary.fat_offset # For various calculations, if ARM64 Mach-O extracted from Universal Binary 
         self.prot_map = {
         0: '---',
         1: 'r--',
@@ -204,6 +334,7 @@ class SnakeI:
                 'N_INDR': 0x0A, # INDIRECT
             }
         }
+
 
     def getSegmentsInfo(self):
         ''' Helper function for gathering various initialization information about the binary if extracted from FAT. '''
@@ -325,8 +456,10 @@ class SnakeI:
             Return section start and end file offset. 
             If there is no such section return False, False.
         '''
+        segment_name = segment_name.lower()
+        section_name = section_name.lower()
         for section in self.binary.sections:
-            if segment_name == section.segment_name:
+            if segment_name == section.segment_name.lower():
                 if section_name == section.fullname.decode():
                     section_offset_start, section_offset_end = self.calcSectionRange(section)
                     return section_offset_start, section_offset_end
@@ -596,6 +729,8 @@ class SnakeI:
             Dump '__SEGMENT,__section' to a given file.
                 Reutrn False if the section does not exist.
         '''
+        segment_name = segment_name.lower()
+        section_name = section_name.lower()
         extracted_bytes = self.extractSection(segment_name, section_name)
         if extracted_bytes:
             self.saveBytesToFile(extracted_bytes, filename)
@@ -658,6 +793,49 @@ class SnakeI:
         for ctor in self.binary.ctor_functions:
             print(ctor)
 
+    def dumpSectionToStdout(self, segment_section):
+        ''' Dump '__SEGMENT,__section' to stdout. '''
+        segment_section = segment_section.lower().split(',')
+        segment_name = segment_section[0]
+        section_name = segment_section[1]
+        extracted_bytes = self.extractSection(segment_name, section_name)
+        print(extracted_bytes)
+
+    def printBundleStructure(self):
+        ''' Print the structure of the bundle. '''
+        print(bundle_processor.getBundleStructure())
+
+    def printBundleInfo(self):
+        ''' Print the info of the bundle. '''
+        bundle_info = bundle_processor.getBundleInfo()
+        if bundle_info:
+            print(bundle_info)
+        else:
+            print("No bundle Info.plist found.")
+
+    def printBundleInfoSyntax(self):
+        ''' Print if Info.plist syntax is valid. '''
+        if bundle_processor.checkBundleInfoSyntax():
+            print("Valid Bundle Info.plist syntax")
+        else:
+            print(f"Invalid Bundle Info.plist syntax (use plutil {bundle_processor.info_plist_path} to see the error)")
+
+    def printBundleFrameworks(self):
+        ''' Print the list of frameworks in the bundle. '''
+        if bundle_processor.getFrameworks():
+            for framework in bundle_processor.getFrameworks():
+                print(framework)
+        else:
+            print("No frameworks found.")
+
+    def printBundlePlugIns(self):
+        ''' Print the list of plugins in the bundle. '''
+        if bundle_processor.getPlugIns():
+            for plugin in bundle_processor.getPlugIns():
+                print(plugin)
+        else:
+            print("No plugins found.")
+
 ### --- II. CODE SIGNING --- ### 
 class CodeSigningProcessor:
     def __init__(self):
@@ -678,7 +856,7 @@ class CodeSigningProcessor:
             print(snake_instance.getCodeSignatureRequirements(snake_instance.file_path).decode('utf-8'))
 
         if args.entitlements: # Print Entitlements.
-            print(snake_instance.getEntitlementsFromCodeSignature(snake_instance.file_path, args.entitlements))
+            snake_instance.printEntitlements(snake_instance.file_path, args.entitlements)
 
         if args.extract_cms: # Extract the CMS Signature and save it to a given file.
             cms_signature = snake_instance.extractCMS()
@@ -698,6 +876,12 @@ class CodeSigningProcessor:
 
         if args.cs_flags: # Print Code Signature flags
             snake_instance.printCodeSignatureFlags()
+
+        if args.verify_bundle_signature: # Verify if Code Signature match the bundle content
+            snake_instance.printIsSigValidInAppBundle()
+
+        if args.remove_sig_from_bundle: # Remove the Code Signature from the App Bundle
+            snake_instance.removeSignatureFromBundle()
 
 class SnakeII(SnakeI):
     def __init__(self, binaries, file_path):
@@ -732,6 +916,14 @@ class SnakeII(SnakeI):
         elif format == 'der':
             result = subprocess.run(["codesign", "-d", "--entitlements", "-", "--der", file_path], capture_output=True)
         return result.stdout
+
+    def printEntitlements(self, file_path, format=None):
+        ''' Helper function for printing entitlements. '''
+        entitlements = self.getEntitlementsFromCodeSignature(file_path, format)
+        try:
+            print(entitlements.decode('utf-8'))
+        except:
+            print(entitlements)
 
     def extractCMS(self):
         '''Find the offset of magic bytes in a binary using LIEF.'''
@@ -817,6 +1009,25 @@ class SnakeII(SnakeI):
 
     def printCodeSignatureFlags(self):
         print(f'CS_FLAGS: {hex(self.getCodeSignatureFlags())}')
+
+    def isSigValidInAppBundle(self):
+        ''' Check if the Code Signature is valid (if the contents of the binary have been modified.)'''
+        result = subprocess.run(["codesign", "-v", bundle_processor.bundle_path], capture_output=True)
+        if result.stderr == b'':
+            return True
+        return result.stderr
+
+    def printIsSigValidInAppBundle(self):
+        '''Helper function for printing if the Code Signature is valid in the App Bundle.'''
+        verification_result = self.isSigValidInAppBundle()
+        if verification_result == True:
+            print("Valid Bundle Code Signature (matches the content)")
+        else:
+            print(f"Invalid Bundle Code Signature:\n {verification_result.decode('utf-8')}")
+
+    def removeSignatureFromBundle(self):
+        ''' Remove the Code Signature from the App Bundle (it does not remove the signature from bundled frameworks). '''
+        subprocess.run(["codesign", "--remove-signature", bundle_processor.bundle_path], capture_output=True)
 
 ### --- III. CHECKSEC --- ###
 class ChecksecProcessor:
@@ -1147,10 +1358,11 @@ class SnakeIV(SnakeIII):
         'PREBOUND_DYLIB',
         'REEXPORT_DYLIB',
         }
-        self.dylib_id_path = self.getPathFromDylibID() # Get Dylib ID for @loader_path resolving
-        self.dylib_loading_commands, self.dylib_loading_commands_names = self.getDylibLoadCommands() # 1. Get dylib specific load commands
-        self.rpath_list = self.resolveRunPathLoadCommands() # 2. Get LC_RPATH list
-        self.absolute_paths = self.resolveDylibPaths() # 3. Get all dylib absolute paths dictionary {dylib_name[dylib_paths]}
+        if binaries is not None: # Exception for bundles where binaries are not valid Mach-O
+            self.dylib_id_path = self.getPathFromDylibID() # Get Dylib ID for @loader_path resolving
+            self.dylib_loading_commands, self.dylib_loading_commands_names = self.getDylibLoadCommands() # 1. Get dylib specific load commands
+            self.rpath_list = self.resolveRunPathLoadCommands() # 2. Get LC_RPATH list
+            self.absolute_paths = self.resolveDylibPaths() # 3. Get all dylib absolute paths dictionary {dylib_name[dylib_paths]}
         self.dyld_share_cache_path = '/System/Volumes/Preboot/Cryptexes/OS/System/Library/dyld/dyld_shared_cache_arm64e'
 
     def getSharedLibraries(self, only_names=True):
@@ -2533,7 +2745,9 @@ class ArgumentParser:
         self.addAntivirusArgs()
 
     def addGeneralArgs(self):
-        self.parser.add_argument('-p', '--path', required=True, help="Path to the Mach-O file")
+        general_group = self.parser.add_argument_group('GENERAL ARGS')
+        general_group.add_argument('-p', '--path', help="Path to the Mach-O file")
+        general_group.add_argument('-b', '--bundle', help="Path to the App Bundle (can be used with -p to change path of binary which is by default set to: /target.app/Contents/MacOS/target)")
 
     def addMachOArgs(self):
         macho_group = self.parser.add_argument_group('MACH-O ARGS')
@@ -2563,6 +2777,12 @@ class ArgumentParser:
         macho_group.add_argument('--dump_data', help="Dump {size} bytes starting from {offset} to a given {filename} (e.g. '0x1234,0x1000,out.bin')", metavar=('offset,size,output_path'), nargs="?")
         macho_group.add_argument('--calc_offset', help="Calculate the real address (file on disk) of the given Virtual Memory {vm_offset} (e.g. 0xfffffe000748f580)", metavar='vm_offset')
         macho_group.add_argument('--constructors', action='store_true', help="Print binary constructors")
+        macho_group.add_argument('--dump_section', help="Dump '__SEGMENT,__section' to standard output as a raw bytes", metavar='__SEGMENT,__section')
+        macho_group.add_argument('--bundle_structure', action='store_true', help="Print the structure of the app bundle")
+        macho_group.add_argument('--bundle_info', action='store_true', help="Print the Info.plist content of the app bundle (JSON format)")
+        macho_group.add_argument('--bundle_info_syntax_check', action='store_true', help="Check if bundle info syntax is valid")
+        macho_group.add_argument('--bundle_frameworks', action='store_true', help="Print the list of frameworks in the bundle")
+        macho_group.add_argument('--bundle_plugins', action='store_true', help="Print the list of plugins in the bundle")
 
     def addCodeSignArgs(self):
         codesign_group = self.parser.add_argument_group('CODE SIGNING ARGS')
@@ -2576,6 +2796,8 @@ class ArgumentParser:
         codesign_group.add_argument('--sign_binary', help="Sign binary using specified identity - use : 'security find-identity -v -p codesigning' to get the identity (default: adhoc)", nargs='?', const='adhoc', metavar='adhoc|identity')
         codesign_group.add_argument('--cs_offset', action='store_true', help="Print Code Signature file offset")
         codesign_group.add_argument('--cs_flags', action='store_true', help="Print Code Signature flags")
+        codesign_group.add_argument('--verify_bundle_signature', action='store_true', help="Code Signature verification (if the contents of the bundle have been modified)")
+        codesign_group.add_argument('--remove_sig_from_bundle', action='store_true', help="Remove Code Signature from the bundle")
 
     def addChecksecArgs(self):
         checksec_group = self.parser.add_argument_group('CHECKSEC ARGS')
@@ -2648,10 +2870,13 @@ class ArgumentParser:
         antivirus_group.add_argument('--remove_quarantine', action='store_true', help="Remove com.apple.quarantine extended attribute from the file")
         antivirus_group.add_argument('--add_quarantine', action='store_true', help="Add com.apple.quarantine extended attribute to the file")
 
-
-
     def parseArgs(self):
-        return self.parser.parse_args()
+        args = self.parser.parse_args()
+
+        if not args.path and not args.bundle:
+            self.parser.error('One of arguments: -p/--path or -b/--bundle is required.')
+
+        return args
 
     def printAllArgs(self, args):
         '''Just for debugging. This method is a utility designed to print all parsed arguments and their corresponding values.'''
@@ -3014,10 +3239,26 @@ if __name__ == "__main__":
     arg_parser = ArgumentParser()
     args = arg_parser.parseArgs()
 
-    file_path = os.path.abspath(args.path)
+    ### --- APP BUNDLE EXTENSION --- ###
+    if args.bundle is not None:
+        bundle_path = os.path.abspath(args.bundle)
+        bundle_processor = BundleProcessor(bundle_path)
+
+        if os.path.exists(bundle_processor.info_plist_path) and args.path is None:
+            bundle_executable = bundle_processor.getBundleInfoCFBundleExecutableValue()
+            file_path = os.path.join(bundle_processor.bundle_path, 'Contents/MacOS', bundle_executable)
+
+        elif not os.path.exists(bundle_processor.info_plist_path) and args.path is None:
+            file_path = os.path.join(args.bundle, 'Contents/MacOS', os.path.basename(args.bundle).split('.')[0])
+
+        else:
+            file_path = os.path.abspath(args.path)
+    else:
+        #bundle_processor = None # It must be defined for further processors classes logic.
+        file_path = os.path.abspath(args.path)
 
     ### --- I. MACH-O --- ###
-    macho_processor = MachOProcessor(file_path)
+    macho_processor = MachOProcessor(file_path, bundle_processor)
     macho_processor.process(args)
 
     ### --- II. CODE SIGNING --- ###
@@ -3035,7 +3276,7 @@ if __name__ == "__main__":
     ### --- V. DYLD --- ###
     dyld_processor = DyldProcessor()
     dyld_processor.process(args)
-    
+
     ### --- VI. AMFI --- ###
     amfi_processor = AMFIProcessor()
     amfi_processor.process(args)
