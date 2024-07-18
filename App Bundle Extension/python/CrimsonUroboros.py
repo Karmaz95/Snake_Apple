@@ -3254,7 +3254,7 @@ if __name__ == "__main__":
         else:
             file_path = os.path.abspath(args.path)
     else:
-        #bundle_processor = None # It must be defined for further processors classes logic.
+        bundle_processor = None # It must be defined for further processors classes logic.
         file_path = os.path.abspath(args.path)
 
     ### --- I. MACH-O --- ###
