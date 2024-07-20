@@ -32,6 +32,10 @@ ___
 * Resigning the app for debugging
 * Electron Apps
 * /Contents/Resources/app.asar
+
+___
+### [Cracking Electron Integrity](https://karol-mazurek.medium.com/cracking-electron-integrity-0a10e0d5f239?sk=v2%2F7726b99c-c6c9-4d70-8c37-da9f2f0874e8)
+getRawHeader | node:crypto | generateAsarIntegrity | electron_patcher | ElectronAsarIntegrity
 ___
 ### [I. Mach-O](https://karol-mazurek95.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
 * Universal Binary (Fat Binary)
