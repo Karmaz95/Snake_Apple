@@ -8,7 +8,9 @@ Each article directory contains three subdirectories:
 * `python` - contains the latest CrimsonUroboros and other Python scripts created during research. 
 
 ## ARTICLES
-The table of contents is shown below (tags for each article are in the [Article_tags.md](Article_tags.md)).
+The short introduction is written in: [Snake&Apple Intro](https://karol-mazurek95.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)  
+In the [Article_tags.md](Article_tags.md) you can find the tags for each article.  
+The table of contents showing links to all articles are shown below:
 * &#9745; [App Bundle Extension]()
   * &#9745; [Cracking macOS apps](https://karol-mazurek.medium.com/cracking-macos-apps-39575dd672e0?sk=v2%2F727dce55-53ee-45f6-b051-2979e62f2ba1)
   * &#9745; [Cracking Electron Integrity](https://karol-mazurek.medium.com/cracking-electron-integrity-0a10e0d5f239?sk=v2%2F7726b99c-c6c9-4d70-8c37-da9f2f0874e8)
