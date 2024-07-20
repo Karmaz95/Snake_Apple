@@ -48,7 +48,9 @@ The table of contents showing links to all articles are shown below:
 Core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
 * Usage
 ```console
-usage: CrimsonUroboros [-h] [-p PATH] [-b BUNDLE] [--file_type]
+usage: CrimsonUroboros [-h] [-p PATH] [-b BUNDLE] [--bundle_structure]
+                       [--bundle_info] [--bundle_info_syntax_check]
+                       [--bundle_frameworks] [--bundle_plugins] [--file_type]
                        [--header_flags] [--endian] [--header]
                        [--load_commands] [--has_cmd LC_MAIN] [--segments]
                        [--has_segment __SEGMENT] [--sections]
@@ -61,10 +63,8 @@ usage: CrimsonUroboros [-h] [-p PATH] [-b BUNDLE] [--file_type]
                        [--dump_data [offset,size,output_path]]
                        [--calc_offset vm_offset] [--constructors]
                        [--dump_section __SEGMENT,__section]
-                       [--bundle_structure] [--bundle_info]
-                       [--bundle_info_syntax_check] [--bundle_frameworks]
-                       [--bundle_plugins] [--verify_signature] [--cd_info]
-                       [--cd_requirements] [--entitlements [human|xml|var]]
+                       [--verify_signature] [--cd_info] [--cd_requirements]
+                       [--entitlements [human|xml|var]]
                        [--extract_cms cms_signature.der]
                        [--extract_certificates certificate_name]
                        [--remove_sig unsigned_binary]
@@ -110,6 +110,15 @@ GENERAL ARGS:
                         path of binary which is by default set to:
                         /target.app/Contents/MacOS/target)
 
+BUNDLE ARGS:
+  --bundle_structure    Print the structure of the app bundle
+  --bundle_info         Print the Info.plist content of the app bundle (JSON
+                        format)
+  --bundle_info_syntax_check
+                        Check if bundle info syntax is valid
+  --bundle_frameworks   Print the list of frameworks in the bundle
+  --bundle_plugins      Print the list of plugins in the bundle
+
 MACH-O ARGS:
   --file_type           Print binary file type
   --header_flags        Print binary header flags
@@ -153,13 +162,6 @@ MACH-O ARGS:
   --dump_section __SEGMENT,__section
                         Dump '__SEGMENT,__section' to standard output as a raw
                         bytes
-  --bundle_structure    Print the structure of the app bundle
-  --bundle_info         Print the Info.plist content of the app bundle (JSON
-                        format)
-  --bundle_info_syntax_check
-                        Check if bundle info syntax is valid
-  --bundle_frameworks   Print the list of frameworks in the bundle
-  --bundle_plugins      Print the list of plugins in the bundle
 
 CODE SIGNING ARGS:
   --verify_signature    Code Signature verification (if the contents of the
