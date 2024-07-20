@@ -208,13 +208,6 @@ class BundleProcessor:
         else:
             return None
 
-    def getBundleId(self):
-        ''' Return CFBundleIdentifier from Info.plist of the App Bundle. '''
-        if self.info_plist_exists:
-            return self.info_plist['CFBundleIdentifier']
-        else:
-            return None
-
 class SnakeAppBundleExtension:
     def __init__(self, binaries, file_path):
         ''' It stores only logic for CrimsonUroboros flags. Most of the code related to parsing and extracting data from App Bundle is in BundleProcessor class. 
@@ -2816,36 +2809,6 @@ class SnakeVII(SnakeVI):
         value_as_bytes = value.encode()
         xattr.setxattr(self.file_path, 'com.apple.quarantine', value_as_bytes)
 
-### ---- VIII. SANDBOX --- ###
-class SandboxProcessor:
-    def __init__(self):
-        '''This class contains part of the code from the main() for the SnakeVIII: Sandbox.'''
-        pass
-
-    def process(self, args):
-        pass
-
-
-class SnakeVIII(SnakeVII):
-    def __init__(self, binaries, file_path):
-        super().__init__(binaries, file_path)
-        self.kext_map.update({
-            'com.apple.security.sandbox' : 'sandbox',
-            'sandbox.kext' : 'sandbox',
-        })
-        self.container_metadata_file = ".com.apple.containermanagerd.metadata.plist"
-
-    def todo(self):
-       ''' todo '''
-       return 1
-
-    def hasSandboxContainer(self):
-        ''' Check if sandbox container exists for the given App Bundle. '''
-        # Construct the expected path of the container
-        container_path = os.path.join(self.home_dir, 'Library', 'Containers', bundle_id)
-        
-        # Check if the path exists
-        return os.path.exists(container_path)
 
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
@@ -2990,11 +2953,6 @@ class ArgumentParser:
         antivirus_group.add_argument('--has_quarantine', action='store_true', help="Check if the file has quarantine extended attribute")
         antivirus_group.add_argument('--remove_quarantine', action='store_true', help="Remove com.apple.quarantine extended attribute from the file")
         antivirus_group.add_argument('--add_quarantine', action='store_true', help="Add com.apple.quarantine extended attribute to the file")
-
-    def addSandboxArgs(self):
-        sandbox_group = self.parser.add_argument_group('SANDBOX ARGS')
-        sandbox_group.add_argument('--todo', action='store_true', help="todo")
-        sandbox_group.add_argument('--container_metadata', action='store_true', help="Print the .com.apple.containermanagerd.metadata.plist contents in XML format")
 
     def parseArgs(self):
         args = self.parser.parse_args()
@@ -3396,7 +3354,3 @@ if __name__ == "__main__":
     ### --- VII. ANTIVIRUS --- ###
     antivirus_processor = AntivirusProcessor()
     antivirus_processor.process(args)
-
-    ### --- VIII. SANDBOX --- ###
-    sandbox_processor = SandboxProcessor()
-    sandbox_processor.process(args)
