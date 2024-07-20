@@ -40,7 +40,7 @@ The table of contents showing links to all articles are shown below:
 
 
 ## TOOLS
-[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper)
+[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher)
 ***
 
 ### [CrimsonUroboros](tests/CrimsonUroboros.py)
@@ -48,9 +48,10 @@ The table of contents showing links to all articles are shown below:
 Core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
 * Usage
 ```console
-usage: CrimsonUroboros [-h] -p PATH [--file_type] [--header_flags] [--endian]
-                       [--header] [--load_commands] [--has_cmd LC_MAIN]
-                       [--segments] [--has_segment __SEGMENT] [--sections]
+usage: CrimsonUroboros [-h] [-p PATH] [-b BUNDLE] [--file_type]
+                       [--header_flags] [--endian] [--header]
+                       [--load_commands] [--has_cmd LC_MAIN] [--segments]
+                       [--has_segment __SEGMENT] [--sections]
                        [--has_section __SEGMENT,__section] [--symbols]
                        [--imports] [--exports] [--imported_symbols]
                        [--chained_fixups] [--exports_trie] [--uuid] [--main]
@@ -59,18 +60,22 @@ usage: CrimsonUroboros [-h] -p PATH [--file_type] [--header_flags] [--endian]
                        [--save_strings all_strings.txt] [--info]
                        [--dump_data [offset,size,output_path]]
                        [--calc_offset vm_offset] [--constructors]
-                       [--verify_signature] [--cd_info] [--cd_requirements]
-                       [--entitlements [human|xml|var]]
+                       [--dump_section __SEGMENT,__section]
+                       [--bundle_structure] [--bundle_info]
+                       [--bundle_info_syntax_check] [--bundle_frameworks]
+                       [--bundle_plugins] [--verify_signature] [--cd_info]
+                       [--cd_requirements] [--entitlements [human|xml|var]]
                        [--extract_cms cms_signature.der]
                        [--extract_certificates certificate_name]
                        [--remove_sig unsigned_binary]
                        [--sign_binary [adhoc|identity]] [--cs_offset]
-                       [--cs_flags] [--has_pie] [--has_arc] [--is_stripped]
-                       [--has_canary] [--has_nx_stack] [--has_nx_heap]
-                       [--has_xn] [--is_notarized] [--is_encrypted]
-                       [--is_restricted] [--is_hr] [--is_as] [--is_fort]
-                       [--has_rpath] [--has_lv] [--checksec] [--dylibs]
-                       [--rpaths] [--rpaths_u] [--dylibs_paths]
+                       [--cs_flags] [--verify_bundle_signature]
+                       [--remove_sig_from_bundle] [--has_pie] [--has_arc]
+                       [--is_stripped] [--has_canary] [--has_nx_stack]
+                       [--has_nx_heap] [--has_xn] [--is_notarized]
+                       [--is_encrypted] [--is_restricted] [--is_hr] [--is_as]
+                       [--is_fort] [--has_rpath] [--has_lv] [--checksec]
+                       [--dylibs] [--rpaths] [--rpaths_u] [--dylibs_paths]
                        [--dylibs_paths_u] [--broken_relative_paths]
                        [--dylibtree [cache_path,output_path,is_extracted]]
                        [--dylib_id] [--reexport_paths] [--hijack_sec]
@@ -88,13 +93,22 @@ usage: CrimsonUroboros [-h] -p PATH [--file_type] [--header_flags] [--endian]
                        [--kext_exit kext_name] [--mig] [--has_suid]
                        [--has_sgid] [--has_sticky] [--injectable_dyld]
                        [--test_insert_dylib] [--test_prune_dyld]
-                       [--test_dyld_print_to_file]
+                       [--test_dyld_print_to_file] [--test_dyld_SLC] [--xattr]
+                       [--xattr_value xattr_name] [--xattr_all]
+                       [--has_quarantine] [--remove_quarantine]
+                       [--add_quarantine]
 
 Mach-O files parser for binary analysis
 
 options:
   -h, --help            show this help message and exit
+
+GENERAL ARGS:
   -p PATH, --path PATH  Path to the Mach-O file
+  -b BUNDLE, --bundle BUNDLE
+                        Path to the App Bundle (can be used with -p to change
+                        path of binary which is by default set to:
+                        /target.app/Contents/MacOS/target)
 
 MACH-O ARGS:
   --file_type           Print binary file type
@@ -136,6 +150,16 @@ MACH-O ARGS:
                         Calculate the real address (file on disk) of the given
                         Virtual Memory {vm_offset} (e.g. 0xfffffe000748f580)
   --constructors        Print binary constructors
+  --dump_section __SEGMENT,__section
+                        Dump '__SEGMENT,__section' to standard output as a raw
+                        bytes
+  --bundle_structure    Print the structure of the app bundle
+  --bundle_info         Print the Info.plist content of the app bundle (JSON
+                        format)
+  --bundle_info_syntax_check
+                        Check if bundle info syntax is valid
+  --bundle_frameworks   Print the list of frameworks in the bundle
+  --bundle_plugins      Print the list of plugins in the bundle
 
 CODE SIGNING ARGS:
   --verify_signature    Code Signature verification (if the contents of the
@@ -161,6 +185,11 @@ CODE SIGNING ARGS:
                         (default: adhoc)
   --cs_offset           Print Code Signature file offset
   --cs_flags            Print Code Signature flags
+  --verify_bundle_signature
+                        Code Signature verification (if the contents of the
+                        bundle have been modified)
+  --remove_sig_from_bundle
+                        Remove Code Signature from the bundle
 
 CHECKSEC ARGS:
   --has_pie             Check if Position-Independent Executable (PIE) is set
@@ -264,7 +293,8 @@ AMFI ARGS:
                         from Kernel Cache
   --kext_entry kext_name
                         Calculate the virtual memory address of the __start
-                        (entrpoint) for the given {kext_name} Kernel Extension
+                        (entrypoint) for the given {kext_name} Kernel
+                        Extension
   --kext_exit kext_name
                         Calculate the virtual memory address of the __stop
                         (exitpoint) for the given {kext_name} Kernel Extension
@@ -281,9 +311,23 @@ AMFI ARGS:
                         DYLD_PRINT_INITIALIZERS=1) (INVASIVE - the binary is
                         executed)
   --test_dyld_print_to_file
-                        Check if YLD_PRINT_TO_FILE Dyld Environment Variables
+                        Check if DYLD_PRINT_TO_FILE Dyld Environment Variables
                         works (INVASIVE - the binary is executed)
+  --test_dyld_SLC       Check if DYLD_SHARED_REGION=private Dyld Environment
+                        Variables works and code can be injected using
+                        DYLD_SHARED_CACHE_DIR (INVASIVE - the binary is
+                        executed)
 
+ANTIVIRUS ARGS:
+  --xattr               Print all extended attributes names
+  --xattr_value xattr_name
+                        Print single extended attribute value
+  --xattr_all           Print all extended attributes names and their values
+  --has_quarantine      Check if the file has quarantine extended attribute
+  --remove_quarantine   Remove com.apple.quarantine extended attribute from
+                        the file
+  --add_quarantine      Add com.apple.quarantine extended attribute to the
+                        file
 ```
 * Example:
 ```bash
@@ -430,7 +474,33 @@ Simple script for calculating `amfiFlags` (described [here](https://karol-mazure
 ```console
 python3 check_amfi.py 0x1df
 ```
-
+***
+### [make_bundle](App%20Bundle%20Extension/custom/make_bundle.sh)
+Build a codeless bundle with a red icon.
+* Usage:
+```console
+./make_bundle.sh
+```
+***
+### [make_bundle_exe](App%20Bundle%20Extension/custom/make_bundle_exe.sh)
+Bash template for building a PoC app bundle with Mach-O binary that utilizes Framework:
+* Usage:
+```console
+./make_bundle_exe.sh
+```
+***
+### [make_dmg](App%20Bundle%20Extension/custom/make_dmg.sh)
+Script for packing the app in a compressed DMG container:
+* Usage (change names in the script):
+```console
+./make_dmg.sh
+```
+### [electron_patcher](App%20Bundle%20Extension/custom/electron_patcher.py)
+Pytthon script for extracting ASAR files from Electron apps and patching them with a custom ASAR file. 
+```
+python3 electron_patcher.py extract app_bundle.app extracted_asar
+python3 electron_patcher.py pack extracted_asar app_bundle.app
+```
 
 ## INSTALL
 ```
