@@ -30,6 +30,8 @@ We do it for each TestSnake class.
 }
 '''
 
+snake_class = SnakeVII
+
 class Compiler:
     """
     A class for compiling C code using clang.
@@ -164,26 +166,8 @@ def argumentWrapper(args_list):
     sys.argv[1:] = args_list # Example: ['-p', 'hello', '--file_type']
     arg_parser = ArgumentParser()
     args = arg_parser.parseArgs()
-    
-    global bundle_processor # If not global, it need to be returned to the caller in every test.
-    
-    if args.bundle is not None:
-        bundle_path = os.path.abspath(args.bundle)
-        bundle_processor = BundleProcessor(bundle_path)
 
-        if os.path.exists(bundle_processor.info_plist_path) and args.path is None:
-            bundle_executable = bundle_processor.getBundleInfoCFBundleExecutableValue()
-            file_path = os.path.join(bundle_processor.bundle_path, 'Contents/MacOS', bundle_executable)
-
-        elif not os.path.exists(bundle_processor.info_plist_path) and args.path is None:
-            file_path = os.path.join(args.bundle, 'Contents/MacOS', os.path.basename(args.bundle).split('.')[0])
-
-        else:
-            file_path = os.path.abspath(args.path)
-    else:
-        bundle_processor = None # It must be defined for further processors classes logic.
-        file_path = os.path.abspath(args.path)
-    return args, file_path
+    return args
 
 def executeCodeBlock(func):
     """
@@ -219,6 +203,95 @@ def run_and_get_stdout(command):
     command_with_stdout = f"{command} 2>&1"
     return os.popen(command_with_stdout).read().strip()
 
+class TestSnakeAppBundleExtension():
+    '''Testing App Bundle Extension'''
+    @classmethod
+    def setup_class(cls):
+        # Prepare bare_bone.app for test_bundle_structure
+        os.system("../App\ Bundle\ Extension/custom/make_bundle.sh")
+        assert os.path.exists("bare_bone.app")
+
+    @classmethod
+    def teardown_class(cls):
+        # Remove bare_bone.app for test_bundle_structure
+        os.system("rm -rf bare_bone.app")
+        assert not os.path.exists("bare_bone.app")
+
+    def test_bundle_structure(self):
+        '''Test the --bundle_structure flag of SnakeI.'''
+        args_list = ['-b', 'bare_bone.app', '--bundle_structure']
+        args = argumentWrapper(args_list)
+
+        def code_block():
+            snake_hatchery = SnakeHatchery(args, snake_class)
+            snake_hatchery.hatch()
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output_1 = 'bare_bone.app'
+        expected_output_2 = 'red_icon.icns'
+        
+        assert expected_output_1 in uroboros_output
+        assert expected_output_2 in uroboros_output
+
+    def test_bundle_info(self):
+        '''Test the --bundle_structure flag of SnakeI.'''
+        args_list = ['-b', 'bare_bone.app', '--bundle_info']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            snake_hatchery = SnakeHatchery(args, snake_class)
+            snake_hatchery.hatch()
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = '"CFBundleExecutable": "bare_bone_exe",'
+
+        assert expected_output in uroboros_output
+
+    def test_bundle_info_syntax_check(self):
+        '''Test the --bundle_info_syntax_check flag of SnakeI.'''
+        args_list = ['-b', 'bare_bone.app', '--bundle_info_syntax_check']
+        args = argumentWrapper(args_list)
+
+        def code_block():
+            snake_hatchery = SnakeHatchery(args, snake_class)
+            snake_hatchery.hatch()
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'Valid Bundle Info.plist syntax'
+        assert expected_output in uroboros_output
+
+    def test_bundle_frameworks(self):
+        '''Test the --bundle_frameworks flag of SnakeI.'''
+        args_list = ['-b', 'bare_bone.app', '--bundle_frameworks']
+        args = argumentWrapper(args_list)
+
+        def code_block():
+            snake_hatchery = SnakeHatchery(args, snake_class)
+            snake_hatchery.hatch()
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'ClockOpen.framework'
+
+        assert expected_output in uroboros_output
+
+    def test_bundle_plugins(self):
+        '''Test the --bundle_plugins flag of SnakeI.'''
+        args_list = ['-b', 'bare_bone.app', '--bundle_plugins']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            snake_hatchery = SnakeHatchery(args, snake_class)
+            snake_hatchery.hatch()
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'No plugins found.'
+
+        assert expected_output in uroboros_output
+
 class TestSnakeI():
     '''Testing I. MACH-O'''
     @classmethod
@@ -228,19 +301,11 @@ class TestSnakeI():
         cls.compiler.compileIt("../I.\ Mach-O/custom/hello.c", "hello_1", ["-arch", "arm64"])
         assert os.path.exists("hello_1")  # Check if the file exists after compilation
 
-        # Prepare bare_bone.app for test_bundle_structure
-        os.system("../App\ Bundle\ Extension/custom/make_bundle.sh")
-        assert os.path.exists("bare_bone.app")
-
     @classmethod
     def teardown_class(cls):
         # Purge the compiled files
         cls.compiler.purgeCompiledFiles()
         assert not os.path.exists("hello_1")  # Check if the file is removed after purging
-        
-        # Remove bare_bone.app for test_bundle_structure
-        os.system("rm -rf bare_bone.app")
-        assert not os.path.exists("bare_bone.app")
 
     def test_MachOProcessor(self):
         '''Test the initialization of MachOProcessor.
@@ -252,11 +317,13 @@ class TestSnakeI():
 
         # Set up arguments for testing
         args_list = ['-p', 'hello_1'] 
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         # Define the code block to be executed
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
 
         # Execute the code block using the wrapper function and capture the output
@@ -269,10 +336,12 @@ class TestSnakeI():
     def test_file_type(self):
         '''Test the --file_type flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--file_type']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -283,10 +352,12 @@ class TestSnakeI():
     def test_header_flags(self):
         '''Test the --header_flags flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--header_flags']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -297,10 +368,12 @@ class TestSnakeI():
     def test_endian(self):
         '''Test the --endian flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--endian']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -311,10 +384,12 @@ class TestSnakeI():
     def test_header(self):
         '''Test the --header flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--header']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -329,10 +404,12 @@ class TestSnakeI():
     def test_load_commands(self):
         '''Test the --load_commands flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--load_commands']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -343,10 +420,12 @@ class TestSnakeI():
     def test_has_cmd(self):
         '''Test the --has_cmd flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--has_cmd', 'LC_MAIN']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -357,10 +436,12 @@ class TestSnakeI():
     def test_segments(self):
         '''Test the --segments flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--segments']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -377,10 +458,12 @@ class TestSnakeI():
     def test_has_segment(self):
         '''Test the --has_segment flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--has_segment', '__TEXT']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -391,10 +474,12 @@ class TestSnakeI():
     def test_sections(self):
         '''Test the --sections flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--sections']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -413,10 +498,12 @@ class TestSnakeI():
     def test_has_section(self):
         '''Test the --has_section flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--has_section', '__TEXT,__text']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -427,10 +514,12 @@ class TestSnakeI():
     def test_symbols(self):
         '''Test the --symbols flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--symbols']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -445,10 +534,12 @@ class TestSnakeI():
     def test_imported_symbols(self):
         '''Test the --imported_symbols flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--imported_symbols']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -459,10 +550,12 @@ class TestSnakeI():
     def test_chained_fixups(self):
         '''Test the --chained_fixups flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--chained_fixups']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -473,10 +566,12 @@ class TestSnakeI():
     def test_exports_trie(self):
         '''Test the --exports_trie flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--exports_trie']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -487,10 +582,12 @@ class TestSnakeI():
     def test_uuid(self):
         '''Test the --uuid flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--uuid']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -504,10 +601,12 @@ class TestSnakeI():
     def test_main(self):
         '''Test the --main flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--main']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -520,10 +619,12 @@ class TestSnakeI():
     def test_encryption_info(self):
         '''Test the --encryption_info flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--encryption_info']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -534,10 +635,12 @@ class TestSnakeI():
     def test_strings_section(self):
         '''Test the --strings_section flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--strings_section']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -550,10 +653,12 @@ class TestSnakeI():
     def test_all_strings(self):
         '''Test the --all_strings flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--all_strings']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -564,10 +669,12 @@ class TestSnakeI():
     def test_save_strings(self):
         '''Test the --save_strings flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--save_strings', 'testing_strings.txt']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -584,10 +691,12 @@ class TestSnakeI():
     def test_info(self):
         '''Test the --info flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--info']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
@@ -607,10 +716,12 @@ class TestSnakeI():
     def test_dump_data(self):
         '''Test the --dump_data flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--dump_data', '0x00,0x08,hello_1_header_dump.bin']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
 
         executeCodeBlock(code_block)
@@ -627,10 +738,12 @@ class TestSnakeI():
     def test_calc_offset(self):
         '''Test the --calc_offset flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--calc_offset', "0x0000000100003f20"]
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
 
         uroboros_output = executeCodeBlock(code_block)
@@ -641,10 +754,12 @@ class TestSnakeI():
     def test_constructors(self):
         '''Test the --constructors flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--constructors']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
 
         uroboros_output = executeCodeBlock(code_block)
@@ -655,85 +770,16 @@ class TestSnakeI():
     def test_dump_section(self):
         '''Test the --dump_section flag of SnakeI.'''
         args_list = ['-p', 'hello_1', '--dump_section', '__TEXT,__cstring']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
  
         uroboros_output = executeCodeBlock(code_block)
         expected_output = 'Hello, World!'
-
-        assert expected_output in uroboros_output
-
-    def test_bundle_structure(self):
-        '''Test the --bundle_structure flag of SnakeI.'''
-        args_list = ['-b', 'bare_bone.app', '--bundle_structure']
-        args, file_path = argumentWrapper(args_list)
-
-        def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
-            macho_processor.process(args)
-            
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output_1 = 'bare_bone.app'
-        expected_output_2 = 'red_icon.icns'
-        
-        assert expected_output_1 in uroboros_output
-        assert expected_output_2 in uroboros_output
-
-    def test_bundle_info(self):
-        '''Test the --bundle_structure flag of SnakeI.'''
-        args_list = ['-b', 'bare_bone.app', '--bundle_info']
-        args, file_path = argumentWrapper(args_list)
-
-        def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
-            macho_processor.process(args)
-
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output = '"CFBundleExecutable": "bare_bone_exe",'
-
-        assert expected_output in uroboros_output
-
-    def test_bundle_info_syntax_check(self):
-        '''Test the --bundle_info_syntax_check flag of SnakeI.'''
-        args_list = ['-b', 'bare_bone.app', '--bundle_info_syntax_check']
-        args, file_path = argumentWrapper(args_list)
-
-        def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
-            macho_processor.process(args)
-
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output = 'Valid Bundle Info.plist syntax'
-        assert expected_output in uroboros_output
-
-    def test_bundle_frameworks(self):
-        '''Test the --bundle_frameworks flag of SnakeI.'''
-        args_list = ['-b', 'bare_bone.app', '--bundle_frameworks']
-        args, file_path = argumentWrapper(args_list)
-
-        def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
-            macho_processor.process(args)
-
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output = 'ClockOpen.framework'
-
-        assert expected_output in uroboros_output
-
-    def test_bundle_plugins(self):
-        '''Test the --bundle_plugins flag of SnakeI.'''
-        args_list = ['-b', 'bare_bone.app', '--bundle_plugins']
-        args, file_path = argumentWrapper(args_list)
-
-        def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
-            macho_processor.process(args)
-
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output = 'No plugins found.'
 
         assert expected_output in uroboros_output
 
@@ -788,10 +834,12 @@ class TestSnakeII():
     def test_verify_signature(self):
         '''Test the --verify_signature flag of SnakeII.'''
         args_list = ['-p', 'hello_2', '--verify_signature']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
             code_signing_processor = CodeSigningProcessor()
@@ -803,10 +851,12 @@ class TestSnakeII():
         assert uroboros_output == expected_output
         
         args_list = ['-p', 'hello_2_unsigned_binary', '--verify_signature']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
             code_signing_processor = CodeSigningProcessor()
@@ -820,10 +870,12 @@ class TestSnakeII():
     def test_cd_info(self):
         '''Test the --cd_info flag of SnakeII.'''
         args_list = ['-p', 'hello_2', '--cd_info']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -836,10 +888,12 @@ class TestSnakeII():
     def test_cd_requirements(self):
         '''Test the --cd_requirements flag of SnakeII.'''
         args_list = ['-p', 'hello_2', '--cd_requirements']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -852,10 +906,12 @@ class TestSnakeII():
     def test_entitlements(self):
         '''Test the --entitlements flag of SnakeII.'''
         args_list = ['-p', 'hello_2', '--entitlements']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -870,10 +926,12 @@ class TestSnakeII():
     def test_extract_cms(self):
         '''Test the --extract_cms flag of SnakeII.''' # TODO - this test can be improved, but we need to create a security-identity for tests
         args_list = ['-p', 'hello_2', '--extract_cms', 'hello_2_unpredictable_name.cms']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -886,10 +944,12 @@ class TestSnakeII():
     def test_extract_certificates(self):
         '''Test the --extract_certificates flag of SnakeII.'''
         args_list = ['-p', '/usr/lib/dyld', '--extract_certificates', 'hello_2_unpredictable_name']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
 
             code_signing_processor = CodeSigningProcessor()
@@ -904,10 +964,12 @@ class TestSnakeII():
     def test_remove_sig(self):
         '''Test the --remove_code_signature flag of SnakeII.'''
         args_list = ['-p', 'hello_2', '--remove_sig', 'hello_2_test_remove_sig']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -923,9 +985,11 @@ class TestSnakeII():
     def test_sign_binary(self):
         '''Test the --sign_binary flag of SnakeII.'''
         args_list = ['-p', 'hello_2_unsigned_binary', '--sign_binary']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             
             code_signing_processor = CodeSigningProcessor()
@@ -940,10 +1004,12 @@ class TestSnakeII():
     def test_cs_offset(self):
         '''Test the --cs_offset flag of SnakeII.'''
         args_list = ['-p', 'hello_2', '--cs_offset']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -956,10 +1022,12 @@ class TestSnakeII():
     def test_cs_flags(self):
         '''Test the --cs_flags flag of SnakeII.'''
         args_list = ['-p', 'hello_2', '--cs_flags']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -972,10 +1040,12 @@ class TestSnakeII():
     def test_verify_bundle_signature(self):
         '''Test the --verify_bundle_signature flag of SnakeII.'''
         args_list = ['-b', 'bare_bone.app', '--verify_bundle_signature']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -988,10 +1058,12 @@ class TestSnakeII():
     def test_remove_sig_from_bundle(self):
         '''Test the --remove_sig_from_bundle flag of SnakeII.'''
         args_list = ['-b', 'bare_bone.app', '--remove_sig_from_bundle']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             code_signing_processor = CodeSigningProcessor()
             code_signing_processor.process(args)
@@ -1048,10 +1120,12 @@ class TestSnakeIII():
     def test_has_pie(self):
         '''Test the --has_pie flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--has_pie']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1064,10 +1138,12 @@ class TestSnakeIII():
     def test_has_arc(self):
         '''Test the --has_arc flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--has_arc']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1078,10 +1154,12 @@ class TestSnakeIII():
         assert uroboros_output == expected_output
         
         args_list = ['-p', 'hello_3_arc', '--has_arc']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1094,10 +1172,12 @@ class TestSnakeIII():
     def test_is_stripped(self):
         '''Test the --is_stripped flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--is_stripped']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1108,9 +1188,11 @@ class TestSnakeIII():
         assert uroboros_output == expected_output
 
         args_list = ['-p', 'hello_3_stripped', '--is_stripped']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1123,10 +1205,12 @@ class TestSnakeIII():
     def test_has_canary(self):
         '''Test the --has_canary flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--has_canary']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1137,10 +1221,12 @@ class TestSnakeIII():
         assert uroboros_output == expected_output
 
         args_list = ['-p', 'hello_3_sc', '--has_canary']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1153,10 +1239,12 @@ class TestSnakeIII():
     def test_has_nx_stack(self):
         '''Test the --has_nx_stack flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--has_nx_stack']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1169,10 +1257,12 @@ class TestSnakeIII():
     def test_has_nx_heap(self):
         '''Test the --has_nx_heap flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--has_nx_heap']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1185,10 +1275,12 @@ class TestSnakeIII():
     def test_has_xn(self):
         '''Test the --has_xn flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--has_xn']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1201,10 +1293,12 @@ class TestSnakeIII():
     def test_is_notarized(self):
         '''Test the --is_notarized flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--is_notarized']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1217,10 +1311,12 @@ class TestSnakeIII():
     def test_is_encrypted(self):
         '''Test the --is_encrypted flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--is_encrypted']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1233,10 +1329,12 @@ class TestSnakeIII():
     def test_is_restricted(self):
         '''Test the --is_restricted flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--is_restricted']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1249,10 +1347,12 @@ class TestSnakeIII():
     def test_is_hr(self):
         '''Test the --is_hr flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--is_hr']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1265,10 +1365,12 @@ class TestSnakeIII():
     def test_is_as(self):
         '''Test the --is_as flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--is_as']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1281,10 +1383,12 @@ class TestSnakeIII():
     def test_is_fort(self):
         '''Test the --is_fort flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--is_fort']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1297,10 +1401,12 @@ class TestSnakeIII():
     def test_has_rpath(self):
         '''Test the --has_rpath flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--has_rpath']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1313,10 +1419,12 @@ class TestSnakeIII():
     def test_has_lv(self):
         '''Test the --has_lv flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--has_lv']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1329,10 +1437,12 @@ class TestSnakeIII():
     def test_checksec(self):
         '''Test the --checksec flag of SnakeIII.'''
         args_list = ['-p', 'hello_3', '--checksec']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             checksec_processor = ChecksecProcessor()
             checksec_processor.process(args)
@@ -1406,10 +1516,12 @@ class TestSnakeIV():
     def test_dylibs(self):
         '''Test the --dylibs flag of SnakeIV.'''
         args_list = ['-p', 'hello_4', '--dylibs']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1423,10 +1535,12 @@ class TestSnakeIV():
     def test_rpaths(self):
         '''Test the --rpaths flag of SnakeIV.'''
         args_list = ['-p', 'mylib', '--rpaths']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1439,10 +1553,12 @@ class TestSnakeIV():
     def test_rpaths_u(self):
         '''Test the --rpaths_u flag of SnakeIV.'''
         args_list = ['-p', 'mylib', '--rpaths_u']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1455,10 +1571,12 @@ class TestSnakeIV():
     def test_dylibs_paths(self):
         '''Test the --dylibs_paths flag of SnakeIV.'''
         args_list = ['-p', 'hello_4', '--dylibs_paths']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1471,10 +1589,12 @@ class TestSnakeIV():
     def test_broken_relative_paths(self):
         '''Test the --broken_relative_paths flag of SnakeIV.'''
         args_list = ['-p', 'mylib', '--broken_relative_paths']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1487,10 +1607,12 @@ class TestSnakeIV():
     def test_dylibtree(self):
         '''Test the --dylibtree flag of SnakeIV.'''
         args_list = ['-p', 'hello_4', '--dylibtree']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1507,10 +1629,12 @@ class TestSnakeIV():
     def test_dylib_id(self):
         '''Test the --dylib_id flag of SnakeIV.'''
         args_list = ['-p', 'mylib', '--dylib_id']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1523,10 +1647,12 @@ class TestSnakeIV():
     def test_reexport_paths(self):
         '''Test the --reexport_paths flag of SnakeIV.'''
         args_list = ['-p', 'mylib', '--reexport_paths']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1539,10 +1665,12 @@ class TestSnakeIV():
     def test_hijack_sec(self):
         '''Test the --hijack_sec flag of SnakeIV.'''
         args_list = ['-p', 'mylib', '--hijack_sec']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1555,10 +1683,12 @@ class TestSnakeIV():
     def test_dylib_hijacking(self):
         '''Test the --dylib_hijacking flag of SnakeIV.'''
         args_list = ['-p', 'mylib', '--dylib_hijacking']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1571,10 +1701,12 @@ class TestSnakeIV():
     def test_dylib_hijacking_a(self):
         '''Test the --dylib_hijacking_a flag of SnakeIV.'''
         args_list = ['-p', 'mylib', '--dylib_hijacking_a']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1587,10 +1719,12 @@ class TestSnakeIV():
     def test_prepare_dylib(self):
         '''Test the --prepare_dylib flag of SnakeIV.'''
         args_list = ['-p', 'mylib', '--prepare_dylib']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dylibs_processor = DylibsProcessor()
             dylibs_processor.process(args)
@@ -1624,10 +1758,12 @@ class TestSnakeV():
     def test_is_built_for_sim(self):
         '''Test the --is_built_for_sim flag of SnakeV.'''
         args_list = ['-p', 'hello_5', '--is_built_for_sim']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1640,10 +1776,12 @@ class TestSnakeV():
     def test_get_dyld_env(self):
         '''Test the --get_dyld_env flag of SnakeV.'''
         args_list = ['-p', '/usr/lib/dyld', '--get_dyld_env']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1664,10 +1802,12 @@ class TestSnakeV():
     def test_compiled_with_dyld_env(self):
         '''Test the --compiled_with_dyld_env flag of SnakeV.'''
         args_list = ['-p', 'hello_5', '--compiled_with_dyld_env']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1680,10 +1820,12 @@ class TestSnakeV():
     def test_has_interposing(self):
         '''Test the --has_interposing flag of SnakeV.'''
         args_list = ['-p', 'hello_5', '--has_interposing']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1694,10 +1836,12 @@ class TestSnakeV():
         assert expected_output in uroboros_output
         
         args_list = ['-p', 'libinterpose.dylib', '--has_interposing']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1708,10 +1852,12 @@ class TestSnakeV():
     def test_interposing_symbols(self):
         '''Test the --interposing_symbols flag of SnakeV.'''
         args_list = ['-p', 'libinterpose.dylib', '--interposing_symbols']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             dyld_processor = DyldProcessor()
             dyld_processor.process(args)
@@ -1770,10 +1916,12 @@ class TestSnakeVI():
     def test_dump_prelink_info(self):
         '''Test the --dump_prelink_info flag of SnakeVI.'''
         args_list = ['-p', self.kernelcache_path, '--dump_prelink_info']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1786,10 +1934,12 @@ class TestSnakeVI():
     def test_dump_prelink_text(self):
         '''Test the --dump_prelink_text flag of SnakeVI.'''
         args_list = ['-p', self.kernelcache_path, '--dump_prelink_text']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1802,10 +1952,12 @@ class TestSnakeVI():
     def test_dump_prelink_kext(self):
         '''Test the --dump_prelink_kext flag of SnakeVI.'''
         args_list = ['-p', self.kernelcache_path, '--dump_prelink_kext', 'amfi']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1818,10 +1970,12 @@ class TestSnakeVI():
     def test_kext_prelinkinfo(self):
         '''Test the --kext_prelinkinfo flag of SnakeVI.'''
         args_list = ['-p', self.kernelcache_path, '--kext_prelinkinfo', 'amfi']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1834,10 +1988,12 @@ class TestSnakeVI():
     def test_kmod_info(self):
         '''Test the --kmod_info flag of SnakeVI.'''
         args_list = ['-p', self.kernelcache_path, '--kmod_info', 'amfi']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1850,10 +2006,12 @@ class TestSnakeVI():
     def test_kext_entry(self):
         '''Test the --kext_entry flag of SnakeVI.'''
         args_list = ['-p', self.kernelcache_path, '--kext_entry', 'amfi']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1866,10 +2024,12 @@ class TestSnakeVI():
     def test_kext_exit(self):
         '''Test the --kext_exit flag of SnakeVI.'''
         args_list = ['-p', self.kernelcache_path, '--kext_exit', 'amfi']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1882,10 +2042,12 @@ class TestSnakeVI():
     def test_mig(self):
         '''Test the --mig flag of SnakeVI.'''
         args_list = ['-p', '/usr/libexec/amfid', '--mig']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1914,10 +2076,12 @@ class TestSnakeVI():
     def test_has_suid(self):
         '''Test the --has_suid flag of SnakeVI.'''
         args_list = ['-p', 'hello_6_s', '--has_suid']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1929,10 +2093,12 @@ class TestSnakeVI():
     def test_has_sgid(self):
         '''Test the --has_sgid flag of SnakeVI.'''
         args_list = ['-p', 'hello_6_g', '--has_sgid']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1944,10 +2110,12 @@ class TestSnakeVI():
     def test_has_sticky(self):
         '''Test the --has_sticky flag of SnakeVI.'''
         args_list = ['-p', 'hello_6_sticky', '--has_sticky']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1959,10 +2127,12 @@ class TestSnakeVI():
     def test_injectable_dyld(self):
         '''Test the --injectable_dyld flag of SnakeVI.'''
         args_list = ['-p', 'hello_6', '--injectable_dyld']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1974,10 +2144,12 @@ class TestSnakeVI():
     def test_test_insert_dylib(self):
         '''Test the --test_insert_dylib flag of SnakeVI.'''
         args_list = ['-p', 'hello_6', '--test_insert_dylib']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -1989,10 +2161,12 @@ class TestSnakeVI():
     def test_test_prune_dyld(self):
         '''Test the --test_prune_dyld flag of SnakeVI.'''
         args_list = ['-p', 'hello_6', '--test_prune_dyld']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -2004,10 +2178,12 @@ class TestSnakeVI():
     def test_test_dyld_print_to_file(self):
         '''Test the --test_dyld_print_to_file flag of SnakeVI.'''
         args_list = ['-p', 'hello_6', '--test_dyld_print_to_file']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             amfi_processor = AMFIProcessor()
             amfi_processor.process(args)
@@ -2019,10 +2195,10 @@ class TestSnakeVI():
     # def test_test_dyld_SLC(self):
     #     '''Test the --test_dyld_SLC flag of SnakeVI.'''
     #     args_list = ['-p', 'hello_6', '--test_dyld_SLC']
-    #     args, file_path = argumentWrapper(args_list)
+    #     args = argumentWrapper(args_list)
 
     #     def code_block():
-    #         macho_processor = MachOProcessor(file_path, bundle_processor)
+    #         macho_processor = MachOProcessor()
     #         macho_processor.process(args)
     #         amfi_processor = AMFIProcessor()
     #         amfi_processor.process(args)
@@ -2060,10 +2236,12 @@ class TestSnakeVII():
     def test_xattr(self):
         '''Test the --xattr flag of SnakeVII.'''
         args_list = ['-p', "hello_7", '--xattr']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
@@ -2076,10 +2254,12 @@ class TestSnakeVII():
     def test_xattr_value(self):
         '''Test the --xattr_value flag of SnakeVII.'''
         args_list = ['-p', "hello_7", '--xattr_value', 'com.apple.quarantine']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
@@ -2092,10 +2272,12 @@ class TestSnakeVII():
     def test_xattr_all(self):
         '''Test the --xattr_all flag of SnakeVII.'''
         args_list = ['-p', "hello_7", '--xattr_all']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
@@ -2108,10 +2290,12 @@ class TestSnakeVII():
     def test_has_quarantine(self):
         '''Test the --has_quarantine flag of SnakeVII.'''
         args_list = ['-p', "hello_7", '--has_quarantine']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
         
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
@@ -2124,10 +2308,12 @@ class TestSnakeVII():
     def test_remove_quarantine(self):
         '''Test the --remove_quarantine flag of SnakeVII.'''
         args_list = ['-p', "hello_7", '--remove_quarantine']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
@@ -2142,10 +2328,12 @@ class TestSnakeVII():
     def test_add_quarantine(self):
         '''Test the --add_quarantine flag of SnakeVII.'''
         args_list = ['-p', "hello_7", '--add_quarantine']
-        args, file_path = argumentWrapper(args_list)
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
 
         def code_block():
-            macho_processor = MachOProcessor(file_path, bundle_processor)
+            macho_processor = MachOProcessor()
             macho_processor.process(args)
             antivirus_processor = AntivirusProcessor()
             antivirus_processor.process(args)
