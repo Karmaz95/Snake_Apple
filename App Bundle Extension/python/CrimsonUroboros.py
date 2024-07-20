@@ -97,7 +97,7 @@ class SnakeHatchery:
         ''' Initialize the binary object in global scope.'''
         global binaries # It must be global, becuase after this object is destructed, the snake_instance would point to invalid memory ("binary" is dependant on "binaries").
 
-        if self.file_path_exists:
+        if self.file_path: # We cannot use here self.file_path_exists because at this point the file_path cpuld be set fron None to a valid path by filePathInit() method (when only -b specified)
             adhoc_macho_processor = MachOProcessor() # Just for this limited scope
 
             if adhoc_macho_processor.isFileMachO(self.file_path):
