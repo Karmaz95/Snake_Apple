@@ -394,6 +394,10 @@ ___
 * Sandbox.kext
 
 ___
+### [Sandbox Detector](https://karol-mazurek.medium.com/sandbox-detector-4268ab3cd361?sk=v2%2F58fe49fb-1381-4db3-9db9-3f6309e4053a)
+libsystem_sandbox.dylib | com.apple.security.app-sandbox | Activity Monitor.app | _sandbox_check | /usr/lib/libSystem.B.dylib | dyld-shared-cache-extractor | arm64e_preview_abi | kernel_task | sandbox_operation_fixup_0 | CTL_KERN | KERN_PROC | KERN_PROC_PID | struct kinfo_proc info | kinfo_getproc | sysctl | mib | sandbox_check_common_0 
+
+___
 ### [IX. TCC]()
 
 ___
