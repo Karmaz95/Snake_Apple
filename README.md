@@ -11,7 +11,7 @@ Each article directory contains three subdirectories:
 The short introduction is written in: [Snake&Apple Intro](https://karol-mazurek95.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)  
 In the [Article_tags.md](Article_tags.md) you can find the tags for each article.  
 The table of contents showing links to all articles are shown below:
-* &#9745; [App Bundle Extension]()
+* &#9744; [App Bundle Extension]()
   * &#9745; [Cracking macOS apps](https://karol-mazurek.medium.com/cracking-macos-apps-39575dd672e0?sk=v2%2F727dce55-53ee-45f6-b051-2979e62f2ba1)
   * &#9745; [Cracking Electron Integrity](https://karol-mazurek.medium.com/cracking-electron-integrity-0a10e0d5f239?sk=v2%2F7726b99c-c6c9-4d70-8c37-da9f2f0874e8)
 * &#9745; [I. Mach-O](https://karol-mazurek95.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
@@ -34,6 +34,7 @@ The table of contents showing links to all articles are shown below:
 * &#9745; [VII. Antivirus](https://karol-mazurek.medium.com/snake-apple-vii-antivirus-0a57acc10185?sk=v2%2F2c46d7ac-4435-41e6-bbda-2acb4eb78c76)
 * &#9744; [VIII. Sandbox]()
   * &#9745; [SBPL Compilator](https://karol-mazurek.medium.com/sbpl-compilator-c05f5304d057?sk=v2%2F4ae3bf90-ff12-4fea-b0fc-0f2ef60d7b93)
+  * &#9745; [Sandbox Detector](https://karol-mazurek.medium.com/sandbox-detector-4268ab3cd361?sk=v2%2F58fe49fb-1381-4db3-9db9-3f6309e4053a)
 * &#9744; [IX. TCC]()
 * &#9744; [X. NU]()
   * &#9745; [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
