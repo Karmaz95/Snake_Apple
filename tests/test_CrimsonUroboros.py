@@ -306,6 +306,9 @@ class TestSnakeI():
         # Purge the compiled files
         cls.compiler.purgeCompiledFiles()
         assert not os.path.exists("hello_1")  # Check if the file is removed after purging
+        
+        os.remove("test_bin")
+        assert not os.path.exists("test_bin")  # Check if the file is removed after purging
 
     def test_MachOProcessor(self):
         '''Test the initialization of MachOProcessor.
@@ -769,7 +772,15 @@ class TestSnakeI():
 
     def test_dump_section(self):
         '''Test the --dump_section flag of SnakeI.'''
-        args_list = ['-p', 'hello_1', '--dump_section', '__TEXT,__cstring']
+        uroboros_output = run_and_get_stdout('python3 CrimsonUroboros.py -p hello_1 --dump_section "__TEXT,__cstring"')
+        print(uroboros_output)
+        expected_output = 'Hello, World!'
+
+        assert expected_output in uroboros_output
+
+    def test_dump_binary(self):
+        '''Test the --dump_binary flag of SnakeI.'''
+        args_list = ['-p', 'hello_1', '--dump_binary', 'test_bin']
         args = argumentWrapper(args_list)
         snake_hatchery = SnakeHatchery(args, snake_class)
         snake_hatchery.hatch()
@@ -779,9 +790,11 @@ class TestSnakeI():
             macho_processor.process(args)
  
         uroboros_output = executeCodeBlock(code_block)
-        expected_output = 'Hello, World!'
+        expected_output = ''
 
         assert expected_output in uroboros_output
+        assert os.path.exists('test_bin')
+        assert run_and_get_stdout('file test_bin') == 'test_bin: Mach-O 64-bit executable arm64'
 
 class TestSnakeII():
     '''Testing II. CODE SIGNING'''

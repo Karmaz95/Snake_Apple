@@ -97,7 +97,7 @@ class SnakeHatchery:
         ''' Initialize the binary object in global scope.'''
         global binaries # It must be global, becuase after this object is destructed, the snake_instance would point to invalid memory ("binary" is dependant on "binaries").
 
-        if self.file_path_exists:
+        if self.file_path: # We cannot use here self.file_path_exists because at this point the file_path cpuld be set fron None to a valid path by filePathInit() method (when only -b specified)
             adhoc_macho_processor = MachOProcessor() # Just for this limited scope
 
             if adhoc_macho_processor.isFileMachO(self.file_path):
@@ -208,6 +208,14 @@ class BundleProcessor:
         else:
             return None
 
+    def getBundleId(self):
+        ''' Return CFBundleIdentifier from Info.plist of the App Bundle. '''
+        if self.info_plist_exists:
+            with open(self.info_plist_path, 'rb') as f:
+                plist = plistlib.load(f)
+                return plist.get('CFBundleIdentifier')
+        return None
+
 class SnakeAppBundleExtension:
     def __init__(self, binaries, file_path):
         ''' It stores only logic for CrimsonUroboros flags. Most of the code related to parsing and extracting data from App Bundle is in BundleProcessor class. 
@@ -247,6 +255,14 @@ class SnakeAppBundleExtension:
                 print(plugin)
         else:
             print("No plugins found.")
+
+    def printBundleId(self):
+        ''' Print the CFBundleIdentifier from Info.plist of the App Bundle. '''
+        bundle_id = bundle_processor.getBundleId()
+        if bundle_id:
+            print(bundle_id)
+        else:
+            print("No bundle id found.")
 
 ### --- I. MACH-O --- ###
 class MachOProcessor:
@@ -383,6 +399,9 @@ class MachOProcessor:
 
         if args.dump_section: # Dump section to a stdout
             snake_instance.dumpSectionToStdout(args.dump_section)
+
+        if args.dump_binary: # Dump binary to a given file
+            snake_instance.dumpBinaryToFile(args.dump_binary)
 
     def isFileMachO(self, file_path):
         '''Check if file is Mach-O. '''
@@ -695,12 +714,12 @@ class SnakeI(SnakeAppBundleExtension):
 
     def getStringSection(self):
         '''Return strings from the __cstring (string table).'''
-        extracted_strings = set()
+        extracted_strings = []
         for section in self.binary.sections:
             if section.type == lief.MachO.SECTION_TYPES.CSTRING_LITERALS:
                 strings_bytes = section.content.tobytes()
-                strings = strings_bytes.decode('utf-8', errors='ignore')  # Adjust the encoding as per your requirements
-                extracted_strings.update(strings.split('\x00'))
+                strings = strings_bytes.decode('utf-8', errors='ignore')
+                extracted_strings.extend(strings.split('\x00'))
         return extracted_strings
 
     def findAllStringsInBinary(self):
@@ -914,7 +933,15 @@ class SnakeI(SnakeAppBundleExtension):
         segment_name = segment_section[0]
         section_name = segment_section[1]
         extracted_bytes = self.extractSection(segment_name, section_name)
-        print(extracted_bytes)
+        sys.stdout.buffer.write(extracted_bytes)
+
+    def dumpBinaryToFile(self, output_path):
+        ''' Dump ARM64 binary from FAT binary and save to a given file. '''
+        if binaries is not None:
+            if self.binary is not None:
+                if not output_path.startswith('/'):
+                    output_path = os.path.join(os.getcwd(), output_path)
+                self.binary.write(output_path)
 
 ### --- II. CODE SIGNING --- ### 
 class CodeSigningProcessor:
@@ -2809,6 +2836,281 @@ class SnakeVII(SnakeVI):
         value_as_bytes = value.encode()
         xattr.setxattr(self.file_path, 'com.apple.quarantine', value_as_bytes)
 
+### ---- VIII. SANDBOX --- ###
+class SandboxProcessor:
+    def __init__(self):
+        '''This class contains part of the code from the main() for the SnakeVIII: Sandbox.'''
+        pass
+
+    def process(self, args):
+        if args.sandbox_container_path: # Print the sandbox container path
+            snake_instance.printSandboxContainerPath()
+
+        if args.sandbox_container_metadata: # Print the sandbox container metadata
+            snake_instance.printSandboxContainerMetadata()
+
+        if args.sandbox_redirectable_paths: # Print the sandbox redirectable paths
+            snake_instance.printSandboxRedirectablePaths()
+
+        if args.sandbox_parameters: # Print the sandbox parameters
+            snake_instance.printSandboxParameters()
+        
+        if args.sandbox_entitlements: # Print the sandbox entitlements
+            snake_instance.printSandboxEntitlements()
+        
+        if args.sandbox_build_uuid: # Print the sandbox build UUID
+            snake_instance.printSandboxBuildUUID()
+        
+        if args.sandbox_redirected_paths: # Print the sandbox redirected paths
+            snake_instance.printSandboxRedirectedPaths()
+        
+        if args.sandbox_system_images: # Print the sandbox system images
+            snake_instance.printSandboxSystemImages()
+        
+        if args.sandbox_system_profiles: # Print the sandbox system profiles
+            snake_instance.printSandboxSystemProfiles()
+        
+        if args.sandbox_content_protection: # Print the sandbox com.apple.MobileInstallation.ContentProtectionClass value
+            snake_instance.printContentProtectionClass()
+            
+        if args.sandbox_profile_data: # Print the sandbox profile data
+            snake_instance.printSandboxProfileData()
+
+        if args.dump_kext: # Dump the kernel extension binary from the kernelcache.decompressed file
+            snake_instance.dumpKernelExtensionBinary(args.dump_kext)
+
+        if args.extract_sandbox_operations: # Extract sandbox operations from the kernelcache.decompressed file
+            snake_instance.printSandboxOperations()
+
+
+class SnakeVIII(SnakeVII):
+    def __init__(self, binaries, file_path):
+        super().__init__(binaries, file_path)
+        self.kext_map.update({
+            'com.apple.security.sandbox' : 'sandbox',
+            'sandbox.kext' : 'sandbox',
+        })
+        self.container_metadata_file = ".com.apple.containermanagerd.metadata.plist"
+
+    def getSandboxContainerPath(self):
+        ''' Check if sandbox container exists for the given App Bundle and if it exists, return the path to the container. '''
+        bundle_id = bundle_processor.getBundleId()
+        if bundle_id:
+            container_path = os.path.join(os.path.expanduser('~'), 'Library', 'Containers', bundle_id)
+            if os.path.exists(container_path):
+                return container_path
+        else:
+            print("Bundle id is not set in Info.plist for the given App Bundle.")
+        return None
+
+    def printSandboxContainerPath(self):
+        ''' Print the sandbox container path. '''
+        container_path = self.getSandboxContainerPath()
+        if container_path:
+            print(f'APP BUNDLE SANDBOX CONTAINER: {container_path}')
+        else:
+            print("No sandbox container found for the given App Bundle.")
+
+    def getSandboxContainerMetadata(self):
+        ''' Return the sandbox container metadata in XML format. '''
+        container_path = self.getSandboxContainerPath()
+        if container_path:
+            container_metadata_path = os.path.join(container_path, self.container_metadata_file)
+            if os.path.exists(container_metadata_path):
+                with open(container_metadata_path, 'rb') as f:
+                    container_metadata = plistlib.load(f)
+                return container_metadata
+        return None
+
+    def printSandboxContainerMetadata(self):
+        ''' Print the sandbox container metadata in XML format. '''
+        container_metadata = self.getSandboxContainerMetadata()
+        if container_metadata is None:
+            print("No sandbox container found for the given App Bundle.")
+        else:
+            container_metadata_xml = (plistlib.dumps(container_metadata, fmt=plistlib.FMT_XML).decode('utf-8'))
+            print(container_metadata_xml)
+
+    def getSandboxRedirectablePaths(self):
+        ''' Return the redirectable paths as array. '''
+        container_metadata = self.getSandboxContainerMetadata()
+        if container_metadata:
+            redirectable_paths = container_metadata.get('MCMMetadataInfo', {}).get('SandboxProfileDataValidationInfo', {}).get('RedirectablePaths', [])
+            return redirectable_paths
+        return None
+
+    def printSandboxRedirectablePaths(self):
+        ''' Print the redirectable paths. '''
+        redirectable_paths = self.getSandboxRedirectablePaths()
+        if redirectable_paths:
+            for path in redirectable_paths:
+                print(path)
+        else:
+            print("No redirectable paths found for the given App Bundle.")
+
+    def getSandboxParameters(self):
+        ''' Return the sandbox parameters as dictionary. '''
+        container_metadata = self.getSandboxContainerMetadata()
+        if container_metadata:
+            parameters = container_metadata.get('MCMMetadataInfo', {}).get('SandboxProfileDataValidationInfo', {}).get('Parameters', {})
+            return parameters
+        return None
+
+    def printSandboxParameters(self):
+        ''' Print the sandbox parameters as key-value pairs. '''
+        parameters = self.getSandboxParameters()
+        if parameters:
+            for parameter_key, parameter_value in parameters.items():
+                print(f"{parameter_key}: {parameter_value}")
+        else:
+            print("No sandbox parameters found for the given App Bundle.")
+
+    def getSandboxEntitlements(self):
+        ''' Return the sandbox entitlements as dictionary. '''
+        container_metadata = self.getSandboxContainerMetadata()
+        if container_metadata:
+            entitlements = container_metadata.get('MCMMetadataInfo', {}).get('SandboxProfileDataValidationInfo', {}).get('Entitlements', {})
+            return entitlements
+        return None
+
+    def printSandboxEntitlements(self):
+        ''' Print the sandbox entitlements as JSON. '''
+        entitlements = self.getSandboxEntitlements()
+        if entitlements:
+            print(json.dumps(entitlements, indent=4))
+        else:
+            print("No sandbox entitlements found for the given App Bundle.")
+
+    def getSandboxBuildUUID(self):
+        ''' Return the sandbox build UUID as string. '''
+        container_metadata = self.getSandboxContainerMetadata()
+        if container_metadata:
+            build_uuid = container_metadata.get('MCMMetadataInfo', {}).get('SandboxProfileDataValidationInfo', {}).get('Sandbox_Build_UUID', '')
+            return build_uuid
+        return None
+
+    def printSandboxBuildUUID(self):
+        ''' Print the sandbox build UUID as string. '''
+        build_uuid = self.getSandboxBuildUUID()
+        if build_uuid:
+            print(f"Build UUID: {build_uuid}")
+        else:
+            print("No sandbox build UUID found for the given App Bundle.")
+
+    def getSandboxRedirectedPaths(self):
+        ''' Return the redirected paths as list. '''
+        container_metadata = self.getSandboxContainerMetadata()
+        if container_metadata:
+            redirected_paths = container_metadata.get('MCMMetadataInfo', {}).get('SandboxProfileDataValidationInfo', {}).get('RedirectedPaths', [])
+            return redirected_paths
+        return None
+
+    def printSandboxRedirectedPaths(self):
+        ''' Print the redirected paths as dictionary. '''
+        redirected_paths = self.getRedirectedPaths()
+        if redirected_paths:
+            for path in redirected_paths:
+                print(path)
+        else:
+            print("No redirected paths found for the given App Bundle.")
+
+    def getSandboxSystemImages(self):
+        ''' Return the system images as list. '''
+        container_metadata = self.getSandboxContainerMetadata()
+        if container_metadata:
+            system_images = container_metadata.get('MCMMetadataInfo', {}).get('SandboxProfileDataValidationInfo', {}).get('SystemImages', [])
+            return system_images
+        return None
+
+    def printSandboxSystemImages(self):
+        ''' Print the system images as dictionary. '''
+        system_images = self.getSandboxSystemImages()
+        if system_images:
+            for path in system_images:
+                print(path)
+        else:
+            print("No system images found for the given App Bundle.")
+
+    def getSandboxSystemProfiles(self):
+        ''' Return the system profiles as dict. '''
+        container_metadata = self.getSandboxContainerMetadata()
+        if container_metadata:
+            system_profiles = container_metadata.get('MCMMetadataInfo', {}).get('SandboxProfileDataValidationInfo', {}).get('SystemProfiles', {})
+            return system_profiles
+        return None
+
+    def printSandboxSystemProfiles(self):
+        ''' Print the system profiles as JSON. '''
+        system_profiles = self.getSandboxSystemProfiles()
+        if system_profiles:
+            # Convert datetime to string for all profiles
+            for profile in system_profiles:
+                if 'AppSandboxProfileSnippetModificationDateKey' in profile:
+                    profile['AppSandboxProfileSnippetModificationDateKey'] = profile['AppSandboxProfileSnippetModificationDateKey'].isoformat()
+            
+            # Print all profiles as a single JSON object
+            print(json.dumps(system_profiles, indent=4))
+        else:
+            print("No system profiles found for the given App Bundle.")
+
+    def getContentProtectionClass(self):
+        '''Return the com.apple.MobileInstallation.ContentProtectionClass value'''
+        container_metadata = self.getSandboxContainerMetadata()
+        if container_metadata:
+            content_protection = container_metadata.get('MCMMetadataInfo', {}).get('com.apple.MobileInstallation.ContentProtectionClass')
+            return content_protection
+        return None
+
+    def printContentProtectionClass(self):
+        '''Print the com.apple.MobileInstallation.ContentProtectionClass value'''
+        content_protection = self.getContentProtectionClass()
+        if content_protection is not None:
+            print(f"com.apple.MobileInstallation.ContentProtectionClass: {content_protection}")
+        else:
+            print("No com.apple.MobileInstallation.ContentProtectionClass found for the given App Bundle.")
+
+    def getSandboxProfileData(self):
+        ''' Return the sandbox profile data as bytes. '''
+        container_metadata = self.getSandboxContainerMetadata()
+        if container_metadata:
+            sandbox_profile_data = container_metadata.get('MCMMetadataInfo', {}).get('SandboxProfileData', None)
+            return sandbox_profile_data
+        return None
+    
+    def printSandboxProfileData(self):
+        ''' Print the sandbox profile data as bytes. '''
+        sandbox_profile_data = self.getSandboxProfileData()
+        if sandbox_profile_data:
+            sys.stdout.buffer.write(sandbox_profile_data)
+        else:
+            print("No SandboxProfileData found for the given App Bundle.")
+
+    def dumpKernelExtensionBinary(self, kext_name):
+        ''' Dump the kernel extension binary from the kernelcache.decompressed file. 
+        For now it is only wrapper arround ipsw'''
+        os.system(f"ipsw kernel extract {self.file_path} {kext_name}")
+
+    def extractSandboxOperations(self):
+        ''' Extract sandbox operations from the Sandbox.kext file. '''
+        all_strings = self.getStringSection()
+        operations = []
+        capture = False
+
+        for string in all_strings:
+            if string == 'default':
+                capture = True
+            if capture:
+                operations.append(string)
+            if string == 'xpc-message-send':
+                capture = False
+
+        return operations
+
+    def printSandboxOperations(self):
+        '''Print the sandbox operations.'''
+        operations = self.extractSandboxOperations()
+        for operation in operations:
+            print(operation)
 
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
@@ -2824,6 +3126,7 @@ class ArgumentParser:
         self.addDyldArgs()
         self.addAMFIArgs()
         self.addAntivirusArgs()
+        self.addSandboxArgs()
 
     def addGeneralArgs(self):
         general_group = self.parser.add_argument_group('GENERAL ARGS')
@@ -2837,6 +3140,7 @@ class ArgumentParser:
         bundle_group.add_argument('--bundle_info_syntax_check', action='store_true', help="Check if bundle info syntax is valid")
         bundle_group.add_argument('--bundle_frameworks', action='store_true', help="Print the list of frameworks in the bundle")
         bundle_group.add_argument('--bundle_plugins', action='store_true', help="Print the list of plugins in the bundle")
+        bundle_group.add_argument('--bundle_id', action='store_true', help="Print the CFBundleIdentifier value from the Info.plist file if it exists")
 
     def addMachOArgs(self):
         macho_group = self.parser.add_argument_group('MACH-O ARGS')
@@ -2867,6 +3171,7 @@ class ArgumentParser:
         macho_group.add_argument('--calc_offset', help="Calculate the real address (file on disk) of the given Virtual Memory {vm_offset} (e.g. 0xfffffe000748f580)", metavar='vm_offset')
         macho_group.add_argument('--constructors', action='store_true', help="Print binary constructors")
         macho_group.add_argument('--dump_section', help="Dump '__SEGMENT,__section' to standard output as a raw bytes", metavar='__SEGMENT,__section')
+        macho_group.add_argument('--dump_binary', help="Dump arm64 binary to a given file", metavar='output_path')
 
     def addCodeSignArgs(self):
         codesign_group = self.parser.add_argument_group('CODE SIGNING ARGS')
@@ -2953,6 +3258,24 @@ class ArgumentParser:
         antivirus_group.add_argument('--has_quarantine', action='store_true', help="Check if the file has quarantine extended attribute")
         antivirus_group.add_argument('--remove_quarantine', action='store_true', help="Remove com.apple.quarantine extended attribute from the file")
         antivirus_group.add_argument('--add_quarantine', action='store_true', help="Add com.apple.quarantine extended attribute to the file")
+
+    def addSandboxArgs(self):
+        sandbox_group = self.parser.add_argument_group('SANDBOX ARGS')
+        sandbox_group.add_argument('--sandbox_container_path', action='store_true', help="todo")
+        sandbox_group.add_argument('--sandbox_container_metadata', action='store_true', help="Print the .com.apple.containermanagerd.metadata.plist contents for the given bundlein XML format")
+        sandbox_group.add_argument('--sandbox_redirectable_paths', action='store_true', help="Print the redirectable paths from the sandbox container metadata as list")
+        sandbox_group.add_argument('--sandbox_parameters', action='store_true', help="Print the parameters from the sandbox container metadata as key-value pairs")
+        sandbox_group.add_argument('--sandbox_entitlements', action='store_true', help="Print the entitlements from the sandbox container metadata in JSON format")
+        sandbox_group.add_argument('--sandbox_build_uuid', action='store_true', help="Print the sandbox build UUID from the sandbox container metadata")
+        sandbox_group.add_argument('--sandbox_redirected_paths', action='store_true', help="Print the redirected paths from the sandbox container metadata as list")
+        sandbox_group.add_argument('--sandbox_system_images', action='store_true', help="Print the system images from the sandbox container metadata as key-value pairs")
+        sandbox_group.add_argument('--sandbox_system_profiles', action='store_true', help="Print the system profile from the sandbox container metadata in JSON format")
+        sandbox_group.add_argument('--sandbox_content_protection', action='store_true', help="Print the content protection from the sandbox container metadata")
+        sandbox_group.add_argument('--sandbox_profile_data', action='store_true', help="Print raw bytes ofthe sandbox profile data from the sandbox container metadata")
+        sandbox_group.add_argument('--dump_kext', help="Dump the kernel extension binary from the kernelcache.decompressed file", metavar='kext_name')
+        sandbox_group.add_argument('--extract_sandbox_operations', action='store_true', help="Extract sandbox operations from the kernelcache.decompressed file")
+        
+        
 
     def parseArgs(self):
         args = self.parser.parse_args()
@@ -3324,7 +3647,7 @@ if __name__ == "__main__":
     args = arg_parser.parseArgs()
 
     ### --- APP BUNDLE EXTENSION --- ###
-    snake_hatchery = SnakeHatchery(args, SnakeVII)
+    snake_hatchery = SnakeHatchery(args, SnakeVIII)
     snake_hatchery.hatch()
 
     ### --- I. MACH-O --- ###
@@ -3354,3 +3677,7 @@ if __name__ == "__main__":
     ### --- VII. ANTIVIRUS --- ###
     antivirus_processor = AntivirusProcessor()
     antivirus_processor.process(args)
+
+    ### --- VIII. SANDBOX --- ###
+    sandbox_processor = SandboxProcessor()
+    sandbox_processor.process(args)

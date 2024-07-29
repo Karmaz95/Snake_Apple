@@ -1,6 +1,7 @@
 import os
 import plistlib
 import argparse
+import base64
 
 class SandboxInspector:
     def __init__(self, home_dir):
@@ -71,7 +72,7 @@ def main():
     parser.add_argument('-p', '--path', type=str, required=True, help="Path to the application (e.g., /Applications/Notes.app)")
     parser.add_argument('-m', '--metadata', action='store_true', help="Print the .com.apple.containermanagerd.metadata.plist contents")
     parser.add_argument('-r', '--redirectable', action='store_true', help="Print the redirectable paths")
-    parser.add_argument('-s', '--sandbox_profile_data', action='store_true', help="Print the SandboxProfileData bytes")
+    parser.add_argument('-s', '--sandbox_profile_data', action='store_true', help="Print the SandboxProfileData as base64-encoded bytes")
     args = parser.parse_args()
     
     app_path = args.path
@@ -103,7 +104,8 @@ def main():
             sandbox_profile_data = inspector.get_sandbox_profile_data(bundle_id)
             if sandbox_profile_data:
                 parsed_data = inspector.parse_sandbox_profile_data(sandbox_profile_data)
-                print(f"SandboxProfileData for {bundle_id}:\n{parsed_data}")
+                encoded_data = base64.b64encode(parsed_data).decode('utf-8')
+                print(f"SandboxProfileData for {bundle_id} (base64-encoded):\n{encoded_data}")
             else:
                 print(f"No SandboxProfileData found for {bundle_id}.")
     else:
