@@ -1,4 +1,4 @@
-### [App Bundle Extension]()
+### [App Bundle Extension](https://karol-mazurek.medium.com/snake-apple-app-bundle-ext-f5c43a3c84c4?sk=v2%2F3ff105ad-f4f0-464d-b4d5-46b86c66fe14)
 * Application Bundle
 * App Bundle Structure
 * Info.plist
@@ -23,20 +23,14 @@
 * Re-signing apps
 * Re-signing system applications
 * make_bundle.sh
-
 ___
-### [Cracking macOS apps](https://karol-mazurek.medium.com/cracking-macos-apps-39575dd672e0?sk=v2%2F727dce55-53ee-45f6-b051-2979e62f2ba1)
-* Binary patching methods
-* Application patching methods
-* Resigning the app without losing entitlements
-* Resigning the app for debugging
-* Electron Apps
-* /Contents/Resources/app.asar
-
+#### [Cracking macOS apps](https://karol-mazurek.medium.com/cracking-macos-apps-39575dd672e0?sk=v2%2F727dce55-53ee-45f6-b051-2979e62f2ba1)
+Binary patching methods |Application patching methods |Resigning the app without losing entitlements |Resigning the app for debugging |Electron Apps | /Contents/Resources/app.asar
 ___
-### [Cracking Electron Integrity](https://karol-mazurek.medium.com/cracking-electron-integrity-0a10e0d5f239?sk=v2%2F7726b99c-c6c9-4d70-8c37-da9f2f0874e8)
+#### [Cracking Electron Integrity](https://karol-mazurek.medium.com/cracking-electron-integrity-0a10e0d5f239?sk=v2%2F7726b99c-c6c9-4d70-8c37-da9f2f0874e8)
 getRawHeader | node:crypto | generateAsarIntegrity | electron_patcher | ElectronAsarIntegrity
 ___
+
 ### [I. Mach-O](https://karol-mazurek95.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
 * Universal Binary (Fat Binary)
 * Memory Pages
@@ -109,8 +103,8 @@ ___
 *  DATA_IN_CODE
   * data_in_code_entry
 * ENDIANESS
-
 ___
+
 ### [II. Code Signing](https://karol-mazurek95.medium.com/snake-apple-ii-code-signing-f0a9967b7f02?sk=v2%2Fbbc87007-89ca-4135-91d6-668b5d2fe9ae)
 * CS_CodeDirectory
 * CDHash 
@@ -134,8 +128,8 @@ ___
 * openssl
 * RFC 5652–5.4. Message Digest Calculation Process.
 * signedAttrs
-
 ___
+
 ### [III. Checksec](https://karol-mazurek95.medium.com/snake-apple-iii-checksec-ed64a4b766c1?sk=v2%2Fb4b8d637-e906-4b6b-8088-ca1f893cd787)
 * PIE — Position-Independent Executable
   * -fno-pie
@@ -177,8 +171,8 @@ ___
 * Fortify
   * -D_FORTIFY_SOURCE
 * RPath
-
 ___
+
 ### [IV. Dylibs](https://karol-mazurek.medium.com/snake-apple-iv-dylibs-2c955439b94e?sk=v2%2Fdef72b7a-121a-47a1-af89-7bf53aed1ea2)
 * Libraries — Static vs Dynamic
 * Frameworks
@@ -217,8 +211,8 @@ ___
 * DYLD_PRINT_APIS
 * dtruss
 * fs_usage
-
 ___
+
 ### [V. Dyld](https://karol-mazurek.medium.com/snake-apple-v-dyld-8b36b674cc44?sk=v2%2F4acb16f8-fa88-41f0-8d7c-1362f4060010)
 * /usr/lib/dyld
 * com.apple.darwin.ignition
@@ -237,42 +231,41 @@ ___
 * Interposing
 * DYLD_PRINT_INTERPOSING
 * DYLD_INSERT_LIBRARIES
-
 ___
-### [DYLD — Do You Like Death? (I)](https://karol-mazurek.medium.com/dyld-do-you-like-death-i-8199faad040e?sk=v2%2F359b081f-d944-409b-9e7c-95f7c171b969)
+#### [DYLD — Do You Like Death? (I)](https://karol-mazurek.medium.com/dyld-do-you-like-death-i-8199faad040e?sk=v2%2F359b081f-d944-409b-9e7c-95f7c171b969)
 Startup | kernArgs | rebaseSelf | initializeLibc | task_self_trap | stack_guard | findArgv | findEnvp | findApple
 ___
-### [DYLD — Do You Like Death? (II)](https://karol-mazurek.medium.com/dyld-do-you-like-death-ii-b74360b8af47?sk=v2%2Ff0cff71c-5345-4228-a639-653325fc979d)
+#### [DYLD — Do You Like Death? (II)](https://karol-mazurek.medium.com/dyld-do-you-like-death-ii-b74360b8af47?sk=v2%2Ff0cff71c-5345-4228-a639-653325fc979d)
 handleDyldInCache| isBuiltForSimulator | isTranslated | crossarch_trap | Calling Convention on ARM64v8 | __unused attribute | Dyld Shared Region | thisDyldUuid | hasExistingDyldCache | shared_region_check_np | Carry flag | dynamic data header | dyldInCacheMH
 ___
-### [DYLD — Do You Like Death? (III)](https://karol-mazurek.medium.com/dyld-do-you-like-death-iii-af77701a3034?sk=v2%2F06c92503-2db9-40e2-b139-c9ae0a35e7b3)
+#### [DYLD — Do You Like Death? (III)](https://karol-mazurek.medium.com/dyld-do-you-like-death-iii-af77701a3034?sk=v2%2F06c92503-2db9-40e2-b139-c9ae0a35e7b3)
 handleDyldInCache | DYLD_IN_CACHE | restartWithDyldInCache | dyld_all_image_infos | calculating offset for debugging Dyld in Cache
 ___
-### [DYLD — Do You Like Death? (IV)](https://karol-mazurek.medium.com/dyld-do-you-like-death-iv-ede6b157752c?sk=v2%2F87ebe38d-004c-41a6-bc1f-43898494a512)
+#### [DYLD — Do You Like Death? (IV)](https://karol-mazurek.medium.com/dyld-do-you-like-death-iv-ede6b157752c?sk=v2%2F87ebe38d-004c-41a6-bc1f-43898494a512)
 RuntimeLocks | MemoryManager | dyld_hw_tpro | Lambda Capture | withWritableMemory | PAC | arm64e_preview_abi | __ptrauth_dyld_tpro0 | WriteProtectionState | previousState | os_compiler_barrier
 ___
-### [DYLD — Do You Like Death? (V)](https://karol-mazurek.medium.com/dyld-do-you-like-death-v-c40a267573cb?sk=v2%2F4c9f16b2-59bd-406a-945d-10a1fba1001b)
+#### [DYLD — Do You Like Death? (V)](https://karol-mazurek.medium.com/dyld-do-you-like-death-v-c40a267573cb?sk=v2%2F4c9f16b2-59bd-406a-945d-10a1fba1001b)
 Linker Standard Library | EphemeralAllocator | Dyld Private Memory | PersistentAllocator | vm_allocate | vm_protect | _kernelrpc_mach_vm_allocate_trap | _kernelrpc_mach_vm_protect_trap 
 ___
-### [DYLD — Do You Like Death? (VI)](https://karol-mazurek.medium.com/dyld-do-you-like-death-vi-1013a69118ff?sk=v2%2F37b3a61f-8483-4b38-977d-7f860944862b)
+#### [DYLD — Do You Like Death? (VI)](https://karol-mazurek.medium.com/dyld-do-you-like-death-vi-1013a69118ff?sk=v2%2F37b3a61f-8483-4b38-977d-7f860944862b)
 ProcessConfig | Process::Process | Process::Security | csr_check | CSR_ALLOW_APPLE_INTERNAL | csrctl | syscall_csr_check | AMFI | internalInstall | isRestricted | isFairPlayEncrypted | amfiFlags | amfi_check_dyld_policy_self | ___sandbox_ms | ___mac_syscall | mpo_policy_syscall_t | MAC policy | com.apple.driver.AppleMobileFileIntegrity | _policy_syscall | _check_dyld_policy_internal | macos_Dyld_policy_collect_state | logDyldPolicyData | DYLD_AMFI_FAKE | getAMFI | pruneEnvVars | com.apple.security.cs.allow-dyld-environment-variables
 ___
-### [DYLD — Do You Like Death? (VII)](https://karol-mazurek.medium.com/dyld-do-you-like-death-vii-62c202f98610?sk=v2%2Fab26bfcf-ba56-493d-9af3-2d8790ca6208)
+#### [DYLD — Do You Like Death? (VII)](https://karol-mazurek.medium.com/dyld-do-you-like-death-vii-62c202f98610?sk=v2%2Fab26bfcf-ba56-493d-9af3-2d8790ca6208)
 ProcessConfig | Process::Logging | Process::dyldCache | DYLD_PRINT_TO_STDERR | DYLD_PRINT_INTERPOSING | allowEnvVarsSharedCache | allowEnvVarsPrint | openLogFile | DYLD_PRINT_TO_FILE |  BSD open syscall | DYLD_SHARED_REGION | Shared Library Cache | DYLD_SHARED_CACHE_DIR | dyldCache | CacheFinder | Ignite | ignitionPayload | ignition | open_console | log_init | sysctlbyname | __sysctl | dyld_parse_boot_arg_int | dyld_parse_boot_arg_cstr | libignition | boot_init | stage_fire | getDyldCache | loadDyldCache | mapSplitCachePrivate | reuseExistingCache | mapSplitCacheSystemWide | jettison
 ___
-### [DYLD — Do You Like Death? (VIII)](https://karol-mazurek.medium.com/dyld-do-you-like-death-viii-327d7e7f3c0f?sk=v2%2F6c6b611d-fee4-4d9d-8a36-d59a05116e23)
+#### [DYLD — Do You Like Death? (VIII)](https://karol-mazurek.medium.com/dyld-do-you-like-death-viii-327d7e7f3c0f?sk=v2%2F6c6b611d-fee4-4d9d-8a36-d59a05116e23)
 ProcessConfig | Process::PathOverrides | Overrides and path fallbacks for Dylibs | security.allowEnvVarsPath | crashMsg | addEnvVar | DYLD_LIBRARY_PATH | DYLD_FRAMEWORK_PATH | DYLD_FALLBACK_FRAMEWORK_PATH | DYLD_FALLBACK_LIBRARY_PATH | DYLD_VERSIONED_FRAMEWORK_PATH | DYLD_VERSIONED_LIBRARY_PATH | DYLD_INSERT_LIBRARIES | DYLD_IMAGE_SUFFIX | DYLD_ROOT_PATH | _dylibPathOverridesExeLC | _dylibPathOverridesEnv | isLC_DYLD_ENV | CRSetCrashLogMessage2 | LC_DYLD_ENVIRONMENT | allowEmbeddedVars | _insertedDylibs | cryptexOSPath | VersionedPaths | processVersionedPaths | checkVersionedPath | LC_ID_DYLIB | sys.getDylibInfo | addPathOverride | dontUsePrebuiltForApp | adjustDevelopmentMode
 ___
-### [DYLD — Do You Like Death? (IX)](https://karol-mazurek.medium.com/dyld-do-you-like-death-ix-5052c865100e?sk=v2%2Fe078d739-ab30-4f2d-8a12-eefc63dd73b4)
+#### [DYLD — Do You Like Death? (IX)](https://karol-mazurek.medium.com/dyld-do-you-like-death-ix-5052c865100e?sk=v2%2Fe078d739-ab30-4f2d-8a12-eefc63dd73b4)
 RuntimeState | ProcessConfig | finalizeListTLV | FileManager | _fsUUIDMap | OrderedMap | UUIDs | PermanentRanges | state APIs
 ___
-### [DYLD — Do You Like Death? (X)](https://karol-mazurek.medium.com/dyld-do-you-like-death-x-76408570c357?sk=v2%2F8b69c2f1-ce13-4d05-bba1-e0164c3de381)
+#### [DYLD — Do You Like Death? (X)](https://karol-mazurek.medium.com/dyld-do-you-like-death-x-76408570c357?sk=v2%2F8b69c2f1-ce13-4d05-bba1-e0164c3de381)
 ExternallyViewableState | externallyViewable.init | dyld_all_image_info | exec_prefault_data | task_info | com.apple.security.get-task-allow | get_dyld_info | lsl:Vector | ProcessSnapshot | compact info | makeUnique | release | setDyldState | setInitialExternallyVisibleState | setShareCacheInfo | setDyld | inDyldCache | DYLD_IN_CACHE | recordFromInfo | FileRecord | Image | addImage | _snapshot | addImageInfo | setInitialImageCount | commit | compactInfoData | RemoteNotificationResponder
 ___
-### [DYLD — Do You Like Death? (XI)](https://karol-mazurek.medium.com/dyld-do-you-like-death-xi-cef76bc8dc14?sk=v2%2F0b88b392-ae94-43d0-9120-109306051e00)
+#### [DYLD — Do You Like Death? (XI)](https://karol-mazurek.medium.com/dyld-do-you-like-death-xi-cef76bc8dc14?sk=v2%2F0b88b392-ae94-43d0-9120-109306051e00)
 prepare | APIs | isSimulatorPlatform | state.initializeClosureMode() | PrebuiltLoaders | JustInTimeLoader | PrebuilLoaderSet | dyld3 | dyld4 | Closures | initializeClosureMode | Loaders | validHeader | hasValidMagic | kmagic | dontUsePrebuiltForApp | findLaunchLoaderSet | cachePBLS | hasLaunchLoaderSetWithCDHash | findLaunchLoaderSetWithCDHash | findLaunchLoaderSet | allowOsProgramsToSaveUpdatedClosures | reserve | bit_ceil  | allowNonOsProgramsToSaveUpdatedClosures | DYLD_USE_CLOSURES | reserveExact | getOnDiskBinarySliceOffset | STACK_ALLOC_OVERFLOW_SAFE_ARRAY | topLevelLoaders | loadDependents | notifyDebuggerLoad | notifyDtrace | DOF | addPermamentRanges | STACK_ALLOC_ARRAY | weakDefMap | buildInterposingTables | handleStrongWeakDefOverrides | visibility | applyFixups | applyCachePatches | doSingletonPatching | applyInterposingToDyldCache | Libdyld.dylib | libdyld4Section | allImageInfos | storeProcessInfoPointer | __chkstk_darwin | partitionDelayLoads | DYLD_JUST_BUILD_CLOSURE | prewarming | notifyMonitorNeeded | LC_MAIN | LC_THREAD | getEntry | appMain | restorePreviousState | TPRO | libSystemHelpers | __exit
-
 ___
+
 ### [VI. AMFI](https://karol-mazurek.medium.com/snake-apple-vi-amfi-31c48fb92d33?sk=v2%2F8116bf86-e0a7-42be-ada9-5348447c01fd)
 * Kernel Extension
   * AppleMobileFileIntegrity.kext
@@ -342,8 +335,8 @@ ___
   * _MIG_subsystem_1000
   * routine_descriptor
   * mach_msg
-
 ___
+
 ### [VII. Antivirus](https://karol-mazurek.medium.com/snake-apple-vii-antivirus-0a57acc10185?sk=v2%2F2c46d7ac-4435-41e6-bbda-2acb4eb78c76)
 * GATEKEEPER
   * Application Whitelisting
@@ -379,32 +372,28 @@ ___
   * CoreSerivcesUIAgent
   * Eicar test
   * Malware creator test
-
 ___
+
 ### [VIII. Sandbox]()
-
+com.apple.security.app-sandbox | Sandbox Operations | Sandbox Profiles | SBPL | /System/Library/Sandbox/Profiles/application.sb | SandboxProfileData | libsystem_sandbox.dylib | libsystem_sandbox.dylib | AppSandbox.framework | sandboxd | containermanagerd | sandbox_init | .com.apple.containermanagerd.metadata.plist | SandboxProfileDataValidationInfo
 ___
-### [SBPL Compilator](https://karol-mazurek.medium.com/sbpl-compilator-c05f5304d057?sk=v2%2F4ae3bf90-ff12-4fea-b0fc-0f2ef60d7b93)
-* .com.apple.containermanagerd.metadata.plist
-* SandboxProfileData
-* /System/Library/Sandbox/Profiles/
-* sandbox_compile_file
-* com.apple.security.get-task-allow
-* sandbox-exec
-* Sandbox.kext
-
+#### [SBPL Compilator](https://karol-mazurek.medium.com/sbpl-compilator-c05f5304d057?sk=v2%2F4ae3bf90-ff12-4fea-b0fc-0f2ef60d7b93)
+.com.apple.containermanagerd.metadata.plist | SandboxProfileData | /System/Library/Sandbox/Profiles/ | sandbox_compile_file | com.apple.security.get-task-allow | sandbox-exec | Sandbox.kext
 ___
-### [Sandbox Detector](https://karol-mazurek.medium.com/sandbox-detector-4268ab3cd361?sk=v2%2F58fe49fb-1381-4db3-9db9-3f6309e4053a)
+#### [Sandbox Detector](https://karol-mazurek.medium.com/sandbox-detector-4268ab3cd361?sk=v2%2F58fe49fb-1381-4db3-9db9-3f6309e4053a)
 libsystem_sandbox.dylib | com.apple.security.app-sandbox | Activity Monitor.app | _sandbox_check | /usr/lib/libSystem.B.dylib | dyld-shared-cache-extractor | arm64e_preview_abi | kernel_task | sandbox_operation_fixup_0 | CTL_KERN | KERN_PROC | KERN_PROC_PID | struct kinfo_proc info | kinfo_getproc | sysctl | mib | sandbox_check_common_0 
-
 ___
+#### [Sandbox Validator](https://karol-mazurek.medium.com/sandbox-validator-e760e5d88617?sk=v2%2F145ac2ef-ca06-41a0-b310-c96f4ce0037b)
+SandBlaster | kernelcache | Decompiling Sandbox Profiles on Sonoma | _operation_is_forbidden | _syscall_check_sandbox_bulk | operation_names_3208 | sandbox_check | opainject | sandbox.h | sbtool | sandbox_filter_type | sandbox_validator
+___
+
 ### [IX. TCC]()
 
 ___
 ### [X. NU]()
 
 ___
-### [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
+#### [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
 * KDK
 * sw_vers
 * BuildVersion

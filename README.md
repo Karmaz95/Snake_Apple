@@ -35,13 +35,14 @@ The table of contents showing links to all articles is below:
 * &#9744; [VIII. Sandbox]()
   * &#9745; [SBPL Compilator](https://karol-mazurek.medium.com/sbpl-compilator-c05f5304d057?sk=v2%2F4ae3bf90-ff12-4fea-b0fc-0f2ef60d7b93)
   * &#9745; [Sandbox Detector](https://karol-mazurek.medium.com/sandbox-detector-4268ab3cd361?sk=v2%2F58fe49fb-1381-4db3-9db9-3f6309e4053a)
+  * &#9745; [Sandbox Validator](https://karol-mazurek.medium.com/sandbox-validator-e760e5d88617?sk=v2%2F145ac2ef-ca06-41a0-b310-c96f4ce0037b)
 * &#9744; [IX. TCC]()
 * &#9744; [X. NU]()
   * &#9745; [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
 
 
 ## TOOLS
-[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher)
+[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster)
 ***
 
 ### [CrimsonUroboros](tests/CrimsonUroboros.py)
@@ -499,10 +500,27 @@ Script for packing the app in a compressed DMG container:
 ./make_dmg.sh
 ```
 ### [electron_patcher](App%20Bundle%20Extension/custom/electron_patcher.py)
-Pytthon script for extracting ASAR files from Electron apps and patching them with a custom ASAR file. 
+Python script for extracting ASAR files from Electron apps and patching them with a custom ASAR file. 
 ```
 python3 electron_patcher.py extract app_bundle.app extracted_asar
 python3 electron_patcher.py pack extracted_asar app_bundle.app
+```
+### [sandbox_validator](VIII.%20Sandbox/custom/sandbox_validator.c)
+It can be used to quickly check if a given process is allowed to perform a particular operation while it is sandboxed.
+```bash
+# Compile
+clang -o sandbox_validator sandbox_validator.c
+
+# Usage: sandbox_validator PID "OPERATION" "FILTER_NAME" "FILTER_VALUE"
+sandbox_validator 93298
+sandbox_validator 93298 "file-read*"
+sandbox_validator 93298 "file-read*" PATH "/users/karmaz/.trash"
+sandbox_validator 93298 "authorization-right-obtain" RIGHT_NAME "system.burn"
+```
+### [sandblaster](https://github.com/Karmaz95/sandblaster)
+This is my forked version of [sandblaster](https://github.com/cellebrite-labs/sandblaster) with MacOS Support:
+```bash
+python3 reverse_sandbox.py -o sonoma_sandbox_operations.txt profile_sb -r 17
 ```
 
 ## INSTALL

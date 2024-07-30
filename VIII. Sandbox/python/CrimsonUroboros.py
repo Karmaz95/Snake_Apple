@@ -139,6 +139,9 @@ class BundleProcessor:
         if args.bundle_plugins: # Print bundle plugins
             snake_instance.printBundlePlugIns()
 
+        if args.bundle_id: # Print bundle id
+            snake_instance.printBundleId()
+
     def hasInfoPlist(self):
         ''' Return True if Info.plist exists in the bundle. '''
         if os.path.exists(self.info_plist_path):
