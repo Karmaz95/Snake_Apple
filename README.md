@@ -31,6 +31,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [DYLD — Do You Like Death? (X)](https://karol-mazurek.medium.com/dyld-do-you-like-death-x-76408570c357?sk=v2%2F8b69c2f1-ce13-4d05-bba1-e0164c3de381)
   * &#9745; [DYLD — Do You Like Death? (XI)](https://karol-mazurek.medium.com/dyld-do-you-like-death-xi-cef76bc8dc14?sk=v2%2F0b88b392-ae94-43d0-9120-109306051e00)
 * &#9745; [VI. AMFI](https://karol-mazurek.medium.com/snake-apple-vi-amfi-31c48fb92d33?sk=v2%2F8116bf86-e0a7-42be-ada9-5348447c01fd)
+  * &#9745; [Unexpected but expected behavior](https://karol-mazurek.medium.com/unexpected-but-expected-behavior-bf281cc21ee2?sk=v2%2Fda20f402-b7fa-4bb1-a160-83e758cdd513)
 * &#9745; [VII. Antivirus](https://karol-mazurek.medium.com/snake-apple-vii-antivirus-0a57acc10185?sk=v2%2F2c46d7ac-4435-41e6-bbda-2acb4eb78c76)
 * &#9744; [VIII. Sandbox]()
   * &#9745; [SBPL Compilator](https://karol-mazurek.medium.com/sbpl-compilator-c05f5304d057?sk=v2%2F4ae3bf90-ff12-4fea-b0fc-0f2ef60d7b93)

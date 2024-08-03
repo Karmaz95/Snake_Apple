@@ -336,6 +336,9 @@ ___
   * routine_descriptor
   * mach_msg
 ___
+#### [Unexpected but expected behavior](https://karol-mazurek.medium.com/unexpected-but-expected-behavior-bf281cc21ee2?sk=v2%2Fda20f402-b7fa-4bb1-a160-83e758cdd513)
+CS_RESTRICT (0x800) | pruneEnvVars | DYLD_PRINT_INITIALIZERS |  CS_REQUIRE_LV | com.apple.security.cs.allow-dyld-environment-variables | CS_RUNTIME | SetUID | SetGID
+___
 
 ### [VII. Antivirus](https://karol-mazurek.medium.com/snake-apple-vii-antivirus-0a57acc10185?sk=v2%2F2c46d7ac-4435-41e6-bbda-2acb4eb78c76)
 * GATEKEEPER
