@@ -54,9 +54,9 @@ class SnakeHatchery:
         self.binaryInit()
 
         if binaries is None and bundle_processor is None:
-            print('QUITING: The file used in -p is not a valid Mach-O and you did not specify a bundle (-b).')
-            print('It will only work if bundle is specified AND|OR file is a valid Mach-O.')
-            exit() # Exit if the file is not valid macho and bundle is not specified
+            sys.stderr.write('QUITING: The file used in -p is not a valid Mach-O and you did not specify a bundle (-b).\n')
+            sys.stderr.write('It will only work if bundle is specified AND|OR file is a valid Mach-O.\n')
+            exit() # Exit if the file is not valid Mach-O and bundle is not specified
 
         global snake_instance # Must be global for further processors classes.
         snake_instance = self.snake_class(binaries, self.file_path)
