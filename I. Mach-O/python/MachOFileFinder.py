@@ -29,7 +29,7 @@ class MachOFileFinder:
                 binaries = lief.MachO.parse(file_path)
                 binary = self.parse_fat_binary(binaries)
                 if binary is not None:
-                    print(f"{binary.header.file_type.name}:{file_path}")
+                    print(f"{binary.header.file_type.__name__}:{file_path}")
             except:
                 pass  # Ignore parsing errors or non-Mach-O files
 
