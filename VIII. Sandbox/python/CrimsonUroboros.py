@@ -2495,10 +2495,10 @@ class SnakeVI(SnakeV):
                     '''
                     # print(f'{hex(mig_subsystem_dict["server"])} {hex(mig_subsystem_dict["start"])}')
                     # At this stage I get 0x8028000000007e74 instead of 0x100007e74 and I do not know why. The same goes for every impl_routine later too...
-                    # I can manually repair it by: & 0xffff | __TEXT 
+                    # I can manually repair it by: & 0xFFFFFFFF | __TEXT 
                     # It is temp fix, there must be a "proper way" - todo 
                     '''
-                    mig_subsystem_dict['server'] = mig_subsystem_dict['server'] & 0xffff | va_start # Fix according to the above comment
+                    mig_subsystem_dict['server'] = mig_subsystem_dict['server'] & 0xFFFFFFFF | va_start # Fix according to the above comment
                     mig_subsystem_number = mig_subsystem_dict['start']
                     subsystem_name = "MIG_subsystem_{0}".format(mig_subsystem_number)
                     mig_subsystems[subsystem_name] = {}
@@ -2511,7 +2511,7 @@ class SnakeVI(SnakeV):
                         chunk = section_bytes[current_offset:current_offset+routine_descriptor_size]
                         routine_descriptor_dict = AppleStructuresManager.routine_descriptor.parse(chunk)
                         if routine_descriptor_dict['impl_routine'] != 0:
-                            routine_descriptor_dict['impl_routine'] = routine_descriptor_dict['impl_routine'] & 0xffff | va_start # Fix like subsystem
+                            routine_descriptor_dict['impl_routine'] = routine_descriptor_dict['impl_routine'] & 0xFFFFFFFF | va_start # Fix like subsystem
                         mig_subsystems[subsystem_name].update({routine_name: routine_descriptor_dict})
                         current_offset += routine_descriptor_size
                         msg += 1
