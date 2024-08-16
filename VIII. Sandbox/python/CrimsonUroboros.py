@@ -2472,53 +2472,53 @@ class SnakeVI(SnakeV):
         # The MIG should be in __DATA,__const | __DATA_CONST,__const | __CONST,__constdata, but it is not always the case. 
         # Great example is decompressed kernelcache, there are no __const section. Conclusion, would be to iterate over each segment, but there is a problem with alignment.
         for section in self.binary.sections:
-            if ('const' in section.name):# and 'DATA' in section.segment.name):
-                section_bytes = section.content.tobytes()
-                section_size = section.size
-                alignment = pow(2,section.alignment)
+            #if ('const' in section.name and 'DATA' in section.segment.name):
+            section_bytes = section.content.tobytes()
+            section_size = section.size
+            alignment = pow(2,section.alignment)
 
-                # Loop through section bytes using alignment to speed up
-                current_offset = 0
-                while current_offset < section_size:
-                    chunk = section_bytes[current_offset:current_offset+mig_subsystem_size]
-                    mig_subsystem_dict = AppleStructuresManager.mig_subsystem.parse(chunk)
-                    number_of_msgs = mig_subsystem_dict['end'] - mig_subsystem_dict['start']
+            # Loop through section bytes using alignment to speed up
+            current_offset = 0
+            while current_offset < section_size:
+                chunk = section_bytes[current_offset:current_offset+mig_subsystem_size]
+                mig_subsystem_dict = AppleStructuresManager.mig_subsystem.parse(chunk)
+                number_of_msgs = mig_subsystem_dict['end'] - mig_subsystem_dict['start']
 
-                    # Check for possible mig_subsystem structure:
-                    if (number_of_msgs > 0 and
-                        number_of_msgs < 1024 and
-                        mig_subsystem_dict['server'] != 0 and
-                        mig_subsystem_dict['start'] > 0 and
-                        mig_subsystem_dict['end'] > 0 and
-                        mig_subsystem_dict['reserved'] == 0 and
-                        mig_subsystem_dict['routine_0'] == 0):
-                        '''
-                        # print(f'{hex(mig_subsystem_dict["server"])} {hex(mig_subsystem_dict["start"])}')
-                        # At this stage I get 0x8028000000007e74 instead of 0x100007e74 and I do not know why. The same goes for every impl_routine later too...
-                        # I can manually repair it by: & 0xffff | __TEXT 
-                        # It is temp fix, there must be a "proper way" - todo 
-                        '''
-                        mig_subsystem_dict['server'] = mig_subsystem_dict['server'] & 0xffff | va_start # Fix according to the above comment
-                        mig_subsystem_number = mig_subsystem_dict['start']
-                        subsystem_name = "MIG_subsystem_{0}".format(mig_subsystem_number)
-                        mig_subsystems[subsystem_name] = {}
-                        current_offset += mig_subsystem_size
+                # Check for possible mig_subsystem structure:
+                if (number_of_msgs > 0 and
+                    number_of_msgs < 1024 and
+                    mig_subsystem_dict['server'] != 0 and
+                    mig_subsystem_dict['start'] > 0 and
+                    mig_subsystem_dict['end'] > 0 and
+                    mig_subsystem_dict['reserved'] == 0 and
+                    mig_subsystem_dict['routine_0'] == 0):
+                    '''
+                    # print(f'{hex(mig_subsystem_dict["server"])} {hex(mig_subsystem_dict["start"])}')
+                    # At this stage I get 0x8028000000007e74 instead of 0x100007e74 and I do not know why. The same goes for every impl_routine later too...
+                    # I can manually repair it by: & 0xffff | __TEXT 
+                    # It is temp fix, there must be a "proper way" - todo 
+                    '''
+                    mig_subsystem_dict['server'] = mig_subsystem_dict['server'] & 0xffff | va_start # Fix according to the above comment
+                    mig_subsystem_number = mig_subsystem_dict['start']
+                    subsystem_name = "MIG_subsystem_{0}".format(mig_subsystem_number)
+                    mig_subsystems[subsystem_name] = {}
+                    current_offset += mig_subsystem_size
 
-                        # If mig_subsystem structure was found, iterate over all routines
-                        msg = 0
-                        while msg < number_of_msgs:
-                            routine_name = "MIG_msg_{0}".format(mig_subsystem_number+msg)
-                            chunk = section_bytes[current_offset:current_offset+routine_descriptor_size]
-                            routine_descriptor_dict = AppleStructuresManager.routine_descriptor.parse(chunk)
-                            if routine_descriptor_dict['impl_routine'] != 0:
-                                routine_descriptor_dict['impl_routine'] = routine_descriptor_dict['impl_routine'] & 0xffff | va_start # Fix like subsystem
-                            mig_subsystems[subsystem_name].update({routine_name: routine_descriptor_dict})
-                            current_offset += routine_descriptor_size
-                            msg += 1
+                    # If mig_subsystem structure was found, iterate over all routines
+                    msg = 0
+                    while msg < number_of_msgs:
+                        routine_name = "MIG_msg_{0}".format(mig_subsystem_number+msg)
+                        chunk = section_bytes[current_offset:current_offset+routine_descriptor_size]
+                        routine_descriptor_dict = AppleStructuresManager.routine_descriptor.parse(chunk)
+                        if routine_descriptor_dict['impl_routine'] != 0:
+                            routine_descriptor_dict['impl_routine'] = routine_descriptor_dict['impl_routine'] & 0xffff | va_start # Fix like subsystem
+                        mig_subsystems[subsystem_name].update({routine_name: routine_descriptor_dict})
+                        current_offset += routine_descriptor_size
+                        msg += 1
 
-                        continue # To find more subsystems we continue the parent while without adding below alignment, because we added routine_descriptor_size
+                    continue # To find more subsystems we continue the parent while without adding below alignment, because we added routine_descriptor_size
 
-                    current_offset += alignment
+                current_offset += alignment
 
         return(mig_subsystems)
 
