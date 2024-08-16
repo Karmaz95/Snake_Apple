@@ -389,6 +389,9 @@ ___
 #### [Sandbox Validator](https://karol-mazurek.medium.com/sandbox-validator-e760e5d88617?sk=v2%2F145ac2ef-ca06-41a0-b310-c96f4ce0037b)
 SandBlaster | kernelcache | Decompiling Sandbox Profiles on Sonoma | _operation_is_forbidden | _syscall_check_sandbox_bulk | operation_names_3208 | sandbox_check | opainject | sandbox.h | sbtool | sandbox_filter_type | sandbox_validator
 ___
+#### [App Sandbox startup](https://karol-mazurek.medium.com/app-sandbox-startup-71daf8f259d1?sk=v2%2F9f3b09a6-c7c0-445d-8613-8e25bf3f4e4d)
+libsystem_secinit.dylib | _libsecinit_appsandbox | prepare() | com.apple.security.app-sandbox | _libsecinit_initializer | ___libsecinit_initializer_block_invoke | _libsecinit_appsandbox_check | xpc_pipe_create | xpc_pipe_routine | xpc_copy_description | xpc_object_t | SECINITD_REGISTRATION_MESSAGE_SHORT_NAME_KEY | SECINITD_REGISTRATION_MESSAGE_IMAGE_PATHS_ARRAY_KEY | SECINITD_REGISTRATION_MESSAGE_DYLD_VARIABLES_KEY | SECINITD_REGISTRATION_MESSAGE_VERSION_NUMBER_KEY | SECINITD_MESSAGE_TYPE_KEY | secinitd | SECINITD_REPLY_MESSAGE_CONTAINER_ID_KEY | SECINITD_REPLY_MESSAGE_REQUIRES_MIGRATION_KEY | SECINITD_REPLY_MESSAGE_QTN_PROC_FLAGS_KEY | SECINITD_REPLY_MESSAGE_CONTAINER_ROOT_PATH_KEY | SECINITD_REPLY_MESSAGE_SANDBOX_PROFILE_DATA_KEY | SECINITD_REPLY_MESSAGE_CONTAINER_ROOT_EXTENSION_KEY | SECINITD_REPLY_MESSAGE_VERSION_NUMBER_KEY | SECINITD_MESSAGE_TYPE_KEY | SECINITD_REPLY_FAILURE_CODE | __sandbox_ms | hook_policy_syscall | sandbox_init
+___
 
 ### [IX. TCC]()
 
