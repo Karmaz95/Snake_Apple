@@ -376,9 +376,12 @@ ___
   * Eicar test
   * Malware creator test
 ___
+#### &#9745; [Apple Gatekeeper Bypass](https://karol-mazurek.medium.com/apple-gatekeeper-bypass-4315bbb33018?sk=v2%2F3c20fa28-1a3d-4bd0-9a25-79646f60c44f)
+USB flash drive bypass | Network Shares bypass
+___
 
-### [VIII. Sandbox]()
-com.apple.security.app-sandbox | Sandbox Operations | Sandbox Profiles | SBPL | /System/Library/Sandbox/Profiles/application.sb | SandboxProfileData | libsystem_sandbox.dylib | libsystem_sandbox.dylib | AppSandbox.framework | sandboxd | containermanagerd | sandbox_init | .com.apple.containermanagerd.metadata.plist | SandboxProfileDataValidationInfo
+### [VIII. Sandbox](https://karol-mazurek.medium.com/snake-apple-viii-app-sandbox-5aff081f07d5?sk=v2%2F5b65151b-d1f3-4f18-93da-4ad9aeacadb7)
+com.apple.security.app-sandbox | Sandbox Operations | Sandbox Profiles | SBPL | /System/Library/Sandbox/Profiles/application.sb | SandboxProfileData | libsystem_sandbox.dylib | libsystem_sandbox.dylib | AppSandbox.framework | sandboxd | containermanagerd | sandbox_init | .com.apple.containermanagerd.metadata.plist | SandboxProfileDataValidationInfo | com.apple.MobileInstallation.ContentProtectionClass | com.apple.security.sandbox | AppleSystemPolicy.kext | CVE-2021–30853 | AppSandbox Framework | 
 ___
 #### [SBPL Compilator](https://karol-mazurek.medium.com/sbpl-compilator-c05f5304d057?sk=v2%2F4ae3bf90-ff12-4fea-b0fc-0f2ef60d7b93)
 .com.apple.containermanagerd.metadata.plist | SandboxProfileData | /System/Library/Sandbox/Profiles/ | sandbox_compile_file | com.apple.security.get-task-allow | sandbox-exec | Sandbox.kext
