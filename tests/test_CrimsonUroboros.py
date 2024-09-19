@@ -30,7 +30,7 @@ We do it for each TestSnake class.
 }
 '''
 
-snake_class = SnakeVII
+snake_class = SnakeVIII
 
 class Compiler:
     """
@@ -201,7 +201,11 @@ def decompressKernelcache():
 
 def run_and_get_stdout(command):
     command_with_stdout = f"{command} 2>&1"
-    return os.popen(command_with_stdout).read().strip()
+    # Run the command and capture the output in bytes
+    result = subprocess.run(command_with_stdout, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    
+    # Decode with utf-8, ignoring invalid characters or replacing them
+    return result.stdout.decode('utf-8', errors='replace').strip()
 
 class TestSnakeAppBundleExtension():
     '''Testing App Bundle Extension'''
@@ -773,7 +777,6 @@ class TestSnakeI():
     def test_dump_section(self):
         '''Test the --dump_section flag of SnakeI.'''
         uroboros_output = run_and_get_stdout('python3 CrimsonUroboros.py -p hello_1 --dump_section "__TEXT,__cstring"')
-        print(uroboros_output)
         expected_output = 'Hello, World!'
 
         assert expected_output in uroboros_output
@@ -2230,21 +2233,11 @@ class TestSnakeVII():
         assert os.path.exists("hello_7")
         os.system("xattr -w com.apple.quarantine '0083;00000000;Safari' hello_7")
 
-        # Decompress KernelCache
-        #result = decompressKernelcache()
-        #assert result == 0
-        #assert os.path.exists("kernelcache")
-        #cls.kernelcache_path = run_and_get_stdout('ls kernelcache/System/Volumes/Preboot/*/boot/*/System/Library/Caches/com.apple.kernelcaches/kernelcache.decompressed')
-
     @classmethod
     def teardown_class(cls):
         # Purge the compiled files
         cls.compiler.purgeCompiledFiles()
         assert not os.path.exists("hello_6")
-
-        # Purge kernelcache directory
-        #os.system("rm -rf kernelcache")
-        #assert not os.path.exists("kernelcache")
     
     def test_xattr(self):
         '''Test the --xattr flag of SnakeVII.'''
@@ -2357,3 +2350,237 @@ class TestSnakeVII():
         
         assert expected_output_1 in uroboros_output
         assert expected_output_2 in run_and_get_stdout("xattr -l  hello_7")
+
+class TestSnakeVIII():
+    '''Testing VIII. App Sandbox'''
+    @classmethod
+    def setup_class(cls):
+        # Set up the compilation process
+        cls.compiler = Compiler()
+        cls.compiler.compileIt("../I.\ Mach-O/custom/hello.c", "hello_8", ["-arch", "arm64"])
+        assert os.path.exists("hello_8")
+
+        # Decompress KernelCache
+        result = decompressKernelcache()
+        assert result == 0
+        assert os.path.exists("kernelcache")
+        cls.kernelcache_path = run_and_get_stdout('ls kernelcache/System/Volumes/Preboot/*/boot/*/System/Library/Caches/com.apple.kernelcaches/kernelcache.decompressed')
+
+    @classmethod
+    def teardown_class(cls):
+        # Purge the compiled files
+        cls.compiler.purgeCompiledFiles()
+        assert not os.path.exists("hello_6")
+
+        # Purge kernelcache directory
+        os.system("rm -rf kernelcache")
+        assert not os.path.exists("kernelcache")
+    
+    def test_sandbox_container_path(self):
+        '''Test the --sandbox_container_path flag of SnakeVIII.'''
+        args_list = ['-b', "/System/Applications/Notes.app", '--sandbox_container_path']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = '/Users/karmaz/Library/Containers/com.apple.Notes'
+
+        assert expected_output in uroboros_output
+
+    def test_sandbox_container_metadata(self):
+        '''Test the --sandbox_container_metadata flag of SnakeVIII.'''
+        args_list = ['-b', "/System/Applications/Notes.app", '--sandbox_container_metadata']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'com.apple.Notes'
+
+        assert expected_output in uroboros_output
+
+    def test_sandbox_parameters(self):
+        '''Test the --sandbox_parameters flag of SnakeVIII.'''
+        args_list = ['-b', "/System/Applications/Notes.app", '--sandbox_parameters']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'application_bundle: /System/Applications/Notes.app'
+
+        assert expected_output in uroboros_output
+
+
+    def test_sandbox_entitlements(self):
+        '''Test the --sandbox_entitlements flag of SnakeVIII.'''
+        args_list = ['-b', "/System/Applications/Notes.app", '--sandbox_entitlements']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'com.apple.Notes'
+
+        assert expected_output in uroboros_output
+
+    def test_sandbox_build_uuid(self):
+        '''Test the --sandbox_build_uuid flag of SnakeVIII.'''
+        args_list = ['-b', "/System/Applications/Notes.app", '--sandbox_build_uuid']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'Build UUID:'
+
+        assert expected_output in uroboros_output
+
+    def test_sandbox_redirected_paths(self):
+        '''Test the --sandbox_redirected_paths flag of SnakeVIII.'''
+        args_list = ['-b', "/System/Applications/Notes.app", '--sandbox_redirected_paths']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'No redirected paths found for the given App Bundle.'
+
+        assert expected_output in uroboros_output
+
+    def test_sandbox_system_images(self):
+        '''Test the --sandbox_system_images flag of SnakeVIII.'''
+        args_list = ['-b', "/System/Applications/Notes.app", '--sandbox_system_images']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = '/System/Library/PrivateFrameworks/'
+
+        assert expected_output in uroboros_output
+
+    def test_sandbox_system_profiles(self):
+        '''Test the --sandbox_system_profiles flag of SnakeVIII.'''
+        args_list = ['-b', "/System/Applications/Notes.app", '--sandbox_system_profiles']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'AppSandboxProfileSnippetModificationDateKey'
+
+        assert expected_output in uroboros_output
+
+    def test_sandbox_content_protection(self):
+        '''Test the --sandbox_content_protection flag of SnakeVIII.'''
+        args_list = ['-b', "/System/Applications/Notes.app", '--sandbox_content_protection']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'com.apple.MobileInstallation.ContentProtectionClass:'
+
+        assert expected_output in uroboros_output
+
+    def test_sandbox_profile_data(self):
+        '''Test the --sandbox_profile_data flag of SnakeVIII.'''
+        uroboros_output = run_and_get_stdout('python3 CrimsonUroboros.py -b /System/Applications/Notes.app --sandbox_profile_data')
+        expected_output = 'No SandboxProfileData found for the given App Bundle.'
+
+        assert expected_output not in uroboros_output
+
+    def test_dump_kext(self):
+        '''Test the --dump_kext flag of SnakeVIII.'''
+        args_list = ['-p', self.kernelcache_path, '--dump_kext', 'sandbox']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        executeCodeBlock(code_block)
+        assert os.path.exists("sandbox")
+        os.remove("sandbox")
+
+    def test_extract_sandbox_operations(self):
+        '''Test the --extract_sandbox_operations flag of SnakeVIII.'''
+        a = run_and_get_stdout(f'python3 CrimsonUroboros.py -p {self.kernelcache_path} --dump_kext sandbox')
+        assert os.path.exists("sandbox")
+        
+        args_list = ['-p', 'sandbox', '--extract_sandbox_operations']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            sandbox_processor = SandboxProcessor()
+            sandbox_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'xpc-message-send'
+
+        assert expected_output in uroboros_output
+        os.remove("sandbox")
