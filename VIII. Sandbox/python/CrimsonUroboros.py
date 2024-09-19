@@ -3010,7 +3010,7 @@ class SnakeVIII(SnakeVII):
 
     def printSandboxRedirectedPaths(self):
         ''' Print the redirected paths as dictionary. '''
-        redirected_paths = self.getRedirectedPaths()
+        redirected_paths = self.getSandboxRedirectedPaths()
         if redirected_paths:
             for path in redirected_paths:
                 print(path)
@@ -3091,7 +3091,7 @@ class SnakeVIII(SnakeVII):
     def dumpKernelExtensionBinary(self, kext_name):
         ''' Dump the kernel extension binary from the kernelcache.decompressed file. 
         For now it is only wrapper arround ipsw'''
-        os.system(f"ipsw kernel extract {self.file_path} {kext_name}")
+        os.system(f"ipsw kernel extract {self.file_path} {kext_name} --output .")
 
     def extractSandboxOperations(self):
         ''' Extract sandbox operations from the Sandbox.kext file. '''
@@ -3264,7 +3264,7 @@ class ArgumentParser:
 
     def addSandboxArgs(self):
         sandbox_group = self.parser.add_argument_group('SANDBOX ARGS')
-        sandbox_group.add_argument('--sandbox_container_path', action='store_true', help="todo")
+        sandbox_group.add_argument('--sandbox_container_path', action='store_true', help="Print the sandbox container path")
         sandbox_group.add_argument('--sandbox_container_metadata', action='store_true', help="Print the .com.apple.containermanagerd.metadata.plist contents for the given bundlein XML format")
         sandbox_group.add_argument('--sandbox_redirectable_paths', action='store_true', help="Print the redirectable paths from the sandbox container metadata as list")
         sandbox_group.add_argument('--sandbox_parameters', action='store_true', help="Print the parameters from the sandbox container metadata as key-value pairs")
@@ -3276,9 +3276,7 @@ class ArgumentParser:
         sandbox_group.add_argument('--sandbox_content_protection', action='store_true', help="Print the content protection from the sandbox container metadata")
         sandbox_group.add_argument('--sandbox_profile_data', action='store_true', help="Print raw bytes ofthe sandbox profile data from the sandbox container metadata")
         sandbox_group.add_argument('--dump_kext', help="Dump the kernel extension binary from the kernelcache.decompressed file", metavar='kext_name')
-        sandbox_group.add_argument('--extract_sandbox_operations', action='store_true', help="Extract sandbox operations from the kernelcache.decompressed file")
-        
-        
+        sandbox_group.add_argument('--extract_sandbox_operations', action='store_true', help="Extract sandbox operations from the Sandbox.kext file")
 
     def parseArgs(self):
         args = self.parser.parse_args()
