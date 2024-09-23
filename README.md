@@ -39,14 +39,14 @@ The table of contents showing links to all articles is below:
   * &#9745; [Sandbox Detector](https://karol-mazurek.medium.com/sandbox-detector-4268ab3cd361?sk=v2%2F58fe49fb-1381-4db3-9db9-3f6309e4053a)
   * &#9745; [Sandbox Validator](https://karol-mazurek.medium.com/sandbox-validator-e760e5d88617?sk=v2%2F145ac2ef-ca06-41a0-b310-c96f4ce0037b)
   * &#9745; [App Sandbox startup](https://karol-mazurek.medium.com/app-sandbox-startup-71daf8f259d1?sk=v2%2F9f3b09a6-c7c0-445d-8613-8e25bf3f4e4d)
-  * &#9744; [System Intigrity Protection]()
+  * &#9745; [System Intigrity Protection](https://karol-mazurek.medium.com/system-integrity-protection-sip-140562b07fea?sk=v2%2F9c293b8f-c376-4603-b8a1-2872ba3395cf)
 * &#9744; [IX. TCC]()
 * &#9744; [X. NU]()
   * &#9745; [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
 
 
 ## TOOLS
-[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster)
+[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster) • [sip_check](#sip_check) • [crimson_waccess.py](#crimson_waccesspy) • [sip_tester](#sip_tester)
 ***
 
 ### [CrimsonUroboros](tests/CrimsonUroboros.py)
@@ -488,6 +488,40 @@ sandbox_validator 93298 "authorization-right-obtain" RIGHT_NAME "system.burn"
 This is my forked version of [sandblaster](https://github.com/cellebrite-labs/sandblaster) with MacOS Support:
 ```bash
 python3 reverse_sandbox.py -o sonoma_sandbox_operations.txt profile_sb -r 17
+```
+### [sip_check](VIII.%20Sandbox/custom/sip_check.py)
+A simple program to check if SIP is enabled in the system with more details.  
+It was introduced in [the article about SIP](https://karol-mazurek.medium.com/system-integrity-protection-sip-140562b07fea?sk=v2%2F9c293b8f-c376-4603-b8a1-2872ba3395cf)
+```bash
+python3 sip_check.py
+SIP Configuration Flags:
+CSR_ALLOW_UNTRUSTED_KEXTS: Off
+CSR_ALLOW_UNRESTRICTED_FS: Off
+CSR_ALLOW_TASK_FOR_PID: Off
+CSR_ALLOW_KERNEL_DEBUGGER: Off
+CSR_ALLOW_APPLE_INTERNAL: Off
+CSR_ALLOW_UNRESTRICTED_DTRACE: Off
+CSR_ALLOW_UNRESTRICTED_NVRAM: Off
+CSR_ALLOW_DEVICE_CONFIGURATION: Off
+CSR_ALLOW_ANY_RECOVERY_OS: Off
+CSR_ALLOW_UNAPPROVED_KEXTS: Off
+CSR_ALLOW_EXECUTABLE_POLICY_OVERRIDE: Off
+CSR_ALLOW_UNAUTHENTICATED_ROOT: Off
+```
+### [crimson_waccess.py](VIII.%20Sandbox/python/crimson_waccess.py)
+It can be use for checking the possibility of file modification and creation in a given directory.  
+It was introduced in [the article about SIP](https://karol-mazurek.medium.com/system-integrity-protection-sip-140562b07fea?sk=v2%2F9c293b8f-c376-4603-b8a1-2872ba3395cf)
+```bash
+python3 crimson_waccess.py -f sip_protected_paths.txt
+```
+### [sip_tester](VIII.%20Sandbox/python/sip_tester)
+It can be used to check if a given path, process or service is SIP-protected and also to check missing paths from `rootless.conf`.  
+It was introduced in [the article about SIP](https://karol-mazurek.medium.com/system-integrity-protection-sip-140562b07fea?sk=v2%2F9c293b8f-c376-4603-b8a1-2872ba3395cf)
+```bash
+sip_tester --path /bin
+sip_tester --pid 1234
+sip_tester --service com.apple.kernelmanager_helper
+sip_tester --missing_paths
 ```
 
 ## INSTALL
