@@ -1,0 +1,405 @@
+#!/usr/bin/env python3
+
+import os
+import subprocess
+import argparse
+import lief 
+import xattr
+import psutil
+import plistlib
+
+ROOTLESS_CONF = '/System/Library/Sandbox/rootless.conf'
+ROOTLESS_PLIST = '/System/Library/Sandbox/com.apple.xpc.launchd.rootless.plist'
+
+class MachOProcessor:
+    def __init__(self, path):
+        '''This class contains part of the code from the main() for the SnakeI: Mach-O part.'''
+        self.macho_magic_numbers = {
+            0xfeedface,  # 32-bit Mach-O
+            0xfeedfacf,  # 64-bit Mach-O
+            0xcefaedfe,  # 32-bit Mach-O, byte-swapped
+            0xcffaedfe,  # 64-bit Mach-O, byte-swapped
+            0xcafebabe,  # Fat binary
+            0xbebafeca   # Fat binary, byte-swapped
+        }
+        self.path = os.path.abspath(path)
+        self.binary = self.parseFatBinary()[0] # Does not matter which architecture we take here for this tool functionalities.
+
+    def isFileMachO(self):
+        '''Check if file is Mach-O. '''
+        try:
+            with open(self.path, 'rb') as f:
+                magic = f.read(4)
+                if len(magic) < 4:
+                    return False
+                magic_number = int.from_bytes(magic, byteorder='big')
+                return magic_number in self.macho_magic_numbers
+        except Exception:
+            return False
+
+    def parseFatBinary(self):
+        '''Return Fat Binary object if file exists.'''
+        if os.path.exists(self.path):
+            if self.isFileMachO():
+                return lief.MachO.parse(self.path)
+        else:
+            return None
+
+    def getCodeSignature(self):
+        '''Returns information about the Code Signature.'''
+        result = subprocess.run(["codesign", "-d", "-vvvvvv", self.path], capture_output=True)
+        return result.stderr
+
+    def hasRestrictSegment(self):
+        '''Check if binary contains __RESTRICT segment. Return True if it does.'''
+        for segment in self.binary.segments:
+            if segment.name.lower().strip() == "__restrict":
+                return True
+        return False
+
+    def hasRestrictFlag(self):
+        '''Check if Code Signature flag CS_RESTRICT 0x800(restrict) is set for the given binary'''
+        if b'restrict' in self.getCodeSignature():
+            return True
+        return False
+
+    def isRestricted(self):
+        '''Check if binary has __RESTRICT segment or CS_RESTRICT flag set.'''
+        if self.hasRestrictSegment() or self.hasRestrictFlag(self.path):
+            return True
+        return False
+
+class FileSystemProcessor:
+    def __init__(self):
+        # File System Flags based on: https://github.com/apple-oss-distributions/xnu/blob/94d3b452840153a99b38a3a9659680b2a006908e/bsd/sys/stat.h
+        self.file_system_flags = {
+            'ACCESSPERMS': 0o777,  # 0777
+            'ALLPERMS': 0o666,     # 0666
+            'DEFFILEMODE': (0o400 | 0o200 | 0o100 | 0o40 | 0o20 | 0o10),  # Default file mode
+
+            # Owner changeable flags
+            'UF_SETTABLE': 0x0000ffff,  # mask of owner changeable flags
+            'UF_NODUMP': 0x00000001,     # do not dump file
+            'UF_IMMUTABLE': 0x00000002,  # file may not be changed
+            'UF_APPEND': 0x00000004,     # writes to file may only append
+            'UF_OPAQUE': 0x00000008,     # directory is opaque wrt. union
+            'UF_COMPRESSED': 0x00000020,  # file is compressed
+            'UF_TRACKED': 0x00000040,     # document ID tracking
+            'UF_DATAVAULT': 0x00000080,   # entitlement required for reading/writing
+            'UF_HIDDEN': 0x00008000,      # hint for GUI display
+
+            # Super-user changeable flags
+            'SF_SUPPORTED': 0x009f0000,   # mask of superuser supported flags
+            'SF_SETTABLE': 0x3fff0000,    # mask of superuser changeable flags
+            'SF_SYNTHETIC': 0xc0000000,   # mask of system read-only synthetic flags
+            'SF_ARCHIVED': 0x00010000,    # file is archived
+            'SF_IMMUTABLE': 0x00020000,   # file may not be changed
+            'SF_APPEND': 0x00040000,      # writes to file may only append
+            'SF_RESTRICTED': 0x00080000,  # entitlement required for writing
+            'SF_NOUNLINK': 0x00100000,    # item may not be removed, renamed, or mounted on
+            'SF_FIRMLINK': 0x00800000,    # file is a firmlink
+            'SF_DATALESS': 0x40000000,    # file is a dataless object
+
+            # Extended flags
+            'EF_MAY_SHARE_BLOCKS': 0x00000001,  # file may share blocks with another file
+            'EF_NO_XATTRS': 0x00000002,           # file has no xattrs
+            'EF_IS_SYNC_ROOT': 0x00000004,        # file is a sync root for iCloud
+            'EF_IS_PURGEABLE': 0x00000008,        # file is purgeable
+            'EF_IS_SPARSE': 0x00000010,           # file has at least one sparse region
+            'EF_IS_SYNTHETIC': 0x00000020,        # a synthetic directory/symlink
+            'EF_SHARES_ALL_BLOCKS': 0x00000040,   # file shares all of its blocks with another file
+        }
+
+    def pathExists(self,path):
+        try:
+            # Use the ls command to check if the path exists
+            output = subprocess.check_output(['ls', path], stderr=subprocess.STDOUT)
+            return True  # If ls doesn't raise an error, the path exists
+        except subprocess.CalledProcessError:
+            return False  # If ls raises an error, the path doesn't exist
+            # I had to replace it to ls, because os.stat() does not handle symlink properly.
+
+    def isFile(self, path):
+        '''Check if the path is a file.'''
+        return os.path.isfile(path)
+
+    def isDirectory(self, path):
+        '''Check if the path is a directory.'''
+        return os.path.isdir(path)
+
+    def getFileFlags(self, path):
+        '''Return a list of active flags for the given path.'''
+        try:
+            # Get file status
+            stat_info = os.stat(path)
+
+            # Assuming `st_flags` is available and contains the flags
+            flags = stat_info.st_flags  # Adjust this if necessary
+
+            active_flags = {}
+            for flag_name, flag_value in self.file_system_flags.items():
+                if flags & flag_value:
+                    active_flags[flag_name] = flag_value
+
+            return active_flags
+        except Exception as e:
+            print(f"Error in FileSystemProcessor.getFileFlags: {e}")
+            return None
+
+    def getExtendedAttributes(self, path):
+        '''Return extended file attributes names.'''
+        try:
+            return xattr.listxattr(path)
+        except Exception as e:
+            print(f"Error in FileSystemProcessor.getExtendedAttributes: {e}")
+            return None
+
+class RootlessProcessor:
+    def __init__(self):
+        self.fs_processor = FileSystemProcessor()
+        self.protected_paths, self.excluded_paths, self.service_exceptions = self.parseRootlessConf()
+
+    def extract_excluded_paths(self, line):
+        '''Extract the path from a line that starts with '*' and contains a path after spaces.
+            *               /Users
+        '''
+        # Remove the leading '*' and any whitespace before the first letter
+        path = line.lstrip('*').lstrip()
+        return path
+
+    def extract_protected_paths(self, line):
+        '''Extract the path from a line that starts with ' ' and contains a path after spaces.
+            				/System
+        '''
+        path = line.strip()
+        return path
+
+    def extract_service_exceptions(self, line):
+        '''Extract service exceptions in the format {key:value}.'''
+        parts = line.split(maxsplit=1)  # Split the line into two parts: key and value
+        if len(parts) == 2:
+            key = parts[0].strip()   # Pkey (e.g., CoreAnalytics)
+            value = parts[1].strip()  # value (e.g., /Library/CoreAnalytics)
+            return {key: value}
+        return None
+
+    def parseRootlessConf(self, rootless_conf_path=ROOTLESS_CONF):
+        ''' Return a list of paths that are protected and excluded by SIP from rootless.conf. '''
+        protected_paths = []
+        excluded_paths = []
+        service_exceptions = {}
+        with open(rootless_conf_path, 'r') as file:
+            for line in file:
+                if line.startswith('#'):
+                    continue # Skip commented lines
+
+                elif line.startswith('*'): # Excluded paths
+                    path = self.extract_excluded_paths(line)
+                    excluded_paths.append(path)
+
+                elif line[0].isalnum(): # Service exceptions
+                    key_value = self.extract_service_exceptions(line)
+                    key = next(iter(key_value))
+                    path = key_value[key]
+                    service_exceptions.update(key_value)
+
+                else: # Protected paths
+                    path = self.extract_protected_paths(line)
+                    protected_paths.append(path)
+
+            protected_paths.remove('/tmp')
+            return protected_paths, excluded_paths, service_exceptions
+
+    def checkForServiceException(self, path):
+        ''' Check if the given path is a service exception and return the service names. '''
+        service_exceptions = []
+        for service_name, service_path in self.service_exceptions.items():
+            if path == service_path:
+                service_exceptions.append(service_name)
+
+        if service_exceptions:
+            return service_exceptions
+        return None
+
+    def makePathsToCheck(self, path):
+        ''' 
+            Make a list of paths to check by adding final slash at the end of string if it does not exist and remove it if it does.
+            This is needed because the rootless.conf may contain paths without and with final slash.
+        '''
+        paths_to_check = [path]
+
+        if path.endswith('/'):
+            paths_to_check.append(path)
+            path = path[:-1]
+
+        elif not path.endswith('/'):
+            path = path + '/'
+            paths_to_check.append(path)
+
+        return paths_to_check
+
+    def checkIfPathIsProtectedByRootlessConf(self, path):
+        ''' Check if the given path is protected by SIP. In case of services exceptions, it will return the service name.'''
+        protected_paths, excluded_paths, _ = self.parseRootlessConf()
+        paths = self.makePathsToCheck(path)
+        
+        if any(path in protected_paths for path in paths):
+            return 1
+        
+        elif any(path in excluded_paths for path in paths):
+            return 2
+        
+        elif any(path in self.service_exceptions.values() for path in paths):
+            service_name = self.checkForServiceException(path)
+            return service_name
+
+        else:
+            return 3
+
+    def checkIfParentDirectoryIsProtectedByRootlessConf(self, path):
+        '''Check if the parent directory of the given path is protected by SIP.'''
+        protected_paths, _, _ = self.parseRootlessConf()  # Get protected paths
+        path = os.path.abspath(path)  # Get absolute path
+        parent_dir = os.path.dirname(path)  # Get parent directory
+
+        # Check if the parent directory is in the list of protected paths
+        if parent_dir in protected_paths:
+            return True
+        return False
+
+    def isRestrictedFlagSet(self, path):
+        '''Check if the CS_RESTRICT flag is set for the given path.'''
+        flags = self.fs_processor.getFileFlags(path)
+        if flags and 'SF_RESTRICTED' in flags:
+            return True
+        return False
+
+    def isRestricedAttributeSet(self, path):
+        '''Check if the com.apple.rootless extended attribute is set for the given path.'''
+        xattr_value = self.fs_processor.getExtendedAttributes(path)
+        if xattr_value and 'com.apple.rootless' in xattr_value:
+            return True
+        return False
+
+    def isRestrictedByRootlessPlist(self, service_name):
+        '''Check if the given service is protected by the rootless.plist file.'''
+        rootless_plist_path = ROOTLESS_PLIST
+        
+        with open(rootless_plist_path, 'rb') as file:
+            plist_data = plistlib.load(file)
+
+            # Check if the service_name is in RemovableServices
+            removable_services = plist_data.get('RemovableServices', {})
+            if service_name in removable_services:
+                return 1
+
+            # Check if the service_name is in InstallerRemovableServices
+            installer_removable_services = plist_data.get('InstallerRemovableServices', {})
+            if service_name in installer_removable_services:
+                return 2
+
+            return False
+
+class SipTester:
+    def __init__(self):
+        self.rootless_processor = RootlessProcessor()
+        self.fs_processor = FileSystemProcessor()
+
+    def checkRootlessConf(self, path):
+        result = self.rootless_processor.checkIfPathIsProtectedByRootlessConf(path)
+
+        if result == 1:
+            print(f"{path}: SIP-protected in rootless.conf")
+        elif result == 2:
+            print(f"{path} is not SIP-protected (excluded by rootless.conf)")
+        elif result == 3:
+            pass # print(f"{path}: does not exists in rootless.conf")
+        else:
+            print(f"{path} is SIP-protected, but {result} service is exception and has access to it")
+
+    def checkParentDirectory(self, path):
+        if self.rootless_processor.checkIfParentDirectoryIsProtectedByRootlessConf(path):
+            print(f"{path}: parent directory is protected by rootless.conf")
+
+    def checkFileSystemRestrictFlag(self, path):
+        if self.rootless_processor.isRestrictedFlagSet(path):
+            print(f"{path}: SF_RESTRICTED flag set")
+
+    def checkRestrictedAttribute(self, path):
+        if self.rootless_processor.isRestricedAttributeSet(path):
+            print(f"{path}: com.apple.rootless extended attribute is set")
+
+    def pathTester(self, path):
+        path = os.path.abspath(path)
+        self.checkRootlessConf(path)
+        self.checkParentDirectory(path)
+        self.checkFileSystemRestrictFlag(path)
+        self.checkRestrictedAttribute(path)
+
+    def checkCodeSignatureRestrictedFlag(self, path):
+        if MachOProcessor(path).hasRestrictFlag():
+            print(f"{path}: CS_RESTRICT flag set on binary")
+    
+    def checkRestrictSegment(self, path):
+        if MachOProcessor(path).hasRestrictSegment():
+            print(f"{path}: __restrict segment set on binary")
+
+    def pidTester(self, pid):
+        try:
+            process = psutil.Process(pid)
+            path = process.exe()
+            self.checkRootlessConf(path)
+            self.checkParentDirectory(path)
+            self.checkFileSystemRestrictFlag(path)
+            self.checkRestrictedAttribute(path)
+            self.checkCodeSignatureRestrictedFlag(path)
+            self.checkRestrictSegment(path)
+        except psutil.NoSuchProcess:
+            print(f"Process with PID {pid} does not exist")
+
+    def checkRootlessPlist(self, service):
+        if self.rootless_processor.isRestrictedByRootlessPlist(service) == 1:
+            print(f"{service} is restricted by rootless.plist in RemovableServices.")
+        
+        elif self.rootless_processor.isRestrictedByRootlessPlist(service) == 2:
+            print(f"{service} is restricted by rootless.plist in InstallerRemovableServices.")
+
+    def serviceTester(self, service):
+        self.checkRootlessPlist(service)
+
+    def missingPathsTester(self):
+        all_paths = self.rootless_processor.protected_paths + list(self.rootless_processor.service_exceptions.values())
+        missing_paths = []
+        for path in all_paths:
+            if path.endswith('*'):
+                path = path[:-1]
+
+            if not self.fs_processor.pathExists(path):
+                missing_paths.append(path)
+        
+        if missing_paths:
+            print("Paths from rootless.conf that are missing:")
+            for path in missing_paths:
+                print(f"{path}")
+    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Check SIP protection")
+    parser.add_argument('--path', help='Path to file or directory')
+    parser.add_argument('--pid', help='PID of the process')
+    parser.add_argument('--service', help='Launchd service name')
+    parser.add_argument('--missing_paths', action='store_true', help='Show paths from rootless.conf that does not exists on the filesystem')
+
+    args = parser.parse_args()
+    sip_tester = SipTester()
+    
+    if args.path:
+        sip_tester.pathTester(args.path)
+    
+    if args.pid:
+        sip_tester.pidTester(int(args.pid))
+
+    if args.service:
+        sip_tester.serviceTester(args.service)
+    
+    if args.missing_paths:
+        sip_tester.missingPathsTester()
