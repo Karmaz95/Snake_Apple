@@ -1,7 +1,7 @@
-lief
-uuid
-argparse
-asn1crypto
-pyimg4
-treelib
-xattr
+lief=0.15.1
+uuid=1.30
+argparse=1.4.0
+asn1crypto=1.5.1
+pyimg4=0.8
+treelib=1.7.0
+xattr=1.1.0

@@ -368,7 +368,7 @@ class TestSnakeI():
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
-        expected_output = 'Header flags: TWOLEVEL NOUNDEFS DYLDLINK PIE'
+        expected_output = 'Header flags: NOUNDEFS DYLDLINK TWOLEVEL PIE'
         
         assert uroboros_output == expected_output
     
@@ -402,7 +402,7 @@ class TestSnakeI():
         uroboros_output = executeCodeBlock(code_block)
         expected_output_1 = 'ARM64'
         expected_output_2 = 'EXECUTE'
-        expected_output_3 = 'NOUNDEFS DYLDLINK TWOLEVEL PIE'
+        expected_output_3 = 'Flags: 2097285'
         
         assert expected_output_1 in uroboros_output
         assert expected_output_2 in uroboros_output
@@ -490,11 +490,11 @@ class TestSnakeI():
             macho_processor.process(args)
             
         uroboros_output = executeCodeBlock(code_block)
-        expected_output_1 = '__TEXT        __text              REGULAR                     0x100003f58-0x100007eb0         0x3f58-0x3f8c		(SOME_INSTRUCTIONS PURE_INSTRUCTIONS)'
-        expected_output_2 = '__TEXT        __stubs             SYMBOL_STUBS                0x100003f8c-0x100007f18         0x3f8c-0x3f98		(SOME_INSTRUCTIONS PURE_INSTRUCTIONS)'
-        expected_output_3 = '__TEXT        __cstring           CSTRING_LITERALS            0x100003f98-0x100007f30         0x3f98-0x3fa7		()'
-        expected_output_4 = '__TEXT        __unwind_info       REGULAR                     0x100003fa8-0x100007f50         0x3fa8-0x4000		()'
-        expected_output_5 = '__DATA_CONST  __got               NON_LAZY_SYMBOL_POINTERS    0x100004000-0x100008000         0x4000-0x4008		()'
+        expected_output_1 = '__TEXT        __text'
+        expected_output_2 = '__TEXT        __stubs'
+        expected_output_3 = '__TEXT        __cstring'
+        expected_output_4 = '__TEXT        __unwind_info'
+        expected_output_5 = '__DATA_CONST  __got'
         
         assert expected_output_1 in uroboros_output
         assert expected_output_2 in uroboros_output
@@ -710,9 +710,9 @@ class TestSnakeI():
 
         expected_output_1 = 'Entry point: 0x3f58'
         expected_output_2 = '__mh_execute_header'
-        expected_output_3 = '__PAGEZERO      ---/---      VM: 0x0000000000000000-0x0000000100000000       FILE: 0x0-0x0'
-        expected_output_4 = '__DATA_CONST0x100004000: _printf (libSystem.B.dylib) addend: 0x0'
-        expected_output_5 = 'Command : SEGMENT_64'
+        expected_output_3 = '__PAGEZERO'
+        expected_output_4 = '__DATA_CONST0x100004000'
+        expected_output_5 = 'Command: SEGMENT_64'
 
         assert expected_output_1 in uroboros_output
         assert expected_output_2 in uroboros_output

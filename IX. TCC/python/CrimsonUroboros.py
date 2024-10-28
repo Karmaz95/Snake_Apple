@@ -507,7 +507,7 @@ class SnakeI(SnakeAppBundleExtension):
             If not, it exits the program.
         '''
         for binary in binaries:
-            if binary.header.cpu_type == lief.MachO.CPU_TYPES.ARM64:
+            if binary.header.cpu_type == lief.MachO.Header.CPU_TYPE.ARM64:
                 return binary
 
         print('The specified Mach-O file is not in ARM64 architecture.')
@@ -643,8 +643,8 @@ class SnakeI(SnakeAppBundleExtension):
         imported_symbols = []
 
         for symbol in self.getSymbols():
-            if (symbol.type & self.symbol_types['N_EXT']):
-                if (symbol.type & self.symbol_types['N_TYPE']) == self.symbol_types['N_TYPES']['N_UNDF']:
+            if (symbol.type.value & self.symbol_types['N_EXT']):
+                if (symbol.type.value & self.symbol_types['N_TYPE']) == self.symbol_types['N_TYPES']['N_UNDF']:
                     imported_symbols.append(symbol)
 
         return(imported_symbols)
@@ -659,8 +659,8 @@ class SnakeI(SnakeAppBundleExtension):
         exported_symbols = []
 
         for symbol in self.getSymbols():
-            if (symbol.type & self.symbol_types['N_EXT']):
-                if (symbol.type & self.symbol_types['N_TYPE']) != self.symbol_types['N_TYPES']['N_UNDF']:
+            if (symbol.type.value & self.symbol_types['N_EXT']):
+                if (symbol.type.value & self.symbol_types['N_TYPE']) != self.symbol_types['N_TYPES']['N_UNDF']:
                     exported_symbols.append(symbol)
 
         return(exported_symbols)
@@ -719,7 +719,7 @@ class SnakeI(SnakeAppBundleExtension):
         '''Return strings from the __cstring (string table).'''
         extracted_strings = []
         for section in self.binary.sections:
-            if section.type == lief.MachO.SECTION_TYPES.CSTRING_LITERALS:
+            if section.type == lief.MachO.Section.TYPE.CSTRING_LITERALS:
                 strings_bytes = section.content.tobytes()
                 strings = strings_bytes.decode('utf-8', errors='ignore')
                 extracted_strings.extend(strings.split('\x00'))
@@ -1232,7 +1232,7 @@ class SnakeIII(SnakeII):
         filter_symbols = ['radr://5614542', '__mh_execute_header']
 
         for symbol in self.binary.symbols:
-            symbol_type = symbol.type
+            symbol_type = symbol.type.value
             symbol_name = symbol.name.lower().strip()
 
             is_symbol_stripped = (symbol_type & 0xe0 > 0) or (symbol_type in [0x0e, 0x1e, 0x0f])
@@ -1252,11 +1252,11 @@ class SnakeIII(SnakeII):
 
     def hasNXstack(self):
         '''Check if MH_ALLOW_STACK_EXECUTION (0x00020000 ) is not set in the header flags.'''
-        return not bool(self.binary.header.flags & lief.MachO.HEADER_FLAGS.ALLOW_STACK_EXECUTION.value)
+        return not bool(self.binary.header.flags & lief.MachO.Header.FLAGS.ALLOW_STACK_EXECUTION.value)
 
     def hasNXheap(self):
         '''Check if MH_NO_HEAP_EXECUTION (0x01000000 ) is set in the header flags.'''
-        return bool(self.binary.header.flags & lief.MachO.HEADER_FLAGS.NO_HEAP_EXECUTION.value)
+        return bool(self.binary.header.flags & lief.MachO.Header.FLAGS.NO_HEAP_EXECUTION.value)
 
     def isXNos():
         '''Check if the OS is running on the ARM architecture.'''
@@ -1313,7 +1313,7 @@ class SnakeIII(SnakeII):
 
     def checkIfCompiledForOtherThanARM(self):
         '''Iterates over FatBinary and check if there are other architectures than ARM.'''
-        XN_types = [lief.MachO.CPU_TYPES.ARM64, lief.MachO.CPU_TYPES.ARM]
+        XN_types = [lief.MachO.Header.CPU_TYPE.ARM64, lief.MachO.Header.CPU_TYPE.ARM]
         for binary in binaries:
             if binary.header.cpu_type not in XN_types:
                 print(f"[INFO -> XN]: {os.path.basename(self.file_path)} is compiled for other CPUs than ARM or ARM64.")
@@ -2885,7 +2885,6 @@ class SandboxProcessor:
         if args.extract_sandbox_operations: # Extract sandbox operations from the kernelcache.decompressed file
             snake_instance.printSandboxOperations()
 
-
 class SnakeVIII(SnakeVII):
     def __init__(self, binaries, file_path):
         super().__init__(binaries, file_path)
@@ -3115,6 +3114,25 @@ class SnakeVIII(SnakeVII):
         for operation in operations:
             print(operation)
 
+### ---- IX. TCC --- ###
+class TCCProcessor:
+    def __init__(self):
+        '''This class contains part of the code from the main() for the SnakeIX: TCC.'''
+        pass
+
+    def process(self, args):
+        if args.test: # 
+            snake_instance.test()
+
+class SnakeIX(SnakeVIII):
+    def __init__(self, binaries, file_path):
+        super().__init__(binaries, file_path)
+
+    def test(self):
+        ''' test '''
+        print('test')
+
+
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
     def __init__(self):
@@ -3130,6 +3148,7 @@ class ArgumentParser:
         self.addAMFIArgs()
         self.addAntivirusArgs()
         self.addSandboxArgs()
+        self.addTCCArgs()
 
     def addGeneralArgs(self):
         general_group = self.parser.add_argument_group('GENERAL ARGS')
@@ -3277,6 +3296,10 @@ class ArgumentParser:
         sandbox_group.add_argument('--sandbox_profile_data', action='store_true', help="Print raw bytes ofthe sandbox profile data from the sandbox container metadata")
         sandbox_group.add_argument('--dump_kext', help="Dump the kernel extension binary from the kernelcache.decompressed file", metavar='kext_name')
         sandbox_group.add_argument('--extract_sandbox_operations', action='store_true', help="Extract sandbox operations from the Sandbox.kext file")
+
+    def addTCCArgs(self):
+        tcc_group = self.parser.add_argument_group('TCC ARGS')
+        tcc_group.add_argument('--test', action='store_true', help="test")
 
     def parseArgs(self):
         args = self.parser.parse_args()
@@ -3648,7 +3671,7 @@ if __name__ == "__main__":
     args = arg_parser.parseArgs()
 
     ### --- APP BUNDLE EXTENSION --- ###
-    snake_hatchery = SnakeHatchery(args, SnakeVIII)
+    snake_hatchery = SnakeHatchery(args, SnakeIX)
     snake_hatchery.hatch()
 
     ### --- I. MACH-O --- ###
@@ -3682,3 +3705,7 @@ if __name__ == "__main__":
     ### --- VIII. SANDBOX --- ###
     sandbox_processor = SandboxProcessor()
     sandbox_processor.process(args)
+
+    ### --- IX. TCC --- ###
+    tcc_processor = TCCProcessor()
+    tcc_processor.process(args)
