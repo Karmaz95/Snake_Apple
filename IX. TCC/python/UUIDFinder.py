@@ -1,10 +1,12 @@
+#!/usr/bin/env python3
 import os
 import json
 import subprocess
 import argparse
 from typing import List, Optional, Dict
 
-DEFAULT_DATABASE_FILE = 'uuid_database.json'
+home_directory = os.path.expanduser("~")
+DEFAULT_DATABASE_FILE = os.path.join(home_directory, '.uuid_database.json')
 
 class UUIDFinder:
     def __init__(self, db_location: str = DEFAULT_DATABASE_FILE):
@@ -98,7 +100,7 @@ class UUIDFinder:
         print("\nDatabase contents:")
         print("-----------------")
         for path, uuids in self.database.items():
-            print(f"{path}", end="")
+            print(f"{path} ", end="")
             print(f"{', '.join(uuids)}")
         print("\n-----------------")
 
