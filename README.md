@@ -41,6 +41,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [App Sandbox startup](https://karol-mazurek.medium.com/app-sandbox-startup-71daf8f259d1?sk=v2%2F9f3b09a6-c7c0-445d-8613-8e25bf3f4e4d)
   * &#9745; [System Intigrity Protection](https://karol-mazurek.medium.com/system-integrity-protection-sip-140562b07fea?sk=v2%2F9c293b8f-c376-4603-b8a1-2872ba3395cf)
 * &#9744; [IX. TCC]()
+  * &#9745; [Apple UUID Finder](https://karol-mazurek.medium.com/apple-uuid-finder-a5173bdd1a8a?sk=v2%2F04bb0d32-6dc9-437d-bf72-8f65e03fed90)
 * &#9744; [X. NU]()
   * &#9745; [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
 
@@ -522,6 +523,67 @@ sip_tester --path /bin
 sip_tester --pid 1234
 sip_tester --service com.apple.kernelmanager_helper
 sip_tester --missing_paths
+```
+### [UUIDFinder](IX.%20TCC/python/UUIDFinder.py)
+A tool for creating a centralized UUID database for macOS. It is used to find UUIDs of files and directories.
+It was introduced in the article [Apple UUID Finder](https://karol-mazurek.medium.com/apple-uuid-finder-a5173bdd1a8a?sk=v2%2F04bb0d32-6dc9-437d-bf72-8f65e03fed90)
+```bash
+usage: UUIDFinder [-h] [--path PATH | --list LIST] [--uuid UUID] [--delete] [--resolve] [--show_db] [--db_location DB_LOCATION]
+
+UUIDFinder - A tool for managing Mach-O executable UUIDs
+
+options:
+  -h, --help            show this help message and exit
+  --path, -p PATH       Path to the executable
+  --list, -l LIST       Path to a file containing a list of executables
+  --uuid, -u UUID       UUID to lookup or add
+  --delete, -d          Delete the path record from database
+  --resolve, -r         Get UUIDs for the path and add to database
+  --show_db, -s         Show all records in the database
+  --db_location DB_LOCATION
+                        Location of the UUID database file
+
+Examples:
+---------
+
+1. Display UUIDs for a single executable from database:
+   --path /path/to/executable
+   -p /path/to/executable
+
+2. Find path for a specific UUID in database:
+   --uuid 123e4567-e89b-12d3-a456-426614174000
+   -u 123e4567-e89b-12d3-a456-426614174000
+
+3. Add or update UUID for a path:
+   --path /path/to/executable --uuid 123e4567-e89b-12d3-a456-426614174000
+   -p /path/to/executable -u 123e4567-e89b-12d3-a456-426614174000
+
+4. Extract and add UUIDs from executable to database:
+   --path /path/to/executable --resolve
+   -p /path/to/executable -r
+
+5. Delete path and its UUIDs from database:
+   --path /path/to/executable --delete
+   -p /path/to/executable -d
+
+6. Process multiple executables from a list file:
+   --list /path/to/list.txt --resolve
+   -l /path/to/list.txt -r
+
+7. Show all records in the database:
+   --show_db
+   -s
+
+8. Use custom database location:
+   --path /path/to/executable --db_location /custom/path/db.json
+   -p /path/to/executable --db_location /custom/path/db.json
+
+Notes:
+------
+- All UUIDs are stored in lowercase in the database
+- The default database file is 'uuid_database.json' in the current directory
+- When using --list, each path should be on a new line in the list file
+- The tool automatically converts relative paths to absolute paths
 ```
 
 ## INSTALL
