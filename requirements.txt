@@ -5,3 +5,4 @@ asn1crypto=1.5.1
 pyimg4=0.8
 treelib=1.7.0
 xattr=1.1.0
+python-magic=0.4.27

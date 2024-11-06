@@ -1,45 +1,70 @@
 #!/usr/bin/env python3
 import os
-import lief
+import magic
 import sys
 import argparse
+
+# Mapping for known file types based on `python-magic` output strings
+FILE_TYPE_MAP = {
+    "bundle": "BUNDLE",
+    "dSYM companion file": "DSYM",
+    "dynamic linker": "DYLINKER",
+    "kext bundle": "KEXT_BUNDLE",
+    "dynamically linked shared library": "DYLIB",
+    "dynamically linked shared library stub": "DYLIB_STUB",
+    "preload executable": "PRELOAD",
+    "fixed virtual memory shared library": "FVMLIB",
+    "core": "CORE",
+    "object": "OBJECT",
+    "executable": "EXECUTE"
+}
 
 class MachOFileFinder:
     '''Class for finding Mach-O binaries in a given directory, with an option to filter for ARM64 architecture only.'''
 
     def __init__(self, directory_path, recursive=False, only_arm64=False):
-        '''Constructor to initialize the directory path, recursive flag, and architecture filter.'''
+        '''Initialize the directory path, recursive flag, and architecture filter.'''
         self.directory_path = directory_path
         self.recursive = recursive
         self.only_arm64 = only_arm64
 
-    def parse_fat_binary(self, binaries):
-        '''Function to parse Mach-O files and check for architecture type.
-        If only_arm64 is set, it returns only ARM64 binaries; otherwise, it returns the first valid binary.'''
-        for binary in binaries:
-            if not self.only_arm64 or binary.header.cpu_type == lief.MachO.Header.CPU_TYPE.ARM64:
-                return binary
+    def is_mach_o(self, file_path):
+        '''Check if a file is a Mach-O binary and optionally filter by ARM64 architecture.'''
+        try:
+            mime = magic.Magic()
+            file_type = mime.from_file(file_path)
+
+            # Check if it's a Mach-O file and filter by ARM64 if needed
+            if "Mach-O" in file_type:
+                if self.only_arm64 and "arm64" not in file_type:
+                    return None
+                return file_type
+        except Exception:
+            pass  # Ignore errors for non-Mach-O files or inaccessible files
         return None
 
+    def map_file_type(self, file_type):
+        '''Map the file type string from python-magic to the required output format.'''
+        for key, label in FILE_TYPE_MAP.items():
+            if key in file_type:
+                return label
+        return "UNKNOWN"  # Default to UNKNOWN if no known type is found
+
     def process_directory(self, root, files):
-        '''Method to process all files in the specified directory.'''
+        '''Process all files in the specified directory.'''
         for file_name in files:
             file_path = os.path.abspath(os.path.join(root, file_name))
-            try:
-                binaries = lief.MachO.parse(file_path)
-                binary = self.parse_fat_binary(binaries)
-                if binary is not None:
-                    print(f"{binary.header.file_type.__name__}:{file_path}")
-            except:
-                pass  # Ignore parsing errors or non-Mach-O files
+            file_type = self.is_mach_o(file_path)
+            if file_type:
+                mapped_type = self.map_file_type(file_type)
+                print(f"{mapped_type}:{file_path}")
 
     def process_files(self):
-        '''Method to process files based on the specified search type.'''
+        '''Process files based on the specified search type.'''
         for root, dirs, files in os.walk(self.directory_path):
             self.process_directory(root, files)
-
             if not self.recursive:
-                break  # Break the loop if not searching recursively
+                break  # Stop if not searching recursively
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Find Mach-O binaries in a directory with an option to filter for ARM64.')
