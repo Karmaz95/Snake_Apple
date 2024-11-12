@@ -56,37 +56,68 @@ The table of contents showing links to all articles is below:
 Core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
 * Usage
 ```console
-usage: CrimsonUroboros [-h] [-p PATH] [-b BUNDLE] [--bundle_structure] [--bundle_info]
-                       [--bundle_info_syntax_check] [--bundle_frameworks] [--bundle_plugins] [--bundle_id]
-                       [--file_type] [--header_flags] [--endian] [--header] [--load_commands] [--has_cmd LC_MAIN]
-                       [--segments] [--has_segment __SEGMENT] [--sections] [--has_section __SEGMENT,__section]
-                       [--symbols] [--imports] [--exports] [--imported_symbols] [--chained_fixups]
-                       [--exports_trie] [--uuid] [--main] [--encryption_info [(optional) save_path.bytes]]
-                       [--strings_section] [--all_strings] [--save_strings all_strings.txt] [--info]
-                       [--dump_data [offset,size,output_path]] [--calc_offset vm_offset] [--constructors]
-                       [--dump_section __SEGMENT,__section] [--dump_binary output_path] [--verify_signature]
-                       [--cd_info] [--cd_requirements] [--entitlements [human|xml|var]]
-                       [--extract_cms cms_signature.der] [--extract_certificates certificate_name]
-                       [--remove_sig unsigned_binary] [--sign_binary [adhoc|identity]] [--cs_offset] [--cs_flags]
-                       [--verify_bundle_signature] [--remove_sig_from_bundle] [--has_pie] [--has_arc]
-                       [--is_stripped] [--has_canary] [--has_nx_stack] [--has_nx_heap] [--has_xn] [--is_notarized]
-                       [--is_encrypted] [--is_restricted] [--is_hr] [--is_as] [--is_fort] [--has_rpath] [--has_lv]
-                       [--checksec] [--dylibs] [--rpaths] [--rpaths_u] [--dylibs_paths] [--dylibs_paths_u]
-                       [--broken_relative_paths] [--dylibtree [cache_path,output_path,is_extracted]] [--dylib_id]
-                       [--reexport_paths] [--hijack_sec] [--dylib_hijacking [(optional) cache_path]]
-                       [--dylib_hijacking_a [cache_path]] [--prepare_dylib [(optional) target_dylib_name]]
-                       [--is_built_for_sim] [--get_dyld_env] [--compiled_with_dyld_env] [--has_interposing]
-                       [--interposing_symbols] [--dump_prelink_info [(optional) out_name]]
-                       [--dump_prelink_text [(optional) out_name]] [--dump_prelink_kext [kext_name]]
-                       [--kext_prelinkinfo [kext_name]] [--kmod_info kext_name] [--kext_entry kext_name]
-                       [--kext_exit kext_name] [--mig] [--has_suid] [--has_sgid] [--has_sticky]
-                       [--injectable_dyld] [--test_insert_dylib] [--test_prune_dyld] [--test_dyld_print_to_file]
-                       [--test_dyld_SLC] [--xattr] [--xattr_value xattr_name] [--xattr_all] [--has_quarantine]
-                       [--remove_quarantine] [--add_quarantine] [--sandbox_container_path]
-                       [--sandbox_container_metadata] [--sandbox_redirectable_paths] [--sandbox_parameters]
-                       [--sandbox_entitlements] [--sandbox_build_uuid] [--sandbox_redirected_paths]
-                       [--sandbox_system_images] [--sandbox_system_profiles] [--sandbox_content_protection]
-                       [--sandbox_profile_data] [--dump_kext kext_name] [--extract_sandbox_operations]
+usage: CrimsonUroboros [-h] [-p PATH] [-b BUNDLE] [--bundle_structure]
+                       [--bundle_info] [--bundle_info_syntax_check]
+                       [--bundle_frameworks] [--bundle_plugins] [--bundle_id]
+                       [--file_type] [--header_flags] [--endian] [--header]
+                       [--load_commands] [--has_cmd LC_MAIN] [--segments]
+                       [--has_segment __SEGMENT] [--sections]
+                       [--has_section __SEGMENT,__section] [--symbols]
+                       [--imports] [--exports] [--imported_symbols]
+                       [--chained_fixups] [--exports_trie] [--uuid] [--main]
+                       [--encryption_info [(optional) save_path.bytes]]
+                       [--strings_section] [--all_strings]
+                       [--save_strings all_strings.txt] [--info]
+                       [--dump_data [offset,size,output_path]]
+                       [--calc_offset vm_offset] [--constructors]
+                       [--dump_section __SEGMENT,__section]
+                       [--dump_binary output_path] [--verify_signature]
+                       [--cd_info] [--cd_requirements]
+                       [--entitlements [human|xml|var]]
+                       [--extract_cms cms_signature.der]
+                       [--extract_certificates certificate_name]
+                       [--remove_sig unsigned_binary]
+                       [--sign_binary [adhoc|identity]] [--cs_offset]
+                       [--cs_flags] [--verify_bundle_signature]
+                       [--remove_sig_from_bundle] [--has_pie] [--has_arc]
+                       [--is_stripped] [--has_canary] [--has_nx_stack]
+                       [--has_nx_heap] [--has_xn] [--is_notarized]
+                       [--is_encrypted] [--is_restricted] [--is_hr] [--is_as]
+                       [--is_fort] [--has_rpath] [--has_lv] [--checksec]
+                       [--dylibs] [--rpaths] [--rpaths_u] [--dylibs_paths]
+                       [--dylibs_paths_u] [--broken_relative_paths]
+                       [--dylibtree [cache_path,output_path,is_extracted]]
+                       [--dylib_id] [--reexport_paths] [--hijack_sec]
+                       [--dylib_hijacking [(optional) cache_path]]
+                       [--dylib_hijacking_a [cache_path]]
+                       [--prepare_dylib [(optional) target_dylib_name]]
+                       [--is_built_for_sim] [--get_dyld_env]
+                       [--compiled_with_dyld_env] [--has_interposing]
+                       [--interposing_symbols]
+                       [--dump_prelink_info [(optional) out_name]]
+                       [--dump_prelink_text [(optional) out_name]]
+                       [--dump_prelink_kext [kext_name]]
+                       [--kext_prelinkinfo [kext_name]]
+                       [--kmod_info kext_name] [--kext_entry kext_name]
+                       [--kext_exit kext_name] [--mig] [--has_suid]
+                       [--has_sgid] [--has_sticky] [--injectable_dyld]
+                       [--test_insert_dylib] [--test_prune_dyld]
+                       [--test_dyld_print_to_file] [--test_dyld_SLC] [--xattr]
+                       [--xattr_value xattr_name] [--xattr_all]
+                       [--has_quarantine] [--remove_quarantine]
+                       [--add_quarantine] [--sandbox_container_path]
+                       [--sandbox_container_metadata]
+                       [--sandbox_redirectable_paths] [--sandbox_parameters]
+                       [--sandbox_entitlements] [--sandbox_build_uuid]
+                       [--sandbox_redirected_paths] [--sandbox_system_images]
+                       [--sandbox_system_profiles]
+                       [--sandbox_content_protection] [--sandbox_profile_data]
+                       [--dump_kext kext_name] [--extract_sandbox_operations]
+                       [--tcc] [--tcc_fda] [--tcc_automation] [--tcc_sysadmin]
+                       [--tcc_desktop] [--tcc_documents] [--tcc_downloads]
+                       [--tcc_photos] [--tcc_contacts] [--tcc_calendar]
+                       [--tcc_camera] [--tcc_microphone] [--tcc_location]
+                       [--tcc_recording] [--tcc_accessibility] [--tcc_icloud]
 
 Mach-O files parser for binary analysis
 
@@ -94,19 +125,21 @@ options:
   -h, --help            show this help message and exit
 
 GENERAL ARGS:
-  -p PATH, --path PATH  Path to the Mach-O file
-  -b BUNDLE, --bundle BUNDLE
-                        Path to the App Bundle (can be used with -p to change path of binary which is by default
-                        set to: /target.app/Contents/MacOS/target)
+  -p, --path PATH       Path to the Mach-O file
+  -b, --bundle BUNDLE   Path to the App Bundle (can be used with -p to change
+                        path of binary which is by default set to:
+                        /target.app/Contents/MacOS/target)
 
 BUNDLE ARGS:
   --bundle_structure    Print the structure of the app bundle
-  --bundle_info         Print the Info.plist content of the app bundle (JSON format)
+  --bundle_info         Print the Info.plist content of the app bundle (JSON
+                        format)
   --bundle_info_syntax_check
                         Check if bundle info syntax is valid
   --bundle_frameworks   Print the list of frameworks in the bundle
   --bundle_plugins      Print the list of plugins in the bundle
-  --bundle_id           Print the CFBundleIdentifier value from the Info.plist file if it exists
+  --bundle_id           Print the CFBundleIdentifier value from the Info.plist
+                        file if it exists
 
 MACH-O ARGS:
   --file_type           Print binary file type
@@ -124,147 +157,192 @@ MACH-O ARGS:
   --symbols             Print all binary symbols
   --imports             Print imported symbols
   --exports             Print exported symbols
-  --imported_symbols    Print symbols imported from external libraries with dylib names
+  --imported_symbols    Print symbols imported from external libraries with
+                        dylib names
   --chained_fixups      Print Chained Fixups information
   --exports_trie        Print Export Trie information
   --uuid                Print UUID
   --main                Print entry point and stack size
   --encryption_info [(optional) save_path.bytes]
-                        Print encryption info if any. Optionally specify an output path to dump the encrypted data
-                        (if cryptid=0, data will be in plain text)
+                        Print encryption info if any. Optionally specify an
+                        output path to dump the encrypted data (if cryptid=0,
+                        data will be in plain text)
   --strings_section     Print strings from __cstring section
   --all_strings         Print strings from all sections
   --save_strings all_strings.txt
-                        Parse all sections, detect strings, and save them to a file
-  --info                Print header, load commands, segments, sections, symbols, and strings
+                        Parse all sections, detect strings, and save them to a
+                        file
+  --info                Print header, load commands, segments, sections,
+                        symbols, and strings
   --dump_data [offset,size,output_path]
-                        Dump {size} bytes starting from {offset} to a given {filename} (e.g.
-                        '0x1234,0x1000,out.bin')
+                        Dump {size} bytes starting from {offset} to a given
+                        {filename} (e.g. '0x1234,0x1000,out.bin')
   --calc_offset vm_offset
-                        Calculate the real address (file on disk) of the given Virtual Memory {vm_offset} (e.g.
-                        0xfffffe000748f580)
+                        Calculate the real address (file on disk) of the given
+                        Virtual Memory {vm_offset} (e.g. 0xfffffe000748f580)
   --constructors        Print binary constructors
   --dump_section __SEGMENT,__section
-                        Dump '__SEGMENT,__section' to standard output as a raw bytes
+                        Dump '__SEGMENT,__section' to standard output as a raw
+                        bytes
   --dump_binary output_path
                         Dump arm64 binary to a given file
 
 CODE SIGNING ARGS:
-  --verify_signature    Code Signature verification (if the contents of the binary have been modified)
+  --verify_signature    Code Signature verification (if the contents of the
+                        binary have been modified)
   --cd_info             Print Code Signature information
   --cd_requirements     Print Code Signature Requirements
   --entitlements [human|xml|var]
-                        Print Entitlements in a human-readable, XML, or DER format (default: human)
+                        Print Entitlements in a human-readable, XML, or DER
+                        format (default: human)
   --extract_cms cms_signature.der
-                        Extract CMS Signature from the Code Signature and save it to a given file
+                        Extract CMS Signature from the Code Signature and save
+                        it to a given file
   --extract_certificates certificate_name
-                        Extract Certificates and save them to a given file. To each filename will be added an
-                        index at the end: _0 for signing, _1 for intermediate, and _2 for root CA certificate
+                        Extract Certificates and save them to a given file. To
+                        each filename will be added an index at the end: _0
+                        for signing, _1 for intermediate, and _2 for root CA
+                        certificate
   --remove_sig unsigned_binary
                         Save the new file on a disk with removed signature
   --sign_binary [adhoc|identity]
-                        Sign binary using specified identity - use : 'security find-identity -v -p codesigning' to
-                        get the identity (default: adhoc)
+                        Sign binary using specified identity - use : 'security
+                        find-identity -v -p codesigning' to get the identity
+                        (default: adhoc)
   --cs_offset           Print Code Signature file offset
   --cs_flags            Print Code Signature flags
   --verify_bundle_signature
-                        Code Signature verification (if the contents of the bundle have been modified)
+                        Code Signature verification (if the contents of the
+                        bundle have been modified)
   --remove_sig_from_bundle
                         Remove Code Signature from the bundle
 
 CHECKSEC ARGS:
   --has_pie             Check if Position-Independent Executable (PIE) is set
-  --has_arc             Check if Automatic Reference Counting (ARC) is in use (can be false positive)
+  --has_arc             Check if Automatic Reference Counting (ARC) is in use
+                        (can be false positive)
   --is_stripped         Check if binary is stripped
-  --has_canary          Check if Stack Canary is in use (can be false positive)
+  --has_canary          Check if Stack Canary is in use (can be false
+                        positive)
   --has_nx_stack        Check if stack is non-executable (NX stack)
   --has_nx_heap         Check if heap is non-executable (NX heap)
-  --has_xn              Check if binary is protected by eXecute Never (XN) ARM protection
-  --is_notarized        Check if the application is notarized and can pass the Gatekeeper verification
-  --is_encrypted        Check if the application is encrypted (has LC_ENCRYPTION_INFO(_64) and cryptid set to 1)
-  --is_restricted       Check if binary has __RESTRICT segment or CS_RESTRICT flag set
+  --has_xn              Check if binary is protected by eXecute Never (XN) ARM
+                        protection
+  --is_notarized        Check if the application is notarized and can pass the
+                        Gatekeeper verification
+  --is_encrypted        Check if the application is encrypted (has
+                        LC_ENCRYPTION_INFO(_64) and cryptid set to 1)
+  --is_restricted       Check if binary has __RESTRICT segment or CS_RESTRICT
+                        flag set
   --is_hr               Check if the Hardened Runtime is in use
   --is_as               Check if the App Sandbox is in use
   --is_fort             Check if the binary is fortified
   --has_rpath           Check if the binary utilise any @rpath variables
-  --has_lv              Check if the binary has Library Validation (protection against Dylib Hijacking)
+  --has_lv              Check if the binary has Library Validation (protection
+                        against Dylib Hijacking)
   --checksec            Run all checksec module options on the binary
 
 DYLIBS ARGS:
-  --dylibs              Print shared libraries used by specified binary with compatibility and the current version
-                        (loading paths unresolved, like @rpath/example.dylib)
-  --rpaths              Print all paths (resolved) that @rpath can be resolved to
-  --rpaths_u            Print all paths (unresolved) that @rpath can be resolved to
-  --dylibs_paths        Print absolute dylib loading paths (resolved @rpath|@executable_path|@loader_path) in
-                        order they are searched for
+  --dylibs              Print shared libraries used by specified binary with
+                        compatibility and the current version (loading paths
+                        unresolved, like @rpath/example.dylib)
+  --rpaths              Print all paths (resolved) that @rpath can be resolved
+                        to
+  --rpaths_u            Print all paths (unresolved) that @rpath can be
+                        resolved to
+  --dylibs_paths        Print absolute dylib loading paths (resolved
+                        @rpath|@executable_path|@loader_path) in order they
+                        are searched for
   --dylibs_paths_u      Print unresolved dylib loading paths.
   --broken_relative_paths
-                        Print 'broken' relative paths from the binary (cases where the dylib source is specified
-                        for an executable directory without @executable_path)
+                        Print 'broken' relative paths from the binary (cases
+                        where the dylib source is specified for an executable
+                        directory without @executable_path)
   --dylibtree [cache_path,output_path,is_extracted]
-                        Print the dynamic dependencies of a Mach-O binary recursively. You can specify the Dyld
-                        Shared Cache path in the first argument, the output directory as the 2nd argument, and if
-                        you have already extracted DSC in the 3rd argument (0 or 1). The output_path will be used
-                        as a base for dylibtree. For example, to not extract DSC, use: --dylibs ",,1", or to
-                        extract from default to default use just --dylibs or --dylibs ",,0" which will extract DSC
-                        to extracted_dyld_share_cache/ in the current directory
+                        Print the dynamic dependencies of a Mach-O binary
+                        recursively. You can specify the Dyld Shared Cache
+                        path in the first argument, the output directory as
+                        the 2nd argument, and if you have already extracted
+                        DSC in the 3rd argument (0 or 1). The output_path will
+                        be used as a base for dylibtree. For example, to not
+                        extract DSC, use: --dylibs ",,1", or to extract from
+                        default to default use just --dylibs or --dylibs ",,0"
+                        which will extract DSC to extracted_dyld_share_cache/
+                        in the current directory
   --dylib_id            Print path from LC_ID_DYLIB
   --reexport_paths      Print paths from LC_REEXPORT_DLIB
   --hijack_sec          Check if binary is protected against Dylib Hijacking
   --dylib_hijacking [(optional) cache_path]
-                        Check for possible Direct and Indirect Dylib Hijacking loading paths. The output is
-                        printed to console and saved in JSON format to /tmp/dylib_hijacking_log.json(append mode).
+                        Check for possible Direct and Indirect Dylib Hijacking
+                        loading paths. The output is printed to console and
+                        saved in JSON format to
+                        /tmp/dylib_hijacking_log.json(append mode).
                         Optionally, specify the path to the Dyld Shared Cache
   --dylib_hijacking_a [cache_path]
-                        Like --dylib_hijacking, but shows only possible vectors (without protected binaries)
+                        Like --dylib_hijacking, but shows only possible
+                        vectors (without protected binaries)
   --prepare_dylib [(optional) target_dylib_name]
-                        Compile rogue dylib. Optionally, specify target_dylib_path, it will search for the
-                        imported symbols from it in the dylib specified in the --path argument and automatically
-                        add it to the source code of the rogue lib. Example: --path lib1.dylib --prepare_dylib
-                        /path/to/lib2.dylib
+                        Compile rogue dylib. Optionally, specify
+                        target_dylib_path, it will search for the imported
+                        symbols from it in the dylib specified in the --path
+                        argument and automatically add it to the source code
+                        of the rogue lib. Example: --path lib1.dylib
+                        --prepare_dylib /path/to/lib2.dylib
 
 DYLD ARGS:
   --is_built_for_sim    Check if binary is built for simulator platform.
-  --get_dyld_env        Extract Dyld environment variables from the loader binary.
+  --get_dyld_env        Extract Dyld environment variables from the loader
+                        binary.
   --compiled_with_dyld_env
-                        Check if binary was compiled with -dyld_env flag and print the environment variables and
-                        its values.
+                        Check if binary was compiled with -dyld_env flag and
+                        print the environment variables and its values.
   --has_interposing     Check if binary has interposing sections.
   --interposing_symbols
                         Print interposing symbols if any.
 
 AMFI ARGS:
   --dump_prelink_info [(optional) out_name]
-                        Dump "__PRELINK_INFO,__info" to a given file (default: "PRELINK_info.txt")
+                        Dump "__PRELINK_INFO,__info" to a given file (default:
+                        "PRELINK_info.txt")
   --dump_prelink_text [(optional) out_name]
-                        Dump "__PRELINK_TEXT,__text" to a given file (default: "PRELINK_text.txt")
+                        Dump "__PRELINK_TEXT,__text" to a given file (default:
+                        "PRELINK_text.txt")
   --dump_prelink_kext [kext_name]
-                        Dump prelinked KEXT {kext_name} from decompressed Kernel Cache PRELINK_TEXT segment to a
-                        file named: prelinked_{kext_name}.bin
+                        Dump prelinked KEXT {kext_name} from decompressed
+                        Kernel Cache PRELINK_TEXT segment to a file named:
+                        prelinked_{kext_name}.bin
   --kext_prelinkinfo [kext_name]
-                        Print _Prelink properties from PRELINK_INFO,__info for a give {kext_name}
+                        Print _Prelink properties from PRELINK_INFO,__info for
+                        a give {kext_name}
   --kmod_info kext_name
-                        Parse kmod_info structure for the given {kext_name} from Kernel Cache
+                        Parse kmod_info structure for the given {kext_name}
+                        from Kernel Cache
   --kext_entry kext_name
-                        Calculate the virtual memory address of the __start (entrypoint) for the given {kext_name}
-                        Kernel Extension
+                        Calculate the virtual memory address of the __start
+                        (entrypoint) for the given {kext_name} Kernel
+                        Extension
   --kext_exit kext_name
-                        Calculate the virtual memory address of the __stop (exitpoint) for the given {kext_name}
-                        Kernel Extension
+                        Calculate the virtual memory address of the __stop
+                        (exitpoint) for the given {kext_name} Kernel Extension
   --mig                 Search for MIG subsystem and prints message handlers
   --has_suid            Check if the file has SetUID bit set
   --has_sgid            Check if the file has SetGID bit set
   --has_sticky          Check if the file has sticky bit set
-  --injectable_dyld     Check if the binary is injectable using DYLD_INSERT_LIBRARIES
-  --test_insert_dylib   Check if it is possible to inject dylib using DYLD_INSERT_LIBRARIES (INVASIVE - the binary
-                        is executed)
-  --test_prune_dyld     Check if Dyld Environment Variables are cleared (using DYLD_PRINT_INITIALIZERS=1)
-                        (INVASIVE - the binary is executed)
-  --test_dyld_print_to_file
-                        Check if DYLD_PRINT_TO_FILE Dyld Environment Variables works (INVASIVE - the binary is
+  --injectable_dyld     Check if the binary is injectable using
+                        DYLD_INSERT_LIBRARIES
+  --test_insert_dylib   Check if it is possible to inject dylib using
+                        DYLD_INSERT_LIBRARIES (INVASIVE - the binary is
                         executed)
-  --test_dyld_SLC       Check if DYLD_SHARED_REGION=private Dyld Environment Variables works and code can be
-                        injected using DYLD_SHARED_CACHE_DIR (INVASIVE - the binary is executed)
+  --test_prune_dyld     Check if Dyld Environment Variables are cleared (using
+                        DYLD_PRINT_INITIALIZERS=1) (INVASIVE - the binary is
+                        executed)
+  --test_dyld_print_to_file
+                        Check if DYLD_PRINT_TO_FILE Dyld Environment Variables
+                        works (INVASIVE - the binary is executed)
+  --test_dyld_SLC       Check if DYLD_SHARED_REGION=private Dyld Environment
+                        Variables works and code can be injected using
+                        DYLD_SHARED_CACHE_DIR (INVASIVE - the binary is
+                        executed)
 
 ANTIVIRUS ARGS:
   --xattr               Print all extended attributes names
@@ -272,35 +350,67 @@ ANTIVIRUS ARGS:
                         Print single extended attribute value
   --xattr_all           Print all extended attributes names and their values
   --has_quarantine      Check if the file has quarantine extended attribute
-  --remove_quarantine   Remove com.apple.quarantine extended attribute from the file
-  --add_quarantine      Add com.apple.quarantine extended attribute to the file
+  --remove_quarantine   Remove com.apple.quarantine extended attribute from
+                        the file
+  --add_quarantine      Add com.apple.quarantine extended attribute to the
+                        file
 
 SANDBOX ARGS:
   --sandbox_container_path
                         Print the sandbox container path
   --sandbox_container_metadata
-                        Print the .com.apple.containermanagerd.metadata.plist contents for the given bundlein XML
-                        format
+                        Print the .com.apple.containermanagerd.metadata.plist
+                        contents for the given bundlein XML format
   --sandbox_redirectable_paths
-                        Print the redirectable paths from the sandbox container metadata as list
-  --sandbox_parameters  Print the parameters from the sandbox container metadata as key-value pairs
+                        Print the redirectable paths from the sandbox
+                        container metadata as list
+  --sandbox_parameters  Print the parameters from the sandbox container
+                        metadata as key-value pairs
   --sandbox_entitlements
-                        Print the entitlements from the sandbox container metadata in JSON format
-  --sandbox_build_uuid  Print the sandbox build UUID from the sandbox container metadata
+                        Print the entitlements from the sandbox container
+                        metadata in JSON format
+  --sandbox_build_uuid  Print the sandbox build UUID from the sandbox
+                        container metadata
   --sandbox_redirected_paths
-                        Print the redirected paths from the sandbox container metadata as list
+                        Print the redirected paths from the sandbox container
+                        metadata as list
   --sandbox_system_images
-                        Print the system images from the sandbox container metadata as key-value pairs
+                        Print the system images from the sandbox container
+                        metadata as key-value pairs
   --sandbox_system_profiles
-                        Print the system profile from the sandbox container metadata in JSON format
+                        Print the system profile from the sandbox container
+                        metadata in JSON format
   --sandbox_content_protection
-                        Print the content protection from the sandbox container metadata
+                        Print the content protection from the sandbox
+                        container metadata
   --sandbox_profile_data
-                        Print raw bytes ofthe sandbox profile data from the sandbox container metadata
+                        Print raw bytes ofthe sandbox profile data from the
+                        sandbox container metadata
   --dump_kext kext_name
-                        Dump the kernel extension binary from the kernelcache.decompressed file
+                        Dump the kernel extension binary from the
+                        kernelcache.decompressed file
   --extract_sandbox_operations
                         Extract sandbox operations from the Sandbox.kext file
+
+TCC ARGS:
+  --tcc                 Print TCC permissions of the binary
+  --tcc_fda             Check Full Disk Access (FDA) TCC permission for the
+                        binary
+  --tcc_automation      Check Automation TCC permission for the binary
+  --tcc_sysadmin        Check System Policy SysAdmin Files TCC permission for
+                        the binary
+  --tcc_desktop         Check Desktop Folder TCC permission for the binary
+  --tcc_documents       Check Documents Folder TCC permission for the binary
+  --tcc_downloads       Check Downloads Folder TCC permission for the binary
+  --tcc_photos          Check Photos Library TCC permission for the binary
+  --tcc_contacts        Check Contacts TCC permission for the binary
+  --tcc_calendar        Check Calendar TCC permission for the binary
+  --tcc_camera          Check Camera TCC permission for the binary
+  --tcc_microphone      Check Microphone TCC permission for the binary
+  --tcc_location        Check Location Services TCC permission for the binary
+  --tcc_recording       Check Screen Recording TCC permission for the binary
+  --tcc_accessibility   Check Accessibility TCC permission for the binary
+  --tcc_icloud          Check iCloud (Ubiquity) TCC permission for the binary
 ```
 * Example:
 ```bash
@@ -585,6 +695,45 @@ Notes:
 - The default database file is 'uuid_database.json' in the current directory
 - When using --list, each path should be on a new line in the list file
 - The tool automatically converts relative paths to absolute paths
+```
+### [TCCParser](IX.%20TCC/python/TCCParser.py)
+A tool for querying macOS TCC (Transparency, Consent, and Control) databases.
+It was introduced in the article [](todo)
+```bash
+usage: TCCParser [-h] [-p PATH] [-t] [-a] [-l]
+
+Parse TCC Database for Permissions Information
+
+options:
+  -h, --help            Show this help message and exit
+  -p PATH, --path PATH  Path to TCC.db file to analyze
+  -t, --table           Output results in table format
+  -a, --all             Automatically query all available TCC databases on the system
+  -l, --list_db         List all available TCC databases on the system
+
+Examples:
+---------
+
+1. List all available TCC databases on the system:
+   --list_db
+   -l
+
+2. Query a specific TCC database:
+   --path /path/to/TCC.db
+   -p /path/to/TCC.db
+
+3. Display the query results in a formatted table:
+   --path /path/to/TCC.db --table
+   -p /path/to/TCC.db -t
+
+4. Automatically query all known TCC databases:
+   --all
+   -a
+
+Notes:
+------
+- The tool retrieves details such as client, service, and authorization status for each entry in the TCC database.
+- The `--list_db` option helps users locate all known TCC databases on the system, sourced from `REG.db`.
 ```
 
 ## INSTALL

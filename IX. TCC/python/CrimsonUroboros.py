@@ -16,6 +16,7 @@ import struct
 import threading
 import time
 import xattr
+import sqlite3
 
 ### --- APP BUNDLE EXTENSION --- ###
 class SnakeHatchery:
@@ -3121,16 +3122,278 @@ class TCCProcessor:
         pass
 
     def process(self, args):
-        if args.test: # 
-            snake_instance.test()
+
+        if args.tcc:
+            snake_instance.printPermissions()
+
+        if args.tcc_fda:
+            snake_instance.printFDAStatus()
+
+        if args.tcc_automation:
+            snake_instance.printTCCAutomation()
+
+        if args.tcc_sysadmin:
+            snake_instance.printSysAdminFilesStatus()
+
+        if args.tcc_desktop:
+            snake_instance.printDesktopAccessStatus()
+
+        if args.tcc_documents:
+            snake_instance.printDocumentsAccessStatus()
+
+        if args.tcc_downloads:
+            snake_instance.printDownloadsAccessStatus()
+
+        if args.tcc_photos:
+            snake_instance.printPhotosAccessStatus()
+
+        if args.tcc_contacts:
+            snake_instance.printContactsAccessStatus()
+
+        if args.tcc_calendar:
+            snake_instance.printCalendarAccessStatus()
+
+        if args.tcc_camera:
+            snake_instance.printCameraAccessStatus()
+
+        if args.tcc_microphone:
+            snake_instance.printMicrophoneAccessStatus()
+
+        if args.tcc_location:
+            snake_instance.printLocationAccessStatus()
+
+        if args.tcc_recording:
+            snake_instance.printScreenRecordingAccessStatus()
+
+        if args.tcc_accessibility:
+            snake_instance.printAccessibilityAccessStatus()
+
+        if args.tcc_icloud:
+            snake_instance.printICloudAccessStatus()
 
 class SnakeIX(SnakeVIII):
     def __init__(self, binaries, file_path):
         super().__init__(binaries, file_path)
+        # Paths for TCC databases and location plist
+        self.TCC_DB_PATHS = [
+            "/Library/Application Support/com.apple.TCC/TCC.db",
+            os.path.expanduser("~/Library/Application Support/com.apple.TCC/TCC.db")
+        ]
+        self.LOCATION_PLIST_PATH = "/var/db/locationd/clients.plist"
 
-    def test(self):
-        ''' test '''
-        print('test')
+    def prepareDataForTCCQuery(self):
+        ''' Prepare binary path and bundle ID for TCC queries. '''
+        binary_path = os.path.abspath(self.file_path).lower()
+        bundle_id = bundle_processor.getBundleId().lower() if bundle_processor else None
+        return binary_path, bundle_id
+
+    def getPermissionsFromDB(self, db_path, binary_path, bundle_id):
+        ''' Retrieve all permissions from a given TCC database for the binary. '''
+        permissions = []
+        try:
+            conn = sqlite3.connect(db_path)
+            conn.create_function("lower", 1, lambda x: x.lower())
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT * FROM access
+                WHERE lower(client) IN (lower(?), lower(?));
+            ''', (binary_path, bundle_id or binary_path))
+            columns = [col[0] for col in cursor.description]
+            permissions = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        except sqlite3.Error as e:
+            print(f"Error accessing {db_path}: {e}")
+        finally:
+            if 'conn' in locals() and conn:
+                conn.close()
+        return permissions
+
+    def getPermissions(self, binary_path, bundle_id):
+        ''' Retrieve all permissions from all TCC databases. '''
+        permissions = {}
+        for db_path in self.TCC_DB_PATHS:
+            if self.checkIfPathExists(db_path):
+                db_permissions = self.getPermissionsFromDB(db_path, binary_path, bundle_id)
+                for permission in db_permissions:
+                    service = permission.get('service')
+                    if service not in permissions:
+                        permissions[service] = permission.get('auth_value')
+        return permissions
+
+    def getLocationPermission(self, binary_path, bundle_id):
+        ''' Check location services permission for the given binary from the plist. '''
+        if not os.path.exists(self.LOCATION_PLIST_PATH):
+            print(f"Error accessing {self.LOCATION_PLIST_PATH}: File not found or inaccessible from current user (run as root)")
+            return {}
+
+        with open(self.LOCATION_PLIST_PATH, 'rb') as plist_file:
+            plist_data = plistlib.load(plist_file)
+            for key, value in plist_data.items():
+                if isinstance(value, dict):
+                    executable_match = 'Executable' in value and binary_path.lower() in value['Executable'].lower()
+                    bundle_match = bundle_id and 'BundleId' in value and bundle_id.lower() in value['BundleId'].lower()
+                    if executable_match or bundle_match:
+                        return {'Location Services': 2 if value.get('Authorized', 0) == 1 else 0}
+        return {}
+
+    def parseTCCPermissions(self, location_check=False):
+        ''' Consolidate permissions from TCC databases and location plist. '''
+        binary_path, bundle_id = self.prepareDataForTCCQuery()
+        permissions = self.getPermissions(binary_path, bundle_id)
+        
+        if location_check:
+            permissions.update(self.getLocationPermission(binary_path, bundle_id))
+        
+        return permissions
+
+    def printPermissions(self):
+        ''' Print permissions from TCC databases and location plist in a readable format. '''
+        results = self.parseTCCPermissions(True)
+        for service in sorted(results.keys()):
+            auth_value = results[service]
+            status = self.getAuthValueStatus(auth_value)
+            print(f"{service}: {status} ({auth_value})")
+
+    def getAuthValueStatus(self, auth_value):
+        ''' Get human-readable status for a given auth value. '''
+        return {
+            0: "No Access",
+            1: "Unknown",
+            2: "Access Granted",
+            3: "Limited"
+        }.get(auth_value, "Unknown Status")
+
+    def checkFDA(self):
+        ''' Check if the binary has Full Disk Access (FDA) by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceSystemPolicyAllFiles') == 2
+
+    def printFDAStatus(self):
+        ''' Print the Full Disk Access (FDA) status. '''
+        print(f"FDA: {'True' if self.checkFDA() else 'False'}")
+
+    def getAppleEventsPermissions(self, binary_path, bundle_id):
+        ''' Retrieve permissions related to "kTCCServiceAppleEvents". '''
+        permissions = []
+        for db_path in self.TCC_DB_PATHS:
+            if self.checkIfPathExists(db_path):
+                db_permissions = self.getPermissionsFromDB(db_path, binary_path, bundle_id)
+                permissions.extend([
+                    {
+                        'service': perm['service'],
+                        'auth_value': perm['auth_value'],
+                        'indirect_object_identifier': perm['indirect_object_identifier']
+                    }
+                    for perm in db_permissions if perm['service'] == "kTCCServiceAppleEvents"
+                ])
+        return permissions
+
+    def printTCCAutomation(self):
+        ''' Print automation access details for "kTCCServiceAppleEvents". '''
+        binary_path, bundle_id = self.prepareDataForTCCQuery()
+        apple_events_permissions = self.getAppleEventsPermissions(binary_path, bundle_id)
+
+        if not apple_events_permissions:
+            print("TCC Automation: False")
+        else:
+            print("TCC Automation: True")
+            for permission in apple_events_permissions:
+                status = self.getAuthValueStatus(permission['auth_value'])
+                print(f"Target: {permission['indirect_object_identifier']}, Status: {status} ({permission['auth_value']})")
+
+    def checkSysAdminFilesAccess(self):
+        ''' Check if the binary has System Policy SysAdmin Files access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceSystemPolicySysAdminFiles') == 2
+
+    def printSysAdminFilesStatus(self):
+        ''' Print the System Policy SysAdmin Files access status. '''
+        print(f"SysAdmin Files Access: {'True' if self.checkSysAdminFilesAccess() else 'False'}")
+
+    def checkDesktopAccess(self):
+        ''' Check if the binary has Desktop Folder access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceSystemPolicyDesktopFolder') == 2
+
+    def printDesktopAccessStatus(self):
+        ''' Print the Desktop Folder access status. '''
+        print(f"Desktop Folder Access: {'True' if self.checkDesktopAccess() else 'False'}")
+
+    def checkDocumentsAccess(self):
+        ''' Check if the binary has Documents Folder access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceSystemPolicyDocumentsFolder') == 2
+
+    def printDocumentsAccessStatus(self):
+        ''' Print the Documents Folder access status. '''
+        print(f"Documents Folder Access: {'True' if self.checkDocumentsAccess() else 'False'}")
+
+    def checkDownloadsAccess(self):
+        ''' Check if the binary has Downloads Folder access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceSystemPolicyDownloadsFolder') == 2
+
+    def printDownloadsAccessStatus(self):
+        ''' Print the Downloads Folder access status. '''
+        print(f"Downloads Folder Access: {'True' if self.checkDownloadsAccess() else 'False'}")
+
+    def checkPhotosAccess(self):
+        ''' Check if the binary has Photos Library access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServicePhotos') == 2
+
+    def printPhotosAccessStatus(self):
+        ''' Print the Photos Library access status. '''
+        print(f"Photos Library Access: {'True' if self.checkPhotosAccess() else 'False'}")
+
+    def checkContactsAccess(self):
+        ''' Check if the binary has Contacts access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceAddressBook') == 2
+
+    def printContactsAccessStatus(self):
+        ''' Print the Contacts access status. '''
+        print(f"Contacts Access: {'True' if self.checkContactsAccess() else 'False'}")
+
+    def checkCalendarAccess(self):
+        ''' Check if the binary has Calendar access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceCalendar') == 2
+
+    def printCalendarAccessStatus(self):
+        ''' Print the Calendar access status. '''
+        print(f"Calendar Access: {'True' if self.checkCalendarAccess() else 'False'}")
+
+    def checkCameraAccess(self):
+        ''' Check if the binary has Camera access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceCamera') == 2
+
+    def printCameraAccessStatus(self):
+        ''' Print the Camera access status. '''
+        print(f"Camera Access: {'True' if self.checkCameraAccess() else 'False'}")
+
+    def checkMicrophoneAccess(self):
+        ''' Check if the binary has Microphone access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceMicrophone') == 2
+
+    def printMicrophoneAccessStatus(self):
+        ''' Print the Microphone access status. '''
+        print(f"Microphone Access: {'True' if self.checkMicrophoneAccess() else 'False'}")
+
+    def checkScreenRecordingAccess(self):
+        ''' Check if the binary has Screen Recording access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceScreenCapture') == 2
+
+    def printScreenRecordingAccessStatus(self):
+        ''' Print the Screen Recording access status. '''
+        print(f"Screen Recording Access: {'True' if self.checkScreenRecordingAccess() else 'False'}")
+
+    def checkAccessibilityAccess(self):
+        ''' Check if the binary has Accessibility access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceAccessibility') == 2
+
+    def printAccessibilityAccessStatus(self):
+        ''' Print the Accessibility access status. '''
+        print(f"Accessibility Access: {'True' if self.checkAccessibilityAccess() else 'False'}")
+
+    def checkICloudAccess(self):
+        ''' Check if the binary has iCloud (Ubiquity) access by looking for specific permissions. '''
+        return self.parseTCCPermissions().get('kTCCServiceUbiquity') == 2
+
+    def printICloudAccessStatus(self):
+        ''' Print the iCloud (Ubiquity) access status. '''
+        print(f"iCloud Access: {'True' if self.checkICloudAccess() else 'False'}")
 
 
 ### --- ARGUMENT PARSER --- ###  
@@ -3299,7 +3562,22 @@ class ArgumentParser:
 
     def addTCCArgs(self):
         tcc_group = self.parser.add_argument_group('TCC ARGS')
-        tcc_group.add_argument('--test', action='store_true', help="test")
+        tcc_group.add_argument('--tcc', action='store_true', help="Print TCC permissions of the binary")
+        tcc_group.add_argument('--tcc_fda', action='store_true', help="Check Full Disk Access (FDA) TCC permission for the binary")
+        tcc_group.add_argument('--tcc_automation', action='store_true', help="Check Automation TCC permission for the binary")
+        tcc_group.add_argument('--tcc_sysadmin', action='store_true', help="Check System Policy SysAdmin Files TCC permission for the binary")
+        tcc_group.add_argument('--tcc_desktop', action='store_true', help="Check Desktop Folder TCC permission for the binary")
+        tcc_group.add_argument('--tcc_documents', action='store_true', help="Check Documents Folder TCC permission for the binary")
+        tcc_group.add_argument('--tcc_downloads', action='store_true', help="Check Downloads Folder TCC permission for the binary")
+        tcc_group.add_argument('--tcc_photos', action='store_true', help="Check Photos Library TCC permission for the binary")
+        tcc_group.add_argument('--tcc_contacts', action='store_true', help="Check Contacts TCC permission for the binary")
+        tcc_group.add_argument('--tcc_calendar', action='store_true', help="Check Calendar TCC permission for the binary")
+        tcc_group.add_argument('--tcc_camera', action='store_true', help="Check Camera TCC permission for the binary")
+        tcc_group.add_argument('--tcc_microphone', action='store_true', help="Check Microphone TCC permission for the binary")
+        tcc_group.add_argument('--tcc_location', action='store_true', help="Check Location Services TCC permission for the binary")
+        tcc_group.add_argument('--tcc_recording', action='store_true', help="Check Screen Recording TCC permission for the binary")
+        tcc_group.add_argument('--tcc_accessibility', action='store_true', help="Check Accessibility TCC permission for the binary")
+        tcc_group.add_argument('--tcc_icloud', action='store_true', help="Check iCloud (Ubiquity) TCC permission for the binary")
 
     def parseArgs(self):
         args = self.parser.parse_args()
