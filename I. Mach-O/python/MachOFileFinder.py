@@ -4,6 +4,7 @@ import sys
 import argparse
 import struct
 from concurrent.futures import ThreadPoolExecutor
+import stat
 
 class MachOFileFinder:
     # Mach-O and FAT magic numbers
@@ -36,6 +37,14 @@ class MachOFileFinder:
         self.directory_path = directory_path
         self.recursive = recursive
         self.only_arm64 = only_arm64
+
+    def isRegularFile(self, file_path):
+        """Check if the specified file is a regular file."""
+        try:
+            return stat.S_ISREG(os.stat(file_path).st_mode)
+        except (OSError, IOError) as e:
+            # print(f"Error checking file type for {file_path}: {e}")
+            return False
 
     def determineFileEndianness(self, magic):
         """Determine the endianness of the file based on the magic number."""
@@ -161,6 +170,11 @@ class MachOFileFinder:
         for file_name in files:
             file_path = os.path.abspath(os.path.join(root, file_name))
             
+            # Check if the file is a regular file before processing
+            if not self.isRegularFile(file_path):
+                #print(f"Skipping non-regular file: {file_path}")
+                continue
+
             # Check if the file is a Mach-O binary or FAT binary
             file_type = self.getMachoInfo(file_path)
             if file_type:
