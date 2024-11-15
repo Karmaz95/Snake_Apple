@@ -3135,6 +3135,9 @@ class TCCProcessor:
         if args.tcc_sysadmin:
             snake_instance.printSysAdminFilesStatus()
 
+        if args.tcc_location:
+            snake_instance.printLocationAccessStatus()
+
         if args.tcc_desktop:
             snake_instance.printDesktopAccessStatus()
 
@@ -3158,9 +3161,6 @@ class TCCProcessor:
 
         if args.tcc_microphone:
             snake_instance.printMicrophoneAccessStatus()
-
-        if args.tcc_location:
-            snake_instance.printLocationAccessStatus()
 
         if args.tcc_recording:
             snake_instance.printScreenRecordingAccessStatus()
@@ -3306,6 +3306,16 @@ class SnakeIX(SnakeVIII):
     def printSysAdminFilesStatus(self):
         ''' Print the System Policy SysAdmin Files access status. '''
         print(f"SysAdmin Files Access: {'True' if self.checkSysAdminFilesAccess() else 'False'}")
+
+    def checkLocationAccess(self):
+        ''' Check if the binary has Location Services access by looking for specific permissions. '''
+        binary_path, bundle_id = self.prepareDataForTCCQuery()
+        location_permission = self.getLocationPermission(binary_path, bundle_id)
+        return location_permission.get('Location Services') == 2
+
+    def printLocationAccessStatus(self):
+        ''' Print the Location Services access status. '''
+        print(f"Location Services Access: {'True' if self.checkLocationAccess() else 'False'}")
 
     def checkDesktopAccess(self):
         ''' Check if the binary has Desktop Folder access by looking for specific permissions. '''
