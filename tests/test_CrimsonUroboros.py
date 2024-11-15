@@ -30,7 +30,7 @@ We do it for each TestSnake class.
 }
 '''
 
-snake_class = SnakeVIII
+snake_class = SnakeIX
 
 class Compiler:
     """
@@ -2430,7 +2430,6 @@ class TestSnakeVIII():
 
         assert expected_output in uroboros_output
 
-
     def test_sandbox_entitlements(self):
         '''Test the --sandbox_entitlements flag of SnakeVIII.'''
         args_list = ['-b', "/System/Applications/Notes.app", '--sandbox_entitlements']
@@ -2584,3 +2583,232 @@ class TestSnakeVIII():
 
         assert expected_output in uroboros_output
         os.remove("sandbox")
+
+class TestSnakeIX:
+    '''Testing IX. TCC Permissions'''
+
+    @classmethod
+    def setup_class(cls):
+        pass  # No compilation required
+
+    @classmethod
+    def teardown_class(cls):
+        pass  # No decompilation required
+
+    def test_tcc_permission(self):
+        '''Test the --tcc flag for general TCC permissions'''
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Error accessing /var/db/locationd/clients.plist' in uroboros_output
+
+    def test_tcc_fda(self):
+        '''Test the --tcc_fda flag for Full Disk Access permission'''
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_fda']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'FDA: False' in uroboros_output
+
+    def test_tcc_automation(self):
+        '''Test the --tcc_automation flag for Automation TCC permission'''
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_automation']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Automation: False' in uroboros_output
+    
+    def test_tcc_sysadmin(self):
+        '''Test the --tcc_sysadmin flag for System Policy SysAdmin Files TCC permission'''
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_sysadmin']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'SysAdmin Files Access: False' in uroboros_output
+    
+    def test_tcc_location(self):
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_location']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Location Services Access: False' in uroboros_output
+
+    def test_tcc_desktop(self):
+        '''Test the --tcc_desktop flag for Desktop Folder permission'''
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_desktop']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Desktop Folder Access: False' in uroboros_output
+
+    def test_tcc_documents(self):
+        '''Test the --tcc_documents flag for Documents Folder permission'''
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_documents']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Documents Folder Access: False' in uroboros_output
+
+    def test_tcc_downloads(self):
+        '''Test the --tcc_downloads flag for Downloads Folder permission'''
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_downloads']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Downloads Folder Access: False' in uroboros_output
+
+    def test_tcc_photos(self):
+        '''Test the --tcc_photos flag for Photos Library access'''
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_photos']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Photos Library Access:' in uroboros_output
+
+    def test_tcc_contacts(self):
+        '''Test the --tcc_contacts flag for Contacts access'''
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_contacts']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Contacts Access: False' in uroboros_output
+
+    def test_tcc_calendar(self):
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_calendar']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Calendar Access: False' in uroboros_output
+
+    def test_tcc_camera(self):
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_camera']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Camera Access: False' in uroboros_output
+
+    def test_tcc_microphone(self):
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_microphone']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Microphone Access: False' in uroboros_output
+
+    def test_tcc_recording(self):
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_recording']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Screen Recording Access: False' in uroboros_output
+
+    def test_tcc_accessibility(self):
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_accessibility']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'Accessibility Access: False' in uroboros_output
+
+    def test_tcc_icloud(self):
+        args_list = ['-b', "/System/Applications/Chess.app", '--tcc_icloud']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            tcc_processor = TCCProcessor()
+            tcc_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        assert 'iCloud Access: False' in uroboros_output
+
