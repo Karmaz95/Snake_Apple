@@ -41,7 +41,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [Sandbox Validator](https://karol-mazurek.medium.com/sandbox-validator-e760e5d88617?sk=v2%2F145ac2ef-ca06-41a0-b310-c96f4ce0037b)
   * &#9745; [App Sandbox startup](https://karol-mazurek.medium.com/app-sandbox-startup-71daf8f259d1?sk=v2%2F9f3b09a6-c7c0-445d-8613-8e25bf3f4e4d)
   * &#9745; [System Intigrity Protection](https://karol-mazurek.medium.com/system-integrity-protection-sip-140562b07fea?sk=v2%2F9c293b8f-c376-4603-b8a1-2872ba3395cf)
-* &#9744; [IX. TCC](https://karol-mazurek.medium.com/snake-apple-ix-tcc-ae822e3e2718?sk=v2%2F426ae6cf-6418-4e3f-a0ca-3aee06d6f676)
+* &#9745; [IX. TCC](https://karol-mazurek.medium.com/snake-apple-ix-tcc-ae822e3e2718?sk=v2%2F426ae6cf-6418-4e3f-a0ca-3aee06d6f676)
   * &#9745; [Apple UUID Finder](https://karol-mazurek.medium.com/apple-uuid-finder-a5173bdd1a8a?sk=v2%2F04bb0d32-6dc9-437d-bf72-8f65e03fed90)
 * &#9744; [X. NU]()
   * &#9745; [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
