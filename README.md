@@ -46,6 +46,7 @@ The table of contents showing links to all articles is below:
 * &#9744; [X. NU]()
   * &#9745; [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
   * &#9745; [Fixing an Infinite Loop](https://karol-mazurek.medium.com/fixing-an-infinite-loop-on-unix-e0a8a5501c54?sk=v2%2F140555f8-9770-4c6b-9734-d9c5b7cc9bc7)
+  * &#9745; [Exceptions on macOS](https://karol-mazurek.medium.com/exceptions-on-macos-2c4bd6a9fd31?sk=v2%2Ffa7393a6-16e7-46d4-84d0-4de300260533)
 
 ## TOOLS
 [CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster) • [sip_check](#sip_check) • [crimson_waccess.py](#crimson_waccesspy) • [sip_tester](#sip_tester) • [UUIDFinder](#uuidfinder)
