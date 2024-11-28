@@ -3405,6 +3405,81 @@ class SnakeIX(SnakeVIII):
         ''' Print the iCloud (Ubiquity) access status. '''
         print(f"iCloud Access: {'True' if self.checkICloudAccess() else 'False'}")
 
+### ---- X. NU ---- ###
+class XNUProcessor:
+    def __init__(self):
+        '''This class contains part of the code from the main() for the SnakeX: XNU.'''
+        pass
+
+    def process(self, args):
+
+        if args.xnu:
+            snake_instance.printXNU()
+        
+        if args.parse_mpo:
+            snake_instance.printMPO(args.parse_mpo)
+
+class SnakeX(SnakeIX):
+    def __init__(self, binaries, file_path):
+        super().__init__(binaries, file_path)
+
+    def parseMPO(self, mpo_addr_as_hex):
+        """
+        Parse the mac_policy_ops structure from a given virtual memory address.
+
+        Args:
+            mpo_addr_as_hex (str): The memory address of the mac_policy_ops structure in hexadecimal format.
+
+        Returns:
+            dict: A dictionary representation of the mac_policy_ops structure, 
+                with field names as keys and their respective values (in hex) as values.
+        """
+        # Convert the hexadecimal string address to an integer.
+        mpo_addr_vm = int(mpo_addr_as_hex, 16)
+
+        # Calculate the real file offset from the virtual memory address.
+        # This step maps the VM address to the corresponding physical file address.
+        mpo_addr_offset = self.calcRealAddressFromVM(mpo_addr_vm)
+
+        # Determine the size of the mac_policy_ops structure.
+        # This is needed to extract the correct number of bytes.
+        mpo_size = ctypes.sizeof(AppleStructuresManager.mac_policy_ops)
+
+        # Extract the raw bytes corresponding to the mac_policy_ops structure from the file.
+        extracted_mpo_bytes = self.extractBytesAtOffset(mpo_addr_offset, mpo_size)
+
+        # Parse the extracted bytes into a dictionary representation of the structure.
+        # Each field in the structure is mapped to its corresponding value.
+        mpo_as_dict = AppleStructuresManager.mac_policy_ops.parse(extracted_mpo_bytes)
+
+        # Return the parsed dictionary.
+        return mpo_as_dict
+
+    def printMPO(self, mpo_addr):
+        """
+        Parse and print mac_policy_ops structure fields with non-default values.
+
+        Args:
+            mpo_addr (str): The memory address of the mac_policy_ops structure as a hexadecimal string.
+        """
+        # Parse the MPO structure
+        mpo_dict = self.parseMPO(mpo_addr)
+
+        # Filter out fields with default values (zeroed fields)
+        non_default_fields = {
+            field: value for field, value in mpo_dict.items()
+            if value != "0x0000000000000000"
+        }
+
+        # Print the defined MPOs
+        if non_default_fields:
+            for field, value in non_default_fields.items():
+                print(f"{field}: {value}")
+        else:
+            print("No MPOs defined in the given address.")
+
+    def printXNU(self):
+        print("XNU related functions are not implemented yet.")
 
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
@@ -3422,6 +3497,7 @@ class ArgumentParser:
         self.addAntivirusArgs()
         self.addSandboxArgs()
         self.addTCCArgs()
+        self.addXNUArgs()
 
     def addGeneralArgs(self):
         general_group = self.parser.add_argument_group('GENERAL ARGS')
@@ -3588,6 +3664,11 @@ class ArgumentParser:
         tcc_group.add_argument('--tcc_recording', action='store_true', help="Check Screen Recording TCC permission for the binary")
         tcc_group.add_argument('--tcc_accessibility', action='store_true', help="Check Accessibility TCC permission for the binary")
         tcc_group.add_argument('--tcc_icloud', action='store_true', help="Check iCloud (Ubiquity) TCC permission for the binary")
+
+    def addXNUArgs(self):
+        xnu_group = self.parser.add_argument_group('XNU ARGS')
+        xnu_group.add_argument('--xnu', action='store_true', help="Print XNU related information")
+        xnu_group.add_argument('--parse_mpo', metavar='mpo_addr', help="Parse mac_policy_ops at given address from Kernel Cache and print pointers in use (not zeroed)")
 
     def parseArgs(self):
         args = self.parser.parse_args()
@@ -3856,6 +3937,372 @@ class AppleStructuresManager:
                 "linkageSize": getattr(self.info, "linkageSize", None),
             }
 
+    class mac_policy_ops(ctypes.Structure):
+        ''' REF: https://github.com/apple-oss-distributions/xnu/blob/8d741a5de7ff4191bf97d57b9f54c2f6d4a15585/security/mac_policy.h#L5846 '''
+        _pack_ = 1  # Specify the byte order (little-endian)
+        _fields_ = [
+            ("mpo_audit_check_postselect", ctypes.c_void_p),
+            ("mpo_audit_check_preselect", ctypes.c_void_p),
+            ("mpo_reserved01", ctypes.c_void_p),
+            ("mpo_reserved02", ctypes.c_void_p),
+            ("mpo_reserved03", ctypes.c_void_p),
+            ("mpo_reserved04", ctypes.c_void_p),
+            ("mpo_cred_check_label_update_execve", ctypes.c_void_p),
+            ("mpo_cred_check_label_update", ctypes.c_void_p),
+            ("mpo_cred_check_visible", ctypes.c_void_p),
+            ("mpo_cred_label_associate_fork", ctypes.c_void_p),
+            ("mpo_cred_label_associate_kernel", ctypes.c_void_p),
+            ("mpo_cred_label_associate", ctypes.c_void_p),
+            ("mpo_cred_label_associate_user", ctypes.c_void_p),
+            ("mpo_cred_label_destroy", ctypes.c_void_p),
+            ("mpo_cred_label_externalize_audit", ctypes.c_void_p),
+            ("mpo_cred_label_externalize", ctypes.c_void_p),
+            ("mpo_cred_label_init", ctypes.c_void_p),
+            ("mpo_cred_label_internalize", ctypes.c_void_p),
+            ("mpo_cred_label_update_execve", ctypes.c_void_p),
+            ("mpo_cred_label_update", ctypes.c_void_p),
+            ("mpo_devfs_label_associate_device", ctypes.c_void_p),
+            ("mpo_devfs_label_associate_directory", ctypes.c_void_p),
+            ("mpo_devfs_label_copy", ctypes.c_void_p),
+            ("mpo_devfs_label_destroy", ctypes.c_void_p),
+            ("mpo_devfs_label_init", ctypes.c_void_p),
+            ("mpo_devfs_label_update", ctypes.c_void_p),
+            ("mpo_file_check_change_offset", ctypes.c_void_p),
+            ("mpo_file_check_create", ctypes.c_void_p),
+            ("mpo_file_check_dup", ctypes.c_void_p),
+            ("mpo_file_check_fcntl", ctypes.c_void_p),
+            ("mpo_file_check_get_offset", ctypes.c_void_p),
+            ("mpo_file_check_get", ctypes.c_void_p),
+            ("mpo_file_check_inherit", ctypes.c_void_p),
+            ("mpo_file_check_ioctl", ctypes.c_void_p),
+            ("mpo_file_check_lock", ctypes.c_void_p),
+            ("mpo_file_check_mmap_downgrade", ctypes.c_void_p),
+            ("mpo_file_check_mmap", ctypes.c_void_p),
+            ("mpo_file_check_receive", ctypes.c_void_p),
+            ("mpo_file_check_set", ctypes.c_void_p),
+            ("mpo_file_label_init", ctypes.c_void_p),
+            ("mpo_file_label_destroy", ctypes.c_void_p),
+            ("mpo_file_label_associate", ctypes.c_void_p),
+            ("mpo_file_notify_close", ctypes.c_void_p),
+            ("mpo_proc_check_launch_constraints", ctypes.c_void_p),
+            ("mpo_proc_notify_service_port_derive", ctypes.c_void_p),
+            ("mpo_proc_check_set_task_exception_port", ctypes.c_void_p),
+            ("mpo_proc_check_set_thread_exception_port", ctypes.c_void_p),
+            ("mpo_proc_check_delegated_signal", ctypes.c_void_p),
+            ("mpo_reserved08", ctypes.c_void_p),
+            ("mpo_reserved09", ctypes.c_void_p),
+            ("mpo_reserved10", ctypes.c_void_p),
+            ("mpo_reserved11", ctypes.c_void_p),
+            ("mpo_reserved12", ctypes.c_void_p),
+            ("mpo_reserved13", ctypes.c_void_p),
+            ("mpo_reserved14", ctypes.c_void_p),
+            ("mpo_reserved15", ctypes.c_void_p),
+            ("mpo_reserved16", ctypes.c_void_p),
+            ("mpo_reserved17", ctypes.c_void_p),
+            ("mpo_reserved18", ctypes.c_void_p),
+            ("mpo_reserved19", ctypes.c_void_p),
+            ("mpo_reserved20", ctypes.c_void_p),
+            ("mpo_reserved21", ctypes.c_void_p),
+            ("mpo_necp_check_open", ctypes.c_void_p),
+            ("mpo_necp_check_client_action", ctypes.c_void_p),
+            ("mpo_file_check_library_validation", ctypes.c_void_p),
+            ("mpo_vnode_notify_setacl", ctypes.c_void_p),
+            ("mpo_vnode_notify_setattrlist", ctypes.c_void_p),
+            ("mpo_vnode_notify_setextattr", ctypes.c_void_p),
+            ("mpo_vnode_notify_setflags", ctypes.c_void_p),
+            ("mpo_vnode_notify_setmode", ctypes.c_void_p),
+            ("mpo_vnode_notify_setowner", ctypes.c_void_p),
+            ("mpo_vnode_notify_setutimes", ctypes.c_void_p),
+            ("mpo_vnode_notify_truncate", ctypes.c_void_p),
+            ("mpo_vnode_check_getattrlistbulk", ctypes.c_void_p),
+            ("mpo_proc_check_get_task_special_port", ctypes.c_void_p),
+            ("mpo_proc_check_set_task_special_port", ctypes.c_void_p),
+            ("mpo_vnode_notify_swap", ctypes.c_void_p),
+            ("mpo_vnode_notify_unlink", ctypes.c_void_p),
+            ("mpo_vnode_check_swap", ctypes.c_void_p),
+            ("mpo_reserved33", ctypes.c_void_p),
+            ("mpo_reserved34", ctypes.c_void_p),
+            ("mpo_reserved35", ctypes.c_void_p),
+            ("mpo_vnode_check_copyfile", ctypes.c_void_p),
+            ("mpo_mount_check_quotactl", ctypes.c_void_p),
+            ("mpo_mount_check_fsctl", ctypes.c_void_p),
+            ("mpo_mount_check_getattr", ctypes.c_void_p),
+            ("mpo_mount_check_label_update", ctypes.c_void_p),
+            ("mpo_mount_check_mount", ctypes.c_void_p),
+            ("mpo_mount_check_remount", ctypes.c_void_p),
+            ("mpo_mount_check_setattr", ctypes.c_void_p),
+            ("mpo_mount_check_stat", ctypes.c_void_p),
+            ("mpo_mount_check_umount", ctypes.c_void_p),
+            ("mpo_mount_label_associate", ctypes.c_void_p),
+            ("mpo_mount_label_destroy", ctypes.c_void_p),
+            ("mpo_mount_label_externalize", ctypes.c_void_p),
+            ("mpo_mount_label_init", ctypes.c_void_p),
+            ("mpo_mount_label_internalize", ctypes.c_void_p),
+            ("mpo_proc_check_expose_task_with_flavor", ctypes.c_void_p),
+            ("mpo_proc_check_get_task_with_flavor", ctypes.c_void_p),
+            ("mpo_proc_check_task_id_token_get_task", ctypes.c_void_p),
+            ("mpo_pipe_check_ioctl", ctypes.c_void_p),
+            ("mpo_pipe_check_kqfilter", ctypes.c_void_p),
+            ("mpo_reserved41", ctypes.c_void_p),
+            ("mpo_pipe_check_read", ctypes.c_void_p),
+            ("mpo_pipe_check_select", ctypes.c_void_p),
+            ("mpo_pipe_check_stat", ctypes.c_void_p),
+            ("mpo_pipe_check_write", ctypes.c_void_p),
+            ("mpo_pipe_label_associate", ctypes.c_void_p),
+            ("mpo_reserved42", ctypes.c_void_p),
+            ("mpo_pipe_label_destroy", ctypes.c_void_p),
+            ("mpo_reserved43", ctypes.c_void_p),
+            ("mpo_pipe_label_init", ctypes.c_void_p),
+            ("mpo_reserved44", ctypes.c_void_p),
+            ("mpo_proc_check_syscall_mac", ctypes.c_void_p),
+            ("mpo_policy_destroy", ctypes.c_void_p),
+            ("mpo_policy_init", ctypes.c_void_p),
+            ("mpo_policy_initbsd", ctypes.c_void_p),
+            ("mpo_policy_syscall", ctypes.c_void_p),
+            ("mpo_system_check_sysctlbyname", ctypes.c_void_p),
+            ("mpo_proc_check_inherit_ipc_ports", ctypes.c_void_p),
+            ("mpo_vnode_check_rename", ctypes.c_void_p),
+            ("mpo_kext_check_query", ctypes.c_void_p),
+            ("mpo_proc_notify_exec_complete", ctypes.c_void_p),
+            ("mpo_proc_notify_cs_invalidated", ctypes.c_void_p),
+            ("mpo_proc_check_syscall_unix", ctypes.c_void_p),
+            ("mpo_reserved45", ctypes.c_void_p),
+            ("mpo_proc_check_set_host_special_port", ctypes.c_void_p),
+            ("mpo_proc_check_set_host_exception_port", ctypes.c_void_p),
+            ("mpo_exc_action_check_exception_send", ctypes.c_void_p),
+            ("mpo_exc_action_label_associate", ctypes.c_void_p),
+            ("mpo_exc_action_label_populate", ctypes.c_void_p),
+            ("mpo_exc_action_label_destroy", ctypes.c_void_p),
+            ("mpo_exc_action_label_init", ctypes.c_void_p),
+            ("mpo_exc_action_label_update", ctypes.c_void_p),
+            ("mpo_vnode_check_trigger_resolve", ctypes.c_void_p),
+            ("mpo_mount_check_mount_late", ctypes.c_void_p),
+            ("mpo_mount_check_snapshot_mount", ctypes.c_void_p),
+            ("mpo_vnode_notify_reclaim", ctypes.c_void_p),
+            ("mpo_skywalk_flow_check_connect", ctypes.c_void_p),
+            ("mpo_skywalk_flow_check_listen", ctypes.c_void_p),
+            ("mpo_posixsem_check_create", ctypes.c_void_p),
+            ("mpo_posixsem_check_open", ctypes.c_void_p),
+            ("mpo_posixsem_check_post", ctypes.c_void_p),
+            ("mpo_posixsem_check_unlink", ctypes.c_void_p),
+            ("mpo_posixsem_check_wait", ctypes.c_void_p),
+            ("mpo_posixsem_label_associate", ctypes.c_void_p),
+            ("mpo_posixsem_label_destroy", ctypes.c_void_p),
+            ("mpo_posixsem_label_init", ctypes.c_void_p),
+            ("mpo_posixshm_check_create", ctypes.c_void_p),
+            ("mpo_posixshm_check_mmap", ctypes.c_void_p),
+            ("mpo_posixshm_check_open", ctypes.c_void_p),
+            ("mpo_posixshm_check_stat", ctypes.c_void_p),
+            ("mpo_posixshm_check_truncate", ctypes.c_void_p),
+            ("mpo_posixshm_check_unlink", ctypes.c_void_p),
+            ("mpo_posixshm_label_associate", ctypes.c_void_p),
+            ("mpo_posixshm_label_destroy", ctypes.c_void_p),
+            ("mpo_posixshm_label_init", ctypes.c_void_p),
+            ("mpo_proc_check_debug", ctypes.c_void_p),
+            ("mpo_proc_check_fork", ctypes.c_void_p),
+            ("mpo_reserved61", ctypes.c_void_p),
+            ("mpo_reserved62", ctypes.c_void_p),
+            ("mpo_proc_check_getaudit", ctypes.c_void_p),
+            ("mpo_proc_check_getauid", ctypes.c_void_p),
+            ("mpo_reserved63", ctypes.c_void_p),
+            ("mpo_proc_check_mprotect", ctypes.c_void_p),
+            ("mpo_proc_check_sched", ctypes.c_void_p),
+            ("mpo_proc_check_setaudit", ctypes.c_void_p),
+            ("mpo_proc_check_setauid", ctypes.c_void_p),
+            ("mpo_reserved64", ctypes.c_void_p),
+            ("mpo_proc_check_signal", ctypes.c_void_p),
+            ("mpo_proc_check_wait", ctypes.c_void_p),
+            ("mpo_proc_check_dump_core", ctypes.c_void_p),
+            ("mpo_proc_check_remote_thread_create", ctypes.c_void_p),
+            ("mpo_socket_check_accept", ctypes.c_void_p),
+            ("mpo_socket_check_accepted", ctypes.c_void_p),
+            ("mpo_socket_check_bind", ctypes.c_void_p),
+            ("mpo_socket_check_connect", ctypes.c_void_p),
+            ("mpo_socket_check_create", ctypes.c_void_p),
+            ("mpo_reserved46", ctypes.c_void_p),
+            ("mpo_reserved47", ctypes.c_void_p),
+            ("mpo_reserved48", ctypes.c_void_p),
+            ("mpo_socket_check_listen", ctypes.c_void_p),
+            ("mpo_socket_check_receive", ctypes.c_void_p),
+            ("mpo_socket_check_received", ctypes.c_void_p),
+            ("mpo_reserved49", ctypes.c_void_p),
+            ("mpo_socket_check_send", ctypes.c_void_p),
+            ("mpo_socket_check_stat", ctypes.c_void_p),
+            ("mpo_socket_check_setsockopt", ctypes.c_void_p),
+            ("mpo_socket_check_getsockopt", ctypes.c_void_p),
+            ("mpo_proc_check_get_movable_control_port", ctypes.c_void_p),
+            ("mpo_proc_check_dyld_process_info_notify_register", ctypes.c_void_p),
+            ("mpo_proc_check_setuid", ctypes.c_void_p),
+            ("mpo_proc_check_seteuid", ctypes.c_void_p),
+            ("mpo_proc_check_setreuid", ctypes.c_void_p),
+            ("mpo_proc_check_setgid", ctypes.c_void_p),
+            ("mpo_proc_check_setegid", ctypes.c_void_p),
+            ("mpo_proc_check_setregid", ctypes.c_void_p),
+            ("mpo_proc_check_settid", ctypes.c_void_p),
+            ("mpo_proc_check_memorystatus_control", ctypes.c_void_p),
+            ("mpo_reserved60", ctypes.c_void_p),
+            ("mpo_thread_telemetry", ctypes.c_void_p),
+            ("mpo_iokit_check_open_service", ctypes.c_void_p),
+            ("mpo_system_check_acct", ctypes.c_void_p),
+            ("mpo_system_check_audit", ctypes.c_void_p),
+            ("mpo_system_check_auditctl", ctypes.c_void_p),
+            ("mpo_system_check_auditon", ctypes.c_void_p),
+            ("mpo_system_check_host_priv", ctypes.c_void_p),
+            ("mpo_system_check_nfsd", ctypes.c_void_p),
+            ("mpo_system_check_reboot", ctypes.c_void_p),
+            ("mpo_system_check_settime", ctypes.c_void_p),
+            ("mpo_system_check_swapoff", ctypes.c_void_p),
+            ("mpo_system_check_swapon", ctypes.c_void_p),
+            ("mpo_socket_check_ioctl", ctypes.c_void_p),
+            ("mpo_sysvmsg_label_associate", ctypes.c_void_p),
+            ("mpo_sysvmsg_label_destroy", ctypes.c_void_p),
+            ("mpo_sysvmsg_label_init", ctypes.c_void_p),
+            ("mpo_sysvmsg_label_recycle", ctypes.c_void_p),
+            ("mpo_sysvmsq_check_enqueue", ctypes.c_void_p),
+            ("mpo_sysvmsq_check_msgrcv", ctypes.c_void_p),
+            ("mpo_sysvmsq_check_msgrmid", ctypes.c_void_p),
+            ("mpo_sysvmsq_check_msqctl", ctypes.c_void_p),
+            ("mpo_sysvmsq_check_msqget", ctypes.c_void_p),
+            ("mpo_sysvmsq_check_msqrcv", ctypes.c_void_p),
+            ("mpo_sysvmsq_check_msqsnd", ctypes.c_void_p),
+            ("mpo_sysvmsq_label_associate", ctypes.c_void_p),
+            ("mpo_sysvmsq_label_destroy", ctypes.c_void_p),
+            ("mpo_sysvmsq_label_init", ctypes.c_void_p),
+            ("mpo_sysvmsq_label_recycle", ctypes.c_void_p),
+            ("mpo_sysvsem_check_semctl", ctypes.c_void_p),
+            ("mpo_sysvsem_check_semget", ctypes.c_void_p),
+            ("mpo_sysvsem_check_semop", ctypes.c_void_p),
+            ("mpo_sysvsem_label_associate", ctypes.c_void_p),
+            ("mpo_sysvsem_label_destroy", ctypes.c_void_p),
+            ("mpo_sysvsem_label_init", ctypes.c_void_p),
+            ("mpo_sysvsem_label_recycle", ctypes.c_void_p),
+            ("mpo_sysvshm_check_shmat", ctypes.c_void_p),
+            ("mpo_sysvshm_check_shmctl", ctypes.c_void_p),
+            ("mpo_sysvshm_check_shmdt", ctypes.c_void_p),
+            ("mpo_sysvshm_check_shmget", ctypes.c_void_p),
+            ("mpo_sysvshm_label_associate", ctypes.c_void_p),
+            ("mpo_sysvshm_label_destroy", ctypes.c_void_p),
+            ("mpo_sysvshm_label_init", ctypes.c_void_p),
+            ("mpo_sysvshm_label_recycle", ctypes.c_void_p),
+            ("mpo_proc_notify_exit", ctypes.c_void_p),
+            ("mpo_mount_check_snapshot_revert", ctypes.c_void_p),
+            ("mpo_vnode_check_getattr", ctypes.c_void_p),
+            ("mpo_mount_check_snapshot_create", ctypes.c_void_p),
+            ("mpo_mount_check_snapshot_delete", ctypes.c_void_p),
+            ("mpo_vnode_check_clone", ctypes.c_void_p),
+            ("mpo_proc_check_get_cs_info", ctypes.c_void_p),
+            ("mpo_proc_check_set_cs_info", ctypes.c_void_p),
+            ("mpo_iokit_check_hid_control", ctypes.c_void_p),
+            ("mpo_vnode_check_access", ctypes.c_void_p),
+            ("mpo_vnode_check_chdir", ctypes.c_void_p),
+            ("mpo_vnode_check_chroot", ctypes.c_void_p),
+            ("mpo_vnode_check_create", ctypes.c_void_p),
+            ("mpo_vnode_check_deleteextattr", ctypes.c_void_p),
+            ("mpo_vnode_check_exchangedata", ctypes.c_void_p),
+            ("mpo_vnode_check_exec", ctypes.c_void_p),
+            ("mpo_vnode_check_getattrlist", ctypes.c_void_p),
+            ("mpo_vnode_check_getextattr", ctypes.c_void_p),
+            ("mpo_vnode_check_ioctl", ctypes.c_void_p),
+            ("mpo_vnode_check_kqfilter", ctypes.c_void_p),
+            ("mpo_vnode_check_label_update", ctypes.c_void_p),
+            ("mpo_vnode_check_link", ctypes.c_void_p),
+            ("mpo_vnode_check_listextattr", ctypes.c_void_p),
+            ("mpo_vnode_check_lookup", ctypes.c_void_p),
+            ("mpo_vnode_check_open", ctypes.c_void_p),
+            ("mpo_vnode_check_read", ctypes.c_void_p),
+            ("mpo_vnode_check_readdir", ctypes.c_void_p),
+            ("mpo_vnode_check_readlink", ctypes.c_void_p),
+            ("mpo_vnode_check_rename_from", ctypes.c_void_p),
+            ("mpo_vnode_check_rename_to", ctypes.c_void_p),
+            ("mpo_vnode_check_revoke", ctypes.c_void_p),
+            ("mpo_vnode_check_select", ctypes.c_void_p),
+            ("mpo_vnode_check_setattrlist", ctypes.c_void_p),
+            ("mpo_vnode_check_setextattr", ctypes.c_void_p),
+            ("mpo_vnode_check_setflags", ctypes.c_void_p),
+            ("mpo_vnode_check_setmode", ctypes.c_void_p),
+            ("mpo_vnode_check_setowner", ctypes.c_void_p),
+            ("mpo_vnode_check_setutimes", ctypes.c_void_p),
+            ("mpo_vnode_check_stat", ctypes.c_void_p),
+            ("mpo_vnode_check_truncate", ctypes.c_void_p),
+            ("mpo_vnode_check_unlink", ctypes.c_void_p),
+            ("mpo_vnode_check_write", ctypes.c_void_p),
+            ("mpo_vnode_label_associate_devfs", ctypes.c_void_p),
+            ("mpo_vnode_label_associate_extattr", ctypes.c_void_p),
+            ("mpo_vnode_label_associate_file", ctypes.c_void_p),
+            ("mpo_vnode_label_associate_pipe", ctypes.c_void_p),
+            ("mpo_vnode_label_associate_posixsem", ctypes.c_void_p),
+            ("mpo_vnode_label_associate_posixshm", ctypes.c_void_p),
+            ("mpo_vnode_label_associate_singlelabel", ctypes.c_void_p),
+            ("mpo_vnode_label_associate_socket", ctypes.c_void_p),
+            ("mpo_vnode_label_copy", ctypes.c_void_p),
+            ("mpo_vnode_label_destroy", ctypes.c_void_p),
+            ("mpo_vnode_label_externalize_audit", ctypes.c_void_p),
+            ("mpo_vnode_label_externalize", ctypes.c_void_p),
+            ("mpo_vnode_label_init", ctypes.c_void_p),
+            ("mpo_vnode_label_internalize", ctypes.c_void_p),
+            ("mpo_vnode_label_recycle", ctypes.c_void_p),
+            ("mpo_vnode_label_store", ctypes.c_void_p),
+            ("mpo_vnode_label_update_extattr", ctypes.c_void_p),
+            ("mpo_vnode_label_update", ctypes.c_void_p),
+            ("mpo_vnode_notify_create", ctypes.c_void_p),
+            ("mpo_vnode_check_signature", ctypes.c_void_p),
+            ("mpo_vnode_check_uipc_bind", ctypes.c_void_p),
+            ("mpo_vnode_check_uipc_connect", ctypes.c_void_p),
+            ("mpo_proc_check_run_cs_invalid", ctypes.c_void_p),
+            ("mpo_proc_check_suspend_resume", ctypes.c_void_p),
+            ("mpo_thread_userret", ctypes.c_void_p),
+            ("mpo_iokit_check_set_properties", ctypes.c_void_p),
+            ("mpo_vnode_check_supplemental_signature", ctypes.c_void_p),
+            ("mpo_vnode_check_searchfs", ctypes.c_void_p),
+            ("mpo_priv_check", ctypes.c_void_p),
+            ("mpo_priv_grant", ctypes.c_void_p),
+            ("mpo_proc_check_map_anon", ctypes.c_void_p),
+            ("mpo_vnode_check_fsgetpath", ctypes.c_void_p),
+            ("mpo_iokit_check_open", ctypes.c_void_p),
+            ("mpo_proc_check_ledger", ctypes.c_void_p),
+            ("mpo_vnode_notify_rename", ctypes.c_void_p),
+            ("mpo_vnode_check_setacl", ctypes.c_void_p),
+            ("mpo_vnode_notify_deleteextattr", ctypes.c_void_p),
+            ("mpo_system_check_kas_info", ctypes.c_void_p),
+            ("mpo_vnode_check_lookup_preflight", ctypes.c_void_p),
+            ("mpo_vnode_notify_open", ctypes.c_void_p),
+            ("mpo_system_check_info", ctypes.c_void_p),
+            ("mpo_pty_notify_grant", ctypes.c_void_p),
+            ("mpo_pty_notify_close", ctypes.c_void_p),
+            ("mpo_vnode_find_sigs", ctypes.c_void_p),
+            ("mpo_kext_check_load", ctypes.c_void_p),
+            ("mpo_kext_check_unload", ctypes.c_void_p),
+            ("mpo_proc_check_proc_info", ctypes.c_void_p),
+            ("mpo_vnode_notify_link", ctypes.c_void_p),
+            ("mpo_iokit_check_filter_properties", ctypes.c_void_p),
+            ("mpo_iokit_check_get_property", ctypes.c_void_p)
+        ]
+
+        def parse(data):
+            """
+            Parse a binary structure of type mac_policy_ops and return its fields as a dictionary.
+
+            Args:
+                data (bytes): The binary data to parse.
+
+            Returns:
+                dict: A dictionary with field names as keys and their hexadecimal values as values.
+                    Fields with None values are replaced with "0x0000000000000000".
+            """
+            # Create an instance of the mac_policy_ops structure
+            ops = AppleStructuresManager.mac_policy_ops()
+
+            # Populate the structure with binary data
+            ctypes.memmove(ctypes.byref(ops), data, ctypes.sizeof(ops))
+
+            # Convert fields to a dictionary with proper handling of None values
+            parsed_data = {}
+            for field_name, _ in ops._fields_:
+                value = getattr(ops, field_name)  # Get the field value
+                parsed_data[field_name] = hex(value) if value is not None else "0x0000000000000000"
+
+            return parsed_data
+
 ### --- UTILS / DEBUG --- ###
 class Utils:
     def printQuadWordsLittleEndian64(byte_string, columns=2):
@@ -3959,7 +4406,7 @@ if __name__ == "__main__":
     args = arg_parser.parseArgs()
 
     ### --- APP BUNDLE EXTENSION --- ###
-    snake_hatchery = SnakeHatchery(args, SnakeIX)
+    snake_hatchery = SnakeHatchery(args, SnakeX)
     snake_hatchery.hatch()
 
     ### --- I. MACH-O --- ###
@@ -3997,3 +4444,7 @@ if __name__ == "__main__":
     ### --- IX. TCC --- ###
     tcc_processor = TCCProcessor()
     tcc_processor.process(args)
+
+    ### --- X. XNU --- ###
+    xnu_processor = XNUProcessor()
+    xnu_processor.process(args)
