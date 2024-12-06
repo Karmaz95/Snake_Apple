@@ -29,7 +29,7 @@
         };
         8D01CCD20486CAD60068D4B7 /* HelloWorld.kext */ = {
             isa = PBXFileReference;
-            explicitFileType = wrapper.cfbundle;
+            explicitFileType = "wrapper.kernel-extension";
             includeInIndex = 0;
             path = HelloWorld.kext;
             sourceTree = BUILT_PRODUCTS_DIR;
@@ -72,7 +72,7 @@
             productInstallPath = "$(HOME)/Library/Bundles";
             productName = HelloWorld;
             productReference = 8D01CCD20486CAD60068D4B7 /* HelloWorld.kext */;
-            productType = "com.apple.product-type.bundle";
+            productType = "com.apple.product-type.kernel-extension";
         };
         /* End PBXNativeTarget section */
 
@@ -114,16 +114,24 @@
             isa = XCBuildConfiguration;
             buildSettings = {
                 ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-                GCC_MODEL_TUNING = G5;
+                KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(KERNEL_FRAMEWORK)/Headers";
+                KERNEL_FRAMEWORK = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Kernel.framework";
+                ONLY_ACTIVE_ARCH = NO;
+                GCC_C_LANGUAGE_STANDARD = gnu11;
+                CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+                GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
                 GCC_WARN_ABOUT_RETURN_TYPE = YES;
                 GCC_WARN_UNUSED_VARIABLE = YES;
                 INFOPLIST_FILE = src/Info.plist;
-                INSTALL_PATH = "$(HOME)/Library/Bundles";
                 PRODUCT_NAME = HelloWorld;
                 PRODUCT_BUNDLE_IDENTIFIER = "crimson.HelloWorld";
                 SDKROOT = macosx;
                 WRAPPER_EXTENSION = kext;
-                FRAMEWORK_SEARCH_PATHS = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Kernel.framework/Headers";
+                MODULE_NAME = "crimson.HelloWorld";
+                MODULE_VERSION = 1.0.0;
+                MACOSX_DEPLOYMENT_TARGET = 13.0;
+                OTHER_CFLAGS = "-mkernel -fno-builtin -static";
+                OTHER_LDFLAGS = "-static -lkmod";
             };
             name = Release;
         };
@@ -131,10 +139,9 @@
             isa = XCBuildConfiguration;
             buildSettings = {
                 ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-                GCC_C_LANGUAGE_STANDARD = gnu99;
-                GCC_WARN_ABOUT_RETURN_TYPE = YES;
-                GCC_WARN_UNUSED_VARIABLE = YES;
+                ONLY_ACTIVE_ARCH = NO;
                 SDKROOT = macosx;
+                VALID_ARCHS = "x86_64 arm64";
             };
             name = Release;
         };
