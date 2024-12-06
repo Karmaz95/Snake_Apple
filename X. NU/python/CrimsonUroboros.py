@@ -477,17 +477,20 @@ class SnakeI(SnakeAppBundleExtension):
     def getSegmentsInfo(self):
         ''' Helper function for gathering various initialization information about the binary if extracted from FAT. '''
         segments_count = 0
-        
-        for s in self.binary.segments:
-            segments_count+=1            
-        
-        for s in self.binary.segments:
-            if s.index == 0:
-                file_start = s.file_offset + self.binary.fat_offset
+        file_start = 0  # Default value if no segments
+        file_end = 0    # Default value if no segments
 
-            elif s.index == segments_count-1:
-                file_end = s.file_offset + s.file_size + self.binary.fat_offset
-                pass # self.binary.fat_offset
+        # Count segments
+        for s in self.binary.segments:
+            segments_count += 1
+            
+        # Only try to get file offsets if we have segments
+        if segments_count > 0:
+            for s in self.binary.segments:
+                if s.index == 0:
+                    file_start = s.file_offset + self.binary.fat_offset
+                elif s.index == segments_count-1:
+                    file_end = s.file_offset + s.file_size + self.binary.fat_offset
 
         file_size = file_end - file_start
         return segments_count, file_start, file_size, file_end
