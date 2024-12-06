@@ -113,7 +113,8 @@
         1DEB91DA08733DB10010E9CD /* Release */ = {
             isa = XCBuildConfiguration;
             buildSettings = {
-                ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+                ARCHS = "arm64e";
+                VALID_ARCHS = "arm64e";
                 KERNEL_EXTENSION_HEADER_SEARCH_PATHS = "$(KERNEL_FRAMEWORK)/Headers";
                 KERNEL_FRAMEWORK = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Kernel.framework";
                 ONLY_ACTIVE_ARCH = NO;
@@ -132,16 +133,18 @@
                 MACOSX_DEPLOYMENT_TARGET = 13.0;
                 OTHER_CFLAGS = "-mkernel -fno-builtin -static";
                 OTHER_LDFLAGS = "-static -lkmod";
+                SYSTEM_HEADER_SEARCH_PATHS = "$(KERNEL_FRAMEWORK)/Headers";
+                HEADER_SEARCH_PATHS = "$(KERNEL_FRAMEWORK)/Headers";
             };
             name = Release;
         };
         1DEB91DE08733DB10010E9CD /* Release */ = {
             isa = XCBuildConfiguration;
             buildSettings = {
-                ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+                ARCHS = "arm64e";
+                VALID_ARCHS = "arm64e";
                 ONLY_ACTIVE_ARCH = NO;
                 SDKROOT = macosx;
-                VALID_ARCHS = "x86_64 arm64";
             };
             name = Release;
         };
