@@ -1,5 +1,4 @@
-// Contents for HelloWorldKext.xcodeproj/project.pbxproj
-// Save this as a plain text file
+// !$*UTF8*$!
 {
     archiveVersion = 1;
     classes = {
@@ -99,6 +98,17 @@
         };
         /* End PBXProject section */
 
+        /* Begin PBXSourcesBuildPhase section */
+        8D01CCC90486CAD60068D4B7 /* Sources */ = {
+            isa = PBXSourcesBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+                8D01CCC80486CAD60068D4B7 /* HelloWorld.c in Sources */,
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        /* End PBXSourcesBuildPhase section */
+
         /* Begin XCBuildConfiguration section */
         1DEB91DA08733DB10010E9CD /* Release */ = {
             isa = XCBuildConfiguration;
@@ -110,8 +120,10 @@
                 INFOPLIST_FILE = src/Info.plist;
                 INSTALL_PATH = "$(HOME)/Library/Bundles";
                 PRODUCT_NAME = HelloWorld;
+                PRODUCT_BUNDLE_IDENTIFIER = "crimson.HelloWorld";
                 SDKROOT = macosx;
                 WRAPPER_EXTENSION = kext;
+                FRAMEWORK_SEARCH_PATHS = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Kernel.framework/Headers";
             };
             name = Release;
         };
