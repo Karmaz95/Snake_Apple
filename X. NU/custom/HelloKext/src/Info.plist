@@ -45,7 +45,7 @@
    <key>OSBundleLibraries</key>
    <dict>
        <key>com.apple.kpi.libkern</key>
-       <string>20.0.0</string>
+       <string>23.6.0</string>
    </dict>
 </dict>
 </plist>
