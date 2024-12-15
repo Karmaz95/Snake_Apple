@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     // Get bootstrap port for service lookup
     mach_port_t port;
     kern_return_t kr = bootstrap_look_up(bootstrap_port, 
-                                       "xyz.hacktricks.mig", 
+                                       "com.crimson.message_service", 
                                        &port);
     if (kr != KERN_SUCCESS) {
         printf("Service not found\n");

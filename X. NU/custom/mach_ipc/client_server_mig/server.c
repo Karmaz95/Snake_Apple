@@ -26,7 +26,7 @@ int main() {
     kern_return_t kr;
 
     // Register our service with the bootstrap server
-    kr = bootstrap_check_in(bootstrap_port, "xyz.hacktricks.mig", &port);
+    kr = bootstrap_check_in(bootstrap_port, "com.crimson.message_service", &port);
     if (kr != KERN_SUCCESS) {
         printf("bootstrap_check_in() failed with code 0x%x\n", kr);
         return 1;
