@@ -1,0 +1,17 @@
+// message.defs - MIG Interface Definition
+subsystem message 400;  // Define subsystem name and ID
+
+// Prefix for generated client and server function names
+userprefix USER_;
+serverprefix SERVER_;
+
+// Include necessary Mach type definitions
+#include <mach/mach_types.defs>
+#include <mach/std_types.defs>
+
+// Define our message passing routine
+// 'simpleroutine' means one-way communication (no reply expected)
+// pointer_t is used for variable-length data
+simpleroutine send_message(
+    server_port : mach_port_t;  // Port to send message to
+    message     : pointer_t);   // Message data
