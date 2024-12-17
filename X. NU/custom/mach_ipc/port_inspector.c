@@ -1,107 +1,63 @@
-// gcc -o port_inspector port_inspector.c
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
 #include <mach/mach.h>
-#include <mach/mach_error.h>
-
-void print_port_info(task_t task, mach_port_name_t port_name) {
-    mach_port_status_t status;
-    mach_msg_type_number_t status_count = MACH_PORT_RECEIVE_STATUS_COUNT;
-    kern_return_t kr;
-
-    kr = mach_port_get_attributes(task,
-                                 port_name,
-                                 MACH_PORT_RECEIVE_STATUS,
-                                 (mach_port_info_t)&status,
-                                 &status_count);
-
-    if (kr == KERN_SUCCESS) {
-        printf("    Queue size: %d\n", status.mps_msgcount);
-        printf("    Max queue size: %d\n", status.mps_qlimit);
-    }
-}
+#include <unistd.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        printf("Usage: %s <pid>\n", argv[0]);
-        return 1;
-    }
+   if (argc != 2) {
+       printf("Usage: %s <pid>\n", argv[0]);
+       return 1;
+   }
 
-    task_t target_task;
-    pid_t pid = atoi(argv[1]);
+   pid_t target_pid = atoi(argv[1]);
+   kern_return_t kr;
+   mach_port_t task;
+   
+   kr = task_for_pid(mach_task_self(), target_pid, &task);
+   if (kr != KERN_SUCCESS) {
+       printf("Failed to get task for pid %d: %s\n", target_pid, mach_error_string(kr));
+       return 1;
+   }
 
-    kern_return_t kr = task_for_pid(mach_task_self(), pid, &target_task);
-    if (kr != KERN_SUCCESS) {
-        printf("Failed to get task for pid %d: %s\n", pid, mach_error_string(kr));
-        return 1;
-    }
+   ipc_info_name_array_t table_info;
+   mach_msg_type_number_t table_infoCnt;
+   ipc_info_tree_name_array_t tree_info;
+   mach_msg_type_number_t tree_infoCnt;
+   ipc_info_space_t space_info;
 
-    // Get task basic info
-    task_basic_info_data_t basic_info;
-    mach_msg_type_number_t count = TASK_BASIC_INFO_COUNT;
-    kr = task_info(target_task, TASK_BASIC_INFO, (task_info_t)&basic_info, &count);
-    if (kr != KERN_SUCCESS) {
-        printf("Failed to get task info: %s\n", mach_error_string(kr));
-        mach_port_deallocate(mach_task_self(), target_task);
-        return 1;
-    }
+   kr = mach_port_space_info(task, &space_info, &table_info, &table_infoCnt, &tree_info, &tree_infoCnt);
+   if (kr != KERN_SUCCESS) {
+       printf("Failed to get port space info: %s\n", mach_error_string(kr));
+       return 1;
+   }
 
-    // Get port info
-    ipc_info_space_t space_info;
-    ipc_info_name_array_t table;
-    mach_msg_type_number_t table_count;
-    ipc_info_tree_name_array_t tree;
-    mach_msg_type_number_t tree_count;
+   printf("IPC Space Info:\n");
+   printf("Table size: %d, Next: %d, Active ports: %d\n\n", 
+          space_info.iis_table_size, space_info.iis_table_next, table_infoCnt);
 
-    kr = mach_port_space_info(target_task, &space_info, &table, &table_count, &tree, &tree_count);
-    if (kr != KERN_SUCCESS) {
-        printf("Failed to get port space info: %s\n", mach_error_string(kr));
-        mach_port_deallocate(mach_task_self(), target_task);
-        return 1;
-    }
+   printf("%-6s | %-6s | %-20s | %-4s | %-10s\n", 
+          "Index", "Name", "Rights", "Refs", "Generation");
+   printf("-------------------------------------------------------------------\n");
 
-    printf("\nProcess %d Port Space Information:\n", pid);
-    printf("Total ports: %d\n", table_count);
-    printf("Space generation number mask: 0x%x\n\n", space_info.iis_genno_mask);
+   for (int i = 0; i < table_infoCnt; i++) {
+       char rights[32] = "";
+       if (table_info[i].iin_type & MACH_PORT_TYPE_RECEIVE) strcat(rights, "RECV ");
+       if (table_info[i].iin_type & MACH_PORT_TYPE_SEND) strcat(rights, "SEND ");
+       if (table_info[i].iin_type & MACH_PORT_TYPE_SEND_ONCE) strcat(rights, "ONCE ");
+       if (table_info[i].iin_type & MACH_PORT_TYPE_PORT_SET) strcat(rights, "SET ");
+       if (table_info[i].iin_type & MACH_PORT_TYPE_DEAD_NAME) strcat(rights, "DEAD ");
+       if (rights[0] == '\0') strcpy(rights, "IO_NULL");
 
-    // Print information about each port
-    for (mach_msg_type_number_t i = 0; i < table_count; i++) {
-        if (table[i].iin_type != MACH_PORT_TYPE_NONE) {
-            printf("Port %d:\n", i);
-            printf("  Name: 0x%x\n", table[i].iin_name);
-            printf("  Type: 0x%x (", table[i].iin_type);
+       printf("%-6d | 0x%-4x | %-20s | %-4d | %-10d\n",
+              i,
+              table_info[i].iin_name,
+              rights,
+              table_info[i].iin_urefs,
+              MACH_PORT_INDEX(table_info[i].iin_name) >> 24);
+   }
 
-            // Decode port type
-            if (table[i].iin_type & MACH_PORT_TYPE_SEND)
-                printf("SEND ");
-            if (table[i].iin_type & MACH_PORT_TYPE_RECEIVE)
-                printf("RECEIVE ");
-            if (table[i].iin_type & MACH_PORT_TYPE_SEND_ONCE)
-                printf("SEND_ONCE ");
-            if (table[i].iin_type & MACH_PORT_TYPE_PORT_SET)
-                printf("PORT_SET ");
-            if (table[i].iin_type & MACH_PORT_TYPE_DEAD_NAME)
-                printf("DEAD_NAME ");
-            printf(")\n");
-
-            printf("  User References: %d\n", table[i].iin_urefs);
-
-            // Get additional port info for RECEIVE rights
-            if (table[i].iin_type & MACH_PORT_TYPE_RECEIVE) {
-                print_port_info(target_task, table[i].iin_name);
-            }
-            printf("\n");
-        }
-    }
-
-    // Cleanup
-    vm_deallocate(mach_task_self(), (vm_address_t)table, 
-                 table_count * sizeof(ipc_info_name_t));
-    vm_deallocate(mach_task_self(), (vm_address_t)tree, 
-                 tree_count * sizeof(ipc_info_tree_name_t));
-    mach_port_deallocate(mach_task_self(), target_task);
-
-    return 0;
+   mach_port_deallocate(mach_task_self(), task);
+   vm_deallocate(mach_task_self(), (vm_address_t)table_info, table_infoCnt * sizeof(*table_info));
+   vm_deallocate(mach_task_self(), (vm_address_t)tree_info, tree_infoCnt * sizeof(*tree_info));
+   return 0;
 }
