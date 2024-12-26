@@ -2663,6 +2663,58 @@ class TestSnakeX:
         # Purge kernelcache directory
         os.system("rm -rf kernelcache")
         assert not os.path.exists("kernelcache")
+    
+    def test_parse_mpo(self):
+        '''Test the --parse_mpo flag of SnakeX.'''
+        KEXT_NAME = "com.apple.security.quarantine"
+        
+        # Dump the kext
+        args_list = ['-p', self.kernelcache_path, '--dump_kext', KEXT_NAME]
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+        
+        executeCodeBlock(code_block)
+        assert os.path.exists(KEXT_NAME)
+        
+        # Get the address of policy_ops
+        args_list = ['-p', KEXT_NAME, '--symbols']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+        
+        uroboros_output = executeCodeBlock(code_block)
+        ADDR = [line.split()[0] for line in uroboros_output.splitlines() if 'policy_ops' in line][0]
+        
+        # Parse the mpo
+        args_list = ['-p', self.kernelcache_path, '--parse_mpo', ADDR]
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+        
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'mpo_cred_check_label'
+        
+        assert expected_output in uroboros_output
+        os.remove(KEXT_NAME)
 
     def test_dump_prelink_info(self):
         '''Test the --dump_prelink_info flag of SnakeX.'''
