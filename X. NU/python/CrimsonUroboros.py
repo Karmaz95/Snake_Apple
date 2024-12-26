@@ -2607,9 +2607,6 @@ class SandboxProcessor:
         if args.sandbox_profile_data: # Print the sandbox profile data
             snake_instance.printSandboxProfileData()
 
-        if args.dump_kext: # Dump the kernel extension binary from the kernelcache.decompressed file
-            snake_instance.dumpKernelExtensionBinary(args.dump_kext)
-
         if args.extract_sandbox_operations: # Extract sandbox operations from the kernelcache.decompressed file
             snake_instance.printSandboxOperations()
 
@@ -2817,11 +2814,6 @@ class SnakeVIII(SnakeVII):
             sys.stdout.buffer.write(sandbox_profile_data)
         else:
             print("No SandboxProfileData found for the given App Bundle.")
-
-    def dumpKernelExtensionBinary(self, kext_name):
-        ''' Dump the kernel extension binary from the kernelcache.decompressed file. 
-        For now it is only wrapper arround ipsw'''
-        os.system(f"ipsw kernel extract {self.file_path} {kext_name} --output .")
 
     def extractSandboxOperations(self):
         ''' Extract sandbox operations from the Sandbox.kext file. '''
@@ -3179,6 +3171,9 @@ class XNUProcessor:
         if args.mig: # Search for MIG subsystem and prints message handlers
             snake_instance.printMIG()
 
+        if args.dump_kext: # Dump the kernel extension binary from the kernelcache.decompressed file
+            snake_instance.dumpKernelExtensionBinary(args.dump_kext)
+
 class SnakeX(SnakeIX):
     def __init__(self, binaries, file_path):
         super().__init__(binaries, file_path)
@@ -3490,6 +3485,11 @@ class SnakeX(SnakeIX):
             for message, details in messages.items():
                 print(f"- {message}: {hex(details['impl_routine'])}")
 
+    def dumpKernelExtensionBinary(self, kext_name):
+        ''' Dump the kernel extension binary from the kernelcache.decompressed file. 
+        For now it is only wrapper arround ipsw'''
+        os.system(f"ipsw kernel extract {self.file_path} {kext_name} --output .")
+
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
     def __init__(self):
@@ -3644,7 +3644,6 @@ class ArgumentParser:
         sandbox_group.add_argument('--sandbox_system_profiles', action='store_true', help="Print the system profile from the sandbox container metadata in JSON format")
         sandbox_group.add_argument('--sandbox_content_protection', action='store_true', help="Print the content protection from the sandbox container metadata")
         sandbox_group.add_argument('--sandbox_profile_data', action='store_true', help="Print raw bytes ofthe sandbox profile data from the sandbox container metadata")
-        sandbox_group.add_argument('--dump_kext', help="Dump the kernel extension binary from the kernelcache.decompressed file", metavar='kext_name')
         sandbox_group.add_argument('--extract_sandbox_operations', action='store_true', help="Extract sandbox operations from the Sandbox.kext file")
         sandbox_group.add_argument('--extract_sandbox_platform_profile', action='store_true', help="Extract sandbox platform profile from the Sandbox.kext file")
 
@@ -3678,6 +3677,7 @@ class ArgumentParser:
         xnu_group.add_argument('--kext_entry', metavar='kext_name', help="Calculate the virtual memory address of the __start (entrypoint) for the given {kext_name} Kernel Extension")
         xnu_group.add_argument('--kext_exit', metavar='kext_name', help="Calculate the virtual memory address of the __stop (exitpoint) for the given {kext_name} Kernel Extension")
         xnu_group.add_argument('--mig', action='store_true', help="Search for MIG subsystem and prints message handlers")
+        xnu_group.add_argument('--dump_kext', help="Dump the kernel extension binary from the kernelcache.decompressed file", metavar='kext_name')
 
     def parseArgs(self):
         args = self.parser.parse_args()

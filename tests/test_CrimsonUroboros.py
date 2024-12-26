@@ -2385,23 +2385,6 @@ class TestSnakeVIII():
 
         assert expected_output not in uroboros_output
 
-    def test_dump_kext(self):
-        '''Test the --dump_kext flag of SnakeVIII.'''
-        args_list = ['-p', self.kernelcache_path, '--dump_kext', 'sandbox']
-        args = argumentWrapper(args_list)
-        snake_hatchery = SnakeHatchery(args, snake_class)
-        snake_hatchery.hatch()
-
-        def code_block():
-            macho_processor = MachOProcessor()
-            macho_processor.process(args)
-            sandbox_processor = SandboxProcessor()
-            sandbox_processor.process(args)
-
-        executeCodeBlock(code_block)
-        assert os.path.exists("sandbox")
-        os.remove("sandbox")
-
     def test_extract_sandbox_operations(self):
         '''Test the --extract_sandbox_operations flag of SnakeVIII.'''
         a = run_and_get_stdout(f'python3 CrimsonUroboros.py -p {self.kernelcache_path} --dump_kext sandbox')
@@ -2665,7 +2648,7 @@ class TestSnakeIX:
         uroboros_output = executeCodeBlock(code_block)
         assert 'iCloud Access: False' in uroboros_output
 
-class TestSnakeX():
+class TestSnakeX:
     '''Testing X. XNU'''
     @classmethod
     def setup_class(cls):
@@ -2840,3 +2823,20 @@ class TestSnakeX():
         assert expected_output_7 in uroboros_output
         assert expected_output_8 in uroboros_output
         assert expected_output_9 in uroboros_output
+
+    def test_dump_kext(self):
+        '''Test the --dump_kext flag of SnakeX.'''
+        args_list = ['-p', self.kernelcache_path, '--dump_kext', 'sandbox']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+
+        executeCodeBlock(code_block)
+        assert os.path.exists("sandbox")
+        os.remove("sandbox")
