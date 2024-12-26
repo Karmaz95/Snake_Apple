@@ -51,6 +51,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [MACF on macOS](https://karol-mazurek.medium.com/macf-on-macos-004b8a490e2c?sk=v2%2Fd9a61281-e230-4ac6-8608-ad062f4d2a9a)
   * &#9745; [Kernel Extensions on macOS](https://karol-mazurek.medium.com/kernel-extensions-on-macos-1b0f38b632ea?sk=v2%2Fb6920735-90f9-459c-9c10-30980247bae7)
   * &#9745; [Mach IPC Security on macOS](https://karol-mazurek.medium.com/mach-ipc-security-on-macos-63ee350cb59b?sk=v2%2F3afce264-9b59-447f-84ea-b1988606191a)
+  * &#9745; [Drivers on macOS](https://karol-mazurek.medium.com/drivers-on-macos-26edbde370ab?sk=v2%2F8a5bbc18-aae7-4a68-b0dd-bb5ce70b5752)
 
 ## TOOLS
 [CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster) • [sip_check](#sip_check) • [crimson_waccess.py](#crimson_waccesspy) • [sip_tester](#sip_tester) • [UUIDFinder](#uuidfinder)
