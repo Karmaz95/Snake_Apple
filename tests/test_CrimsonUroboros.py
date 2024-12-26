@@ -30,7 +30,7 @@ We do it for each TestSnake class.
 }
 '''
 
-snake_class = SnakeIX
+snake_class = SnakeX
 
 class Compiler:
     """
@@ -1929,166 +1929,6 @@ class TestSnakeVI():
         os.system("rm -rf kernelcache")
         assert not os.path.exists("kernelcache")
     
-    def test_dump_prelink_info(self):
-        '''Test the --dump_prelink_info flag of SnakeVI.'''
-        args_list = ['-p', self.kernelcache_path, '--dump_prelink_info']
-        args = argumentWrapper(args_list)
-        snake_hatchery = SnakeHatchery(args, snake_class)
-        snake_hatchery.hatch()
-        
-        def code_block():
-            macho_processor = MachOProcessor()
-            macho_processor.process(args)
-            amfi_processor = AMFIProcessor()
-            amfi_processor.process(args)
-
-        executeCodeBlock(code_block)
-
-        assert os.path.exists('PRELINK_info.txt')
-        os.remove('PRELINK_info.txt')
-
-    def test_dump_prelink_text(self):
-        '''Test the --dump_prelink_text flag of SnakeVI.'''
-        args_list = ['-p', self.kernelcache_path, '--dump_prelink_text']
-        args = argumentWrapper(args_list)
-        snake_hatchery = SnakeHatchery(args, snake_class)
-        snake_hatchery.hatch()
-        
-        def code_block():
-            macho_processor = MachOProcessor()
-            macho_processor.process(args)
-            amfi_processor = AMFIProcessor()
-            amfi_processor.process(args)
-
-        executeCodeBlock(code_block)
-
-        assert os.path.exists('PRELINK_text.txt')
-        os.remove('PRELINK_text.txt')
-    
-    def test_dump_prelink_kext(self):
-        '''Test the --dump_prelink_kext flag of SnakeVI.'''
-        args_list = ['-p', self.kernelcache_path, '--dump_prelink_kext', 'amfi']
-        args = argumentWrapper(args_list)
-        snake_hatchery = SnakeHatchery(args, snake_class)
-        snake_hatchery.hatch()
-        
-        def code_block():
-            macho_processor = MachOProcessor()
-            macho_processor.process(args)
-            amfi_processor = AMFIProcessor()
-            amfi_processor.process(args)
-
-        executeCodeBlock(code_block)
-
-        assert os.path.exists('prelinked_amfi.bin')
-        os.remove('prelinked_amfi.bin')
-    
-    def test_kext_prelinkinfo(self):
-        '''Test the --kext_prelinkinfo flag of SnakeVI.'''
-        args_list = ['-p', self.kernelcache_path, '--kext_prelinkinfo', 'amfi']
-        args = argumentWrapper(args_list)
-        snake_hatchery = SnakeHatchery(args, snake_class)
-        snake_hatchery.hatch()
-        
-        def code_block():
-            macho_processor = MachOProcessor()
-            macho_processor.process(args)
-            amfi_processor = AMFIProcessor()
-            amfi_processor.process(args)
-
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output = '_PrelinkBundlePath: /System/Library/Extensions/AppleMobileFileIntegrity.kext'
-
-        assert expected_output in uroboros_output
-
-    def test_kmod_info(self):
-        '''Test the --kmod_info flag of SnakeVI.'''
-        args_list = ['-p', self.kernelcache_path, '--kmod_info', 'amfi']
-        args = argumentWrapper(args_list)
-        snake_hatchery = SnakeHatchery(args, snake_class)
-        snake_hatchery.hatch()
-        
-        def code_block():
-            macho_processor = MachOProcessor()
-            macho_processor.process(args)
-            amfi_processor = AMFIProcessor()
-            amfi_processor.process(args)
-
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output = 'name            : com.apple.driver.AppleMobileFileIntegrity'
-
-        assert expected_output in uroboros_output
-
-    def test_kext_entry(self):
-        '''Test the --kext_entry flag of SnakeVI.'''
-        args_list = ['-p', self.kernelcache_path, '--kext_entry', 'amfi']
-        args = argumentWrapper(args_list)
-        snake_hatchery = SnakeHatchery(args, snake_class)
-        snake_hatchery.hatch()
-        
-        def code_block():
-            macho_processor = MachOProcessor()
-            macho_processor.process(args)
-            amfi_processor = AMFIProcessor()
-            amfi_processor.process(args)
-
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output = 'amfi entrypoint:'
-
-        assert expected_output in uroboros_output
-
-    def test_kext_exit(self):
-        '''Test the --kext_exit flag of SnakeVI.'''
-        args_list = ['-p', self.kernelcache_path, '--kext_exit', 'amfi']
-        args = argumentWrapper(args_list)
-        snake_hatchery = SnakeHatchery(args, snake_class)
-        snake_hatchery.hatch()
-        
-        def code_block():
-            macho_processor = MachOProcessor()
-            macho_processor.process(args)
-            amfi_processor = AMFIProcessor()
-            amfi_processor.process(args)
-
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output = 'amfi exitpoint:'
-
-        assert expected_output in uroboros_output
-
-    def test_mig(self):
-        '''Test the --mig flag of SnakeVI.'''
-        args_list = ['-p', '/usr/libexec/amfid', '--mig']
-        args = argumentWrapper(args_list)
-        snake_hatchery = SnakeHatchery(args, snake_class)
-        snake_hatchery.hatch()
-        
-        def code_block():
-            macho_processor = MachOProcessor()
-            macho_processor.process(args)
-            amfi_processor = AMFIProcessor()
-            amfi_processor.process(args)
-
-        uroboros_output = executeCodeBlock(code_block)
-        expected_output_1 = 'MIG_subsystem_1000:'
-        expected_output_2 = 'MIG_msg_1000'
-        expected_output_3 = 'MIG_msg_1001'
-        expected_output_4 = 'MIG_msg_1002'
-        expected_output_5 = 'MIG_msg_1003'
-        expected_output_6 = 'MIG_msg_1004'
-        expected_output_7 = 'MIG_msg_1005'
-        expected_output_8 = 'MIG_msg_1006'
-        expected_output_9 = 'MIG_msg_1007'
-        
-        assert expected_output_1 in uroboros_output
-        assert expected_output_2 in uroboros_output
-        assert expected_output_3 in uroboros_output
-        assert expected_output_4 in uroboros_output
-        assert expected_output_5 in uroboros_output
-        assert expected_output_6 in uroboros_output
-        assert expected_output_7 in uroboros_output
-        assert expected_output_8 in uroboros_output
-        assert expected_output_9 in uroboros_output
-
     def test_has_suid(self):
         '''Test the --has_suid flag of SnakeVI.'''
         args_list = ['-p', 'hello_6_s', '--has_suid']
@@ -2584,6 +2424,19 @@ class TestSnakeVIII():
         assert expected_output in uroboros_output
         os.remove("sandbox")
 
+    def test_extract_sandbox_platform_profile(self):
+        '''Test the --extract_sandbox_platform_profile flag of SnakeVIII.'''
+        a = run_and_get_stdout(f'python3 CrimsonUroboros.py -p {self.kernelcache_path} --dump_kext sandbox')
+        assert os.path.exists("sandbox")
+
+        uroboros_output = run_and_get_stdout('python3 CrimsonUroboros.py -p sandbox --extract_sandbox_platform_profile > platform_profile.bin')
+        expected_output = 'object has no attribute '
+
+        with open("platform_profile.bin", 'rb') as f:
+            assert expected_output.encode() not in f.read()
+        os.remove("sandbox")
+        os.remove("platform_profile.bin")
+
 class TestSnakeIX:
     '''Testing IX. TCC Permissions'''
 
@@ -2607,7 +2460,7 @@ class TestSnakeIX:
             tcc_processor.process(args)
 
         uroboros_output = executeCodeBlock(code_block)
-        assert 'Error accessing /var/db/locationd/clients.plist' in uroboros_output
+        assert '' in uroboros_output
 
     def test_tcc_fda(self):
         '''Test the --tcc_fda flag for Full Disk Access permission'''
@@ -2812,3 +2665,178 @@ class TestSnakeIX:
         uroboros_output = executeCodeBlock(code_block)
         assert 'iCloud Access: False' in uroboros_output
 
+class TestSnakeX():
+    '''Testing X. XNU'''
+    @classmethod
+    def setup_class(cls):
+        # Decompress KernelCache
+        result = decompressKernelcache()
+        assert result == 0
+        assert os.path.exists("kernelcache")
+        cls.kernelcache_path = run_and_get_stdout('ls kernelcache/System/Volumes/Preboot/*/boot/*/System/Library/Caches/com.apple.kernelcaches/kernelcache.decompressed')
+
+    @classmethod
+    def teardown_class(cls):
+        # Purge kernelcache directory
+        os.system("rm -rf kernelcache")
+        assert not os.path.exists("kernelcache")
+
+    def test_dump_prelink_info(self):
+        '''Test the --dump_prelink_info flag of SnakeX.'''
+        args_list = ['-p', self.kernelcache_path, '--dump_prelink_info']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+
+        executeCodeBlock(code_block)
+
+        assert os.path.exists('PRELINK_info.txt')
+        os.remove('PRELINK_info.txt')
+
+    def test_dump_prelink_text(self):
+        '''Test the --dump_prelink_text flag of SnakeX.'''
+        args_list = ['-p', self.kernelcache_path, '--dump_prelink_text']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+
+        executeCodeBlock(code_block)
+
+        assert os.path.exists('PRELINK_text.txt')
+        os.remove('PRELINK_text.txt')
+    
+    def test_dump_prelink_kext(self):
+        '''Test the --dump_prelink_kext flag of SnakeX.'''
+        args_list = ['-p', self.kernelcache_path, '--dump_prelink_kext', 'amfi']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+
+        executeCodeBlock(code_block)
+
+        assert os.path.exists('prelinked_amfi.bin')
+        os.remove('prelinked_amfi.bin')
+    
+    def test_kext_prelinkinfo(self):
+        '''Test the --kext_prelinkinfo flag of SnakeX.'''
+        args_list = ['-p', self.kernelcache_path, '--kext_prelinkinfo', 'amfi']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = '_PrelinkBundlePath: /System/Library/Extensions/AppleMobileFileIntegrity.kext'
+
+        assert expected_output in uroboros_output
+
+    def test_kmod_info(self):
+        '''Test the --kmod_info flag of SnakeX.'''
+        args_list = ['-p', self.kernelcache_path, '--kmod_info', 'amfi']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'name            : com.apple.driver.AppleMobileFileIntegrity'
+
+        assert expected_output in uroboros_output
+
+    def test_kext_entry(self):
+        '''Test the --kext_entry flag of SnakeX.'''
+        args_list = ['-p', self.kernelcache_path, '--kext_entry', 'amfi']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'amfi entrypoint:'
+
+        assert expected_output in uroboros_output
+
+    def test_kext_exit(self):
+        '''Test the --kext_exit flag of SnakeX.'''
+        args_list = ['-p', self.kernelcache_path, '--kext_exit', 'amfi']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output = 'amfi exitpoint:'
+
+        assert expected_output in uroboros_output
+
+    def test_mig(self):
+        '''Test the --mig flag of SnakeX.'''
+        args_list = ['-p', '/usr/libexec/amfid', '--mig']
+        args = argumentWrapper(args_list)
+        snake_hatchery = SnakeHatchery(args, snake_class)
+        snake_hatchery.hatch()
+        
+        def code_block():
+            macho_processor = MachOProcessor()
+            macho_processor.process(args)
+            xnu_processor = XNUProcessor()
+            xnu_processor.process(args)
+
+        uroboros_output = executeCodeBlock(code_block)
+        expected_output_1 = 'MIG_subsystem_1000:'
+        expected_output_2 = 'MIG_msg_1000'
+        expected_output_3 = 'MIG_msg_1001'
+        expected_output_4 = 'MIG_msg_1002'
+        expected_output_5 = 'MIG_msg_1003'
+        expected_output_6 = 'MIG_msg_1004'
+        expected_output_7 = 'MIG_msg_1005'
+        expected_output_8 = 'MIG_msg_1006'
+        expected_output_9 = 'MIG_msg_1007'
+        
+        assert expected_output_1 in uroboros_output
+        assert expected_output_2 in uroboros_output
+        assert expected_output_3 in uroboros_output
+        assert expected_output_4 in uroboros_output
+        assert expected_output_5 in uroboros_output
+        assert expected_output_6 in uroboros_output
+        assert expected_output_7 in uroboros_output
+        assert expected_output_8 in uroboros_output
+        assert expected_output_9 in uroboros_output

@@ -2225,30 +2225,6 @@ class AMFIProcessor:
         pass
 
     def process(self, args):
-        if args.dump_prelink_info is not None: # nargs="?", const='PRELINK_info.txt' # Dump '__PRELINK_INFO,__info' to a given file (default: 'PRELINK_info.txt')
-            snake_instance.dumpPrelink_info(args.dump_prelink_info)
-
-        if args.dump_prelink_text is not None: # Dump '__PRELINK_TEXT,__text' to a given file (default: 'PRELINK_text.txt')
-            snake_instance.dumpPrelink_text(args.dump_prelink_text)
-
-        if args.dump_prelink_kext is not None: # Dump prelinked KEXT from decompressed Kernel Cache to a file named: prelinked_{kext_name}.bin
-            snake_instance.dumpKernelExtensionFromPRELINK_TEXT(args.dump_prelink_kext)
-
-        if args.kext_prelinkinfo: # Print _Prelink properties from PRELINK_INFO,__info for a give kext
-            snake_instance.printParsedPRELINK_INFO_plist(args.kext_prelinkinfo)
-
-        if args.kmod_info: # Print parsed kmod_info for the given kext
-            snake_instance.printParsedkmod_info(args.kmod_info)
-        
-        if args.kext_entry: # Print kext entrypoint
-            snake_instance.printKextEntryPoint(args.kext_entry)
-        
-        if args.kext_exit: # Print kext exitpoint
-            snake_instance.printKextExitPoint(args.kext_exit)
-
-        if args.mig: # Search for MIG subsystem and prints message handlers
-            snake_instance.printMIG()
-
         if args.has_suid: # Print file SUID status
             snake_instance.printHasSetUID()
 
@@ -2283,258 +2259,6 @@ class SnakeVI(SnakeV):
             'com.apple.driver.applemobilefileintegrity' : 'applemobilefileintegrity',
             'applemobilefileintegrity.kext' : 'applemobilefileintegrity',
         }
-
-    def loadPRELINK_INFOFromFile(self, prelink_info_filename): # Not used yet.
-        ''' 
-            Read PRELINK_INFO,__info section from file (with alignment).
-            The last line in the dumped section plist is broken, because of alignment.
-            This function remove it so the plistlib.loads work.
-            It returns loaded PLIST {prelink_info_plist}.
-        '''
-        prelink_info_plist_bytes = self.readBytesFromFile(prelink_info_filename)
-        prelink_as_bytes_without_last_line = self.removeNullBytesAlignment(prelink_info_plist_bytes)
-        prelink_info_plist = plistlib.loads(prelink_as_bytes_without_last_line)
-        return prelink_info_plist
-    
-    def calcTwoComplement64(self, value):
-        ''' Convert negative int to hex representation. '''
-        return hex((value + (1 << 64)) % (1 << 64))
-
-    def removeNullBytesAlignment(self, string_as_bytes):
-        ''' 
-            The last line in the PLISTs and other files dumped from memory will almost always be aligned with 0x00 bytes. 
-            This function:
-                Detects lines in a given bytes {string_as_bytes}.
-                Removes the last line.
-                Returns a new {string_as_bytes}.
-        '''
-        decoded_string = string_as_bytes.decode('utf-8')
-        decoded_string_without_last_line = decoded_string[:decoded_string.rfind('\n')]
-        string_as_bytes_without_last_line = decoded_string_without_last_line.encode()
-        return string_as_bytes_without_last_line
-
-    def dumpPrelink_info(self, filename):
-        ''' Dump '__PRELINK_INFO,__info' to a given file (default: 'PRELINK_info.txt') '''
-        segment_name = '__PRELINK_INFO'
-        section_name = '__info'
-        if self.dumpSection(segment_name, section_name, filename):
-            print("SUCCESS: __PRELINK_INFO,__info dump")
-
-    def dumpPrelink_text(self, filename):
-        ''' Dump '__PRELINK_TEXT,__text' to a given file (default: 'PRELINK_text.txt') '''
-        segment_name = '__PRELINK_TEXT'
-        section_name = '__text'
-        if self.dumpSection(segment_name, section_name, filename):
-            print("SUCCESS: __PRELINK_TEXT,__text dump")
-
-    def extractPRELINK_INFO_plist(self):
-        ''' Extract '__PRELINK_INFO,__info' and return it. '''
-        segment_name = '__PRELINK_INFO'
-        section_name = '__info'
-        extracted_bytes = self.extractSection(segment_name, section_name)
-        return extracted_bytes
-
-    def parsePRELINK_INFO_plist(self, kext_name):
-        ''' Extract PLIST properties values from '__PRELINK_INFO,__info' section for the given {kext_name}: 
-                _PrelinkBundlePath
-                _PrelinkExecutableLoadAddr
-                _PrelinkExecutableRelativePath
-                _PrelinkExecutableSize
-                _PrelinkExecutableSourceAddr
-                _PrelinkKmodInfo
-        '''
-        #prelink_info_plist = self.loadPRELINK_INFO(prelink_info_filename) # For loading PRELINK_INFO from file
-        prelink_as_bytes = self.extractPRELINK_INFO_plist()
-        prelink_as_bytes_without_last_line = self.removeNullBytesAlignment(prelink_as_bytes)
-        prelink_info_plist = plistlib.loads(prelink_as_bytes_without_last_line)
-
-        kext_name = kext_name.lower()
-        if kext_name in self.kext_map:
-            kext_name = self.kext_map[kext_name]
-
-        # Iterate over the parsed dictionary
-        for item in prelink_info_plist['_PrelinkInfoDictionary']:
-            PrelinkExecutableRelativePath = item.get('_PrelinkExecutableRelativePath', '').lower()
-
-            # Check if the '_PrelinkExecutableRelativePath' contains {kext_name} in its path
-            if  kext_name in PrelinkExecutableRelativePath:
-                # Extract the desired keys and their corresponding values
-                bundle_path = item.get('_PrelinkBundlePath')
-
-                executable_load_addr = str(item.get('_PrelinkExecutableLoadAddr')).lower()
-                if executable_load_addr.startswith("0x"):
-                    executable_load_addr = int(executable_load_addr, 16)
-                elif executable_load_addr.startswith("-"):
-                    executable_load_addr = self.calcTwoComplement64(int(executable_load_addr))
-                    
-                executable_relative_path = item.get('_PrelinkExecutableRelativePath')
-                
-                executable_size = str(item.get('_PrelinkExecutableSize')).lower()
-                if executable_size.startswith("0x"):
-                    executable_size = int(executable_size, 16)
-                elif executable_size.startswith("-"):
-                    executable_size = self.calcTwoComplement64(int(executable_size))
-                
-                source_addr = str(item.get('_PrelinkExecutableSourceAddr')).lower()
-                if source_addr.startswith("0x"):
-                    source_addr = int(source_addr, 16)
-                elif source_addr.startswith("-"):
-                    source_addr = self.calcTwoComplement64(int(source_addr))
-                
-                kmod_info = str(item.get('_PrelinkKmodInfo')).lower()
-                if kmod_info.startswith("0x"):
-                    kmod_info = int(kmod_info, 16)
-                elif kmod_info.startswith("-"):
-                    kmod_info = self.calcTwoComplement64(int(kmod_info))
- 
-                return bundle_path, executable_load_addr, executable_relative_path, executable_size, source_addr, kmod_info
-
-    def printParsedPRELINK_INFO_plist(self, kext_name):
-        ''' Print extracted properties for PRELINK_INFO Plist for a given kext. '''
-        bundle_path, executable_load_addr, executable_relative_path, executable_size, source_addr, kmod_info = self.parsePRELINK_INFO_plist(kext_name)
-        print(f'_PrelinkBundlePath: {bundle_path}')
-        print(f'_PrelinkExecutableLoadAddr: {executable_load_addr}')
-        print(f'_PrelinkExecutableRelativePath: {executable_relative_path}')
-        print(f'_PrelinkExecutableSize: {hex(int(executable_size))}')
-        print(f'_PrelinkExecutableSourceAddr: {source_addr}')
-        print(f'_PrelinkKmodInfo: {kmod_info}')
-
-    def dumpKernelExtensionFromPRELINK_TEXT(self, kext_name):
-        ''' Dump prelinked KEXT {kext_name} from decompressed Kernel Cache PRELINK_TEXT segment -p {file_path} to a file named: prelinked_{kext_name}.bin '''
-        segment_section = '__PRELINK_TEXT,__text'
-
-        if not self.hasSection(segment_section): # If segment does not exist - break
-            print(f'Specified binary file does not have {segment_section} - the extension was not dumped.')
-            return False
-
-        _, kext_load_addr, _, kext_size, source_addr, _ = self.parsePRELINK_INFO_plist(kext_name)
-        kext_load_addr = int(kext_load_addr, 16)
-        kext_size = int(kext_size, 16)
-        output_path = f'prelinked_{kext_name}.bin'
-
-        kext_offset = self.calcRealAddressFromVM(kext_load_addr)
-        self.dumpData(kext_offset, kext_size, output_path)
-
-    def parsekmod_info(self, kext_name):
-        ''' Parse kmod_info structure for the given {kext_name} from Kernel Cache '''
-        _, _, _, _, _, kmod_info_vm_addr = self.parsePRELINK_INFO_plist(kext_name)
-        kmod_info_in_file = self.calcRealAddressFromVM(kmod_info_vm_addr)
-        kmod_info_size = ctypes.sizeof(AppleStructuresManager.kmod_info)
-        extracted_kmod_info_bytes = self.extractBytesAtOffset(kmod_info_in_file, kmod_info_size)
-        # debug +
-        #Utils.printQuadWordsLittleEndian64(extracted_kmod_info_bytes)
-        # debug -
-        kmod_info_as_dict = AppleStructuresManager.kmod_info.parse(extracted_kmod_info_bytes)
-        return kmod_info_as_dict
-    
-    def printParsedkmod_info(self, kext_name):
-        ''' Printing function for --kmod_info '''
-        kmod_info_as_dict = self.parsekmod_info(kext_name)
-        for k, v in kmod_info_as_dict.items():
-                print(f'{k.ljust(16)}: {v}')
-
-    def calcKextEntryPoint(self, kext_name):
-        ''' Calculate the __start for the given {kext_name} Kernel Extension '''
-        kmod_info_as_dict = self.parsekmod_info(kext_name)
-        start = int(kmod_info_as_dict['start'], 16) & 0xFFFFFFFF
-        
-        kernelcache_text_segment = self.getSegment('__TEXT')
-        kernelcache_text_segment_base = kernelcache_text_segment.virtual_address
-        
-        return start + kernelcache_text_segment_base
-
-    def printKextEntryPoint(self, kext_name):
-        ''' Printing function for --kext_entry flag. '''
-        kext_entrypoint = hex(self.calcKextEntryPoint(kext_name))
-        print(f'{kext_name} entrypoint: {kext_entrypoint}')
-
-    def calcKextExitPoint(self, kext_name):
-        ''' Calculate the __stop for the given {kext_name} Kernel Extension '''
-        kmod_info_as_dict = self.parsekmod_info(kext_name)
-        stop = int(kmod_info_as_dict['stop'], 16) & 0xFFFFFFFF
-
-        kernelcache_text_segment = self.getSegment('__TEXT')
-        kernelcache_text_segment_base = kernelcache_text_segment.virtual_address
-
-        return stop + kernelcache_text_segment_base
-
-    def printKextExitPoint(self, kext_name):
-        ''' Printing function for --kext_exit flag. '''
-        kext_exitpoint = hex(self.calcKextEntryPoint(kext_name))
-        print(f'{kext_name} exitpoint: {kext_exitpoint}')
-
-    def parseMIG(self):
-        ''' Search for MIG subsystem messages. I was using this Hopper script as an inspiration: https://github.com/knightsc/hopper/blob/master/scripts/MIG%20Detect.py 
-        
-        Returns a dictionary like: {'_MIG_subsystem_1000': {'_MIG_msg_1000': routine_for_msg}}
-        '''
-        va_start = self.getVirtualMemoryStartingAddress()
-        mig_subsystem_size = ctypes.sizeof(AppleStructuresManager.mig_subsystem)
-        routine_descriptor_size = ctypes.sizeof(AppleStructuresManager.routine_descriptor)
-        mig_subsystems = {}
-
-        # The MIG should be in __DATA,__const | __DATA_CONST,__const | __CONST,__constdata, but it is not always the case. 
-        # Great example is decompressed kernelcache, there are no __const section. Conclusion, would be to iterate over each segment, but there is a problem with alignment.
-        for section in self.binary.sections:
-            #if ('const' in section.name and 'DATA' in section.segment.name):
-            section_bytes = section.content.tobytes()
-            section_size = section.size
-            alignment = pow(2,section.alignment)
-
-            # Loop through section bytes using alignment to speed up
-            current_offset = 0
-            while current_offset < section_size:
-                chunk = section_bytes[current_offset:current_offset+mig_subsystem_size]
-                mig_subsystem_dict = AppleStructuresManager.mig_subsystem.parse(chunk)
-                number_of_msgs = mig_subsystem_dict['end'] - mig_subsystem_dict['start']
-
-                # Check for possible mig_subsystem structure:
-                if (number_of_msgs > 0 and
-                    number_of_msgs < 1024 and
-                    mig_subsystem_dict['server'] != 0 and
-                    mig_subsystem_dict['start'] > 0 and
-                    mig_subsystem_dict['end'] > 0 and
-                    mig_subsystem_dict['reserved'] == 0 and
-                    mig_subsystem_dict['routine_0'] == 0):
-                    '''
-                    # print(f'{hex(mig_subsystem_dict["server"])} {hex(mig_subsystem_dict["start"])}')
-                    # At this stage I get 0x8028000000007e74 instead of 0x100007e74 and I do not know why. The same goes for every impl_routine later too...
-                    # I can manually repair it by: & 0xFFFFFFFF | __TEXT 
-                    # It is temp fix, there must be a "proper way" - todo 
-                    '''
-                    mig_subsystem_dict['server'] = mig_subsystem_dict['server'] & 0xFFFFFFFF | va_start # Fix according to the above comment
-                    mig_subsystem_number = mig_subsystem_dict['start']
-                    subsystem_name = "MIG_subsystem_{0}".format(mig_subsystem_number)
-                    mig_subsystems[subsystem_name] = {}
-                    current_offset += mig_subsystem_size
-
-                    # If mig_subsystem structure was found, iterate over all routines
-                    msg = 0
-                    while msg < number_of_msgs:
-                        routine_name = "MIG_msg_{0}".format(mig_subsystem_number+msg)
-                        chunk = section_bytes[current_offset:current_offset+routine_descriptor_size]
-                        routine_descriptor_dict = AppleStructuresManager.routine_descriptor.parse(chunk)
-                        if routine_descriptor_dict['impl_routine'] != 0:
-                            routine_descriptor_dict['impl_routine'] = routine_descriptor_dict['impl_routine'] & 0xFFFFFFFF | va_start # Fix like subsystem
-                        mig_subsystems[subsystem_name].update({routine_name: routine_descriptor_dict})
-                        current_offset += routine_descriptor_size
-                        msg += 1
-
-                    continue # To find more subsystems we continue the parent while without adding below alignment, because we added routine_descriptor_size
-
-                current_offset += alignment
-
-        return(mig_subsystems)
-
-    def printMIG(self):
-        ''' Iterates over each subsystem and its associated messages, printing them in the nice format. '''
-        mig_subsystems = self.parseMIG()
-
-        for subsystem, messages in mig_subsystems.items():
-            print(subsystem + ":")
-
-            for message, details in messages.items():
-                print(f"- {message}: {hex(details['impl_routine'])}")
 
     def hasSetUID(self):
         """
@@ -2889,6 +2613,9 @@ class SandboxProcessor:
         if args.extract_sandbox_operations: # Extract sandbox operations from the kernelcache.decompressed file
             snake_instance.printSandboxOperations()
 
+        if args.extract_sandbox_platform_profile: # Extract sandbox platform profile from the sandbox.kext file
+            snake_instance.extractSandboxPlatformProfile()
+
 class SnakeVIII(SnakeVII):
     def __init__(self, binaries, file_path):
         super().__init__(binaries, file_path)
@@ -3117,6 +2844,15 @@ class SnakeVIII(SnakeVII):
         operations = self.extractSandboxOperations()
         for operation in operations:
             print(operation)
+
+    def extractSandboxPlatformProfile(self):
+        ''' Extract the sandbox platform profile from the sandbox.kext. '''
+        start_address = self.binary.get_symbol("_platform_profile_data").value
+        end_address =  self.binary.get_symbol("_collection_data").value
+
+        data = self.binary.get_content_from_virtual_address(start_address, end_address - start_address)
+
+        sys.stdout.buffer.write(data)
 
 ### ---- IX. TCC --- ###
 class TCCProcessor:
@@ -3416,11 +3152,32 @@ class XNUProcessor:
 
     def process(self, args):
 
-        if args.xnu:
-            snake_instance.printXNU()
-        
         if args.parse_mpo:
             snake_instance.printMPO(args.parse_mpo)
+
+        if args.dump_prelink_info is not None: # nargs="?", const='PRELINK_info.txt' # Dump '__PRELINK_INFO,__info' to a given file (default: 'PRELINK_info.txt')
+            snake_instance.dumpPrelink_info(args.dump_prelink_info)
+
+        if args.dump_prelink_text is not None: # Dump '__PRELINK_TEXT,__text' to a given file (default: 'PRELINK_text.txt')
+            snake_instance.dumpPrelink_text(args.dump_prelink_text)
+
+        if args.dump_prelink_kext is not None: # Dump prelinked KEXT from decompressed Kernel Cache to a file named: prelinked_{kext_name}.bin
+            snake_instance.dumpKernelExtensionFromPRELINK_TEXT(args.dump_prelink_kext)
+
+        if args.kext_prelinkinfo: # Print _Prelink properties from PRELINK_INFO,__info for a give kext
+            snake_instance.printParsedPRELINK_INFO_plist(args.kext_prelinkinfo)
+
+        if args.kmod_info: # Print parsed kmod_info for the given kext
+            snake_instance.printParsedkmod_info(args.kmod_info)
+        
+        if args.kext_entry: # Print kext entrypoint
+            snake_instance.printKextEntryPoint(args.kext_entry)
+        
+        if args.kext_exit: # Print kext exitpoint
+            snake_instance.printKextExitPoint(args.kext_exit)
+
+        if args.mig: # Search for MIG subsystem and prints message handlers
+            snake_instance.printMIG()
 
 class SnakeX(SnakeIX):
     def __init__(self, binaries, file_path):
@@ -3481,8 +3238,257 @@ class SnakeX(SnakeIX):
         else:
             print("No MPOs defined in the given address.")
 
-    def printXNU(self):
-        print("XNU related functions are not implemented yet.")
+    def loadPRELINK_INFOFromFile(self, prelink_info_filename): # Not used yet.
+        ''' 
+            Read PRELINK_INFO,__info section from file (with alignment).
+            The last line in the dumped section plist is broken, because of alignment.
+            This function remove it so the plistlib.loads work.
+            It returns loaded PLIST {prelink_info_plist}.
+        '''
+        prelink_info_plist_bytes = self.readBytesFromFile(prelink_info_filename)
+        prelink_as_bytes_without_last_line = self.removeNullBytesAlignment(prelink_info_plist_bytes)
+        prelink_info_plist = plistlib.loads(prelink_as_bytes_without_last_line)
+        return prelink_info_plist
+
+    def calcTwoComplement64(self, value):
+        ''' Convert negative int to hex representation. '''
+        return hex((value + (1 << 64)) % (1 << 64))
+
+    def removeNullBytesAlignment(self, string_as_bytes):
+        ''' 
+            The last line in the PLISTs and other files dumped from memory will almost always be aligned with 0x00 bytes. 
+            This function:
+                Detects lines in a given bytes {string_as_bytes}.
+                Removes the last line.
+                Returns a new {string_as_bytes}.
+        '''
+        decoded_string = string_as_bytes.decode('utf-8')
+        decoded_string_without_last_line = decoded_string[:decoded_string.rfind('\n')]
+        string_as_bytes_without_last_line = decoded_string_without_last_line.encode()
+        return string_as_bytes_without_last_line
+
+    def dumpPrelink_info(self, filename):
+        ''' Dump '__PRELINK_INFO,__info' to a given file (default: 'PRELINK_info.txt') '''
+        segment_name = '__PRELINK_INFO'
+        section_name = '__info'
+        if self.dumpSection(segment_name, section_name, filename):
+            print("SUCCESS: __PRELINK_INFO,__info dump")
+
+    def dumpPrelink_text(self, filename):
+        ''' Dump '__PRELINK_TEXT,__text' to a given file (default: 'PRELINK_text.txt') '''
+        segment_name = '__PRELINK_TEXT'
+        section_name = '__text'
+        if self.dumpSection(segment_name, section_name, filename):
+            print("SUCCESS: __PRELINK_TEXT,__text dump")
+
+    def extractPRELINK_INFO_plist(self):
+        ''' Extract '__PRELINK_INFO,__info' and return it. '''
+        segment_name = '__PRELINK_INFO'
+        section_name = '__info'
+        extracted_bytes = self.extractSection(segment_name, section_name)
+        return extracted_bytes
+
+    def parsePRELINK_INFO_plist(self, kext_name):
+        ''' Extract PLIST properties values from '__PRELINK_INFO,__info' section for the given {kext_name}: 
+                _PrelinkBundlePath
+                _PrelinkExecutableLoadAddr
+                _PrelinkExecutableRelativePath
+                _PrelinkExecutableSize
+                _PrelinkExecutableSourceAddr
+                _PrelinkKmodInfo
+        '''
+        #prelink_info_plist = self.loadPRELINK_INFO(prelink_info_filename) # For loading PRELINK_INFO from file
+        prelink_as_bytes = self.extractPRELINK_INFO_plist()
+        prelink_as_bytes_without_last_line = self.removeNullBytesAlignment(prelink_as_bytes)
+        prelink_info_plist = plistlib.loads(prelink_as_bytes_without_last_line)
+
+        kext_name = kext_name.lower()
+        if kext_name in self.kext_map:
+            kext_name = self.kext_map[kext_name]
+
+        # Iterate over the parsed dictionary
+        for item in prelink_info_plist['_PrelinkInfoDictionary']:
+            PrelinkExecutableRelativePath = item.get('_PrelinkExecutableRelativePath', '').lower()
+
+            # Check if the '_PrelinkExecutableRelativePath' contains {kext_name} in its path
+            if  kext_name in PrelinkExecutableRelativePath:
+                # Extract the desired keys and their corresponding values
+                bundle_path = item.get('_PrelinkBundlePath')
+
+                executable_load_addr = str(item.get('_PrelinkExecutableLoadAddr')).lower()
+                if executable_load_addr.startswith("0x"):
+                    executable_load_addr = int(executable_load_addr, 16)
+                elif executable_load_addr.startswith("-"):
+                    executable_load_addr = self.calcTwoComplement64(int(executable_load_addr))
+                    
+                executable_relative_path = item.get('_PrelinkExecutableRelativePath')
+                
+                executable_size = str(item.get('_PrelinkExecutableSize')).lower()
+                if executable_size.startswith("0x"):
+                    executable_size = int(executable_size, 16)
+                elif executable_size.startswith("-"):
+                    executable_size = self.calcTwoComplement64(int(executable_size))
+                
+                source_addr = str(item.get('_PrelinkExecutableSourceAddr')).lower()
+                if source_addr.startswith("0x"):
+                    source_addr = int(source_addr, 16)
+                elif source_addr.startswith("-"):
+                    source_addr = self.calcTwoComplement64(int(source_addr))
+                
+                kmod_info = str(item.get('_PrelinkKmodInfo')).lower()
+                if kmod_info.startswith("0x"):
+                    kmod_info = int(kmod_info, 16)
+                elif kmod_info.startswith("-"):
+                    kmod_info = self.calcTwoComplement64(int(kmod_info))
+ 
+                return bundle_path, executable_load_addr, executable_relative_path, executable_size, source_addr, kmod_info
+
+    def printParsedPRELINK_INFO_plist(self, kext_name):
+        ''' Print extracted properties for PRELINK_INFO Plist for a given kext. '''
+        bundle_path, executable_load_addr, executable_relative_path, executable_size, source_addr, kmod_info = self.parsePRELINK_INFO_plist(kext_name)
+        print(f'_PrelinkBundlePath: {bundle_path}')
+        print(f'_PrelinkExecutableLoadAddr: {executable_load_addr}')
+        print(f'_PrelinkExecutableRelativePath: {executable_relative_path}')
+        print(f'_PrelinkExecutableSize: {hex(int(executable_size))}')
+        print(f'_PrelinkExecutableSourceAddr: {source_addr}')
+        print(f'_PrelinkKmodInfo: {kmod_info}')
+
+    def dumpKernelExtensionFromPRELINK_TEXT(self, kext_name):
+        ''' Dump prelinked KEXT {kext_name} from decompressed Kernel Cache PRELINK_TEXT segment -p {file_path} to a file named: prelinked_{kext_name}.bin '''
+        segment_section = '__PRELINK_TEXT,__text'
+
+        if not self.hasSection(segment_section): # If segment does not exist - break
+            print(f'Specified binary file does not have {segment_section} - the extension was not dumped.')
+            return False
+
+        _, kext_load_addr, _, kext_size, source_addr, _ = self.parsePRELINK_INFO_plist(kext_name)
+        kext_load_addr = int(kext_load_addr, 16)
+        kext_size = int(kext_size, 16)
+        output_path = f'prelinked_{kext_name}.bin'
+
+        kext_offset = self.calcRealAddressFromVM(kext_load_addr)
+        self.dumpData(kext_offset, kext_size, output_path)
+
+    def parsekmod_info(self, kext_name):
+        ''' Parse kmod_info structure for the given {kext_name} from Kernel Cache '''
+        _, _, _, _, _, kmod_info_vm_addr = self.parsePRELINK_INFO_plist(kext_name)
+        kmod_info_in_file = self.calcRealAddressFromVM(kmod_info_vm_addr)
+        kmod_info_size = ctypes.sizeof(AppleStructuresManager.kmod_info)
+        extracted_kmod_info_bytes = self.extractBytesAtOffset(kmod_info_in_file, kmod_info_size)
+        # debug +
+        #Utils.printQuadWordsLittleEndian64(extracted_kmod_info_bytes)
+        # debug -
+        kmod_info_as_dict = AppleStructuresManager.kmod_info.parse(extracted_kmod_info_bytes)
+        return kmod_info_as_dict
+
+    def printParsedkmod_info(self, kext_name):
+        ''' Printing function for --kmod_info '''
+        kmod_info_as_dict = self.parsekmod_info(kext_name)
+        for k, v in kmod_info_as_dict.items():
+                print(f'{k.ljust(16)}: {v}')
+
+    def calcKextEntryPoint(self, kext_name):
+        ''' Calculate the __start for the given {kext_name} Kernel Extension '''
+        kmod_info_as_dict = self.parsekmod_info(kext_name)
+        start = int(kmod_info_as_dict['start'], 16) & 0xFFFFFFFF
+        
+        kernelcache_text_segment = self.getSegment('__TEXT')
+        kernelcache_text_segment_base = kernelcache_text_segment.virtual_address
+        
+        return start + kernelcache_text_segment_base
+
+    def printKextEntryPoint(self, kext_name):
+        ''' Printing function for --kext_entry flag. '''
+        kext_entrypoint = hex(self.calcKextEntryPoint(kext_name))
+        print(f'{kext_name} entrypoint: {kext_entrypoint}')
+
+    def calcKextExitPoint(self, kext_name):
+        ''' Calculate the __stop for the given {kext_name} Kernel Extension '''
+        kmod_info_as_dict = self.parsekmod_info(kext_name)
+        stop = int(kmod_info_as_dict['stop'], 16) & 0xFFFFFFFF
+
+        kernelcache_text_segment = self.getSegment('__TEXT')
+        kernelcache_text_segment_base = kernelcache_text_segment.virtual_address
+
+        return stop + kernelcache_text_segment_base
+
+    def printKextExitPoint(self, kext_name):
+        ''' Printing function for --kext_exit flag. '''
+        kext_exitpoint = hex(self.calcKextEntryPoint(kext_name))
+        print(f'{kext_name} exitpoint: {kext_exitpoint}')
+
+    def parseMIG(self):
+        ''' Search for MIG subsystem messages. I was using this Hopper script as an inspiration: https://github.com/knightsc/hopper/blob/master/scripts/MIG%20Detect.py 
+        
+        Returns a dictionary like: {'_MIG_subsystem_1000': {'_MIG_msg_1000': routine_for_msg}}
+        '''
+        va_start = self.getVirtualMemoryStartingAddress()
+        mig_subsystem_size = ctypes.sizeof(AppleStructuresManager.mig_subsystem)
+        routine_descriptor_size = ctypes.sizeof(AppleStructuresManager.routine_descriptor)
+        mig_subsystems = {}
+
+        # The MIG should be in __DATA,__const | __DATA_CONST,__const | __CONST,__constdata, but it is not always the case. 
+        # Great example is decompressed kernelcache, there are no __const section. Conclusion, would be to iterate over each segment, but there is a problem with alignment.
+        for section in self.binary.sections:
+            #if ('const' in section.name and 'DATA' in section.segment.name):
+            section_bytes = section.content.tobytes()
+            section_size = section.size
+            alignment = pow(2,section.alignment)
+
+            # Loop through section bytes using alignment to speed up
+            current_offset = 0
+            while current_offset < section_size:
+                chunk = section_bytes[current_offset:current_offset+mig_subsystem_size]
+                mig_subsystem_dict = AppleStructuresManager.mig_subsystem.parse(chunk)
+                number_of_msgs = mig_subsystem_dict['end'] - mig_subsystem_dict['start']
+
+                # Check for possible mig_subsystem structure:
+                if (number_of_msgs > 0 and
+                    number_of_msgs < 1024 and
+                    mig_subsystem_dict['server'] != 0 and
+                    mig_subsystem_dict['start'] > 0 and
+                    mig_subsystem_dict['end'] > 0 and
+                    mig_subsystem_dict['reserved'] == 0 and
+                    mig_subsystem_dict['routine_0'] == 0):
+                    '''
+                    # print(f'{hex(mig_subsystem_dict["server"])} {hex(mig_subsystem_dict["start"])}')
+                    # At this stage I get 0x8028000000007e74 instead of 0x100007e74 and I do not know why. The same goes for every impl_routine later too...
+                    # I can manually repair it by: & 0xFFFFFFFF | __TEXT 
+                    # It is temp fix, there must be a "proper way" - todo 
+                    '''
+                    mig_subsystem_dict['server'] = mig_subsystem_dict['server'] & 0xFFFFFFFF | va_start # Fix according to the above comment
+                    mig_subsystem_number = mig_subsystem_dict['start']
+                    subsystem_name = "MIG_subsystem_{0}".format(mig_subsystem_number)
+                    mig_subsystems[subsystem_name] = {}
+                    current_offset += mig_subsystem_size
+
+                    # If mig_subsystem structure was found, iterate over all routines
+                    msg = 0
+                    while msg < number_of_msgs:
+                        routine_name = "MIG_msg_{0}".format(mig_subsystem_number+msg)
+                        chunk = section_bytes[current_offset:current_offset+routine_descriptor_size]
+                        routine_descriptor_dict = AppleStructuresManager.routine_descriptor.parse(chunk)
+                        if routine_descriptor_dict['impl_routine'] != 0:
+                            routine_descriptor_dict['impl_routine'] = routine_descriptor_dict['impl_routine'] & 0xFFFFFFFF | va_start # Fix like subsystem
+                        mig_subsystems[subsystem_name].update({routine_name: routine_descriptor_dict})
+                        current_offset += routine_descriptor_size
+                        msg += 1
+
+                    continue # To find more subsystems we continue the parent while without adding below alignment, because we added routine_descriptor_size
+
+                current_offset += alignment
+
+        return(mig_subsystems)
+
+    def printMIG(self):
+        ''' Iterates over each subsystem and its associated messages, printing them in the nice format. '''
+        mig_subsystems = self.parseMIG()
+
+        for subsystem, messages in mig_subsystems.items():
+            print(subsystem + ":")
+
+            for message, details in messages.items():
+                print(f"- {message}: {hex(details['impl_routine'])}")
 
 ### --- ARGUMENT PARSER --- ###  
 class ArgumentParser:
@@ -3607,14 +3613,6 @@ class ArgumentParser:
 
     def addAMFIArgs(self):
         amfi_group = self.parser.add_argument_group('AMFI ARGS')
-        amfi_group.add_argument('--dump_prelink_info', metavar='(optional) out_name', nargs="?", const='PRELINK_info.txt', help='Dump "__PRELINK_INFO,__info" to a given file (default: "PRELINK_info.txt")')
-        amfi_group.add_argument('--dump_prelink_text', metavar='(optional) out_name', nargs="?", const='PRELINK_text.txt', help='Dump "__PRELINK_TEXT,__text" to a given file (default: "PRELINK_text.txt")')
-        amfi_group.add_argument('--dump_prelink_kext', metavar='kext_name', nargs="?", help='Dump prelinked KEXT {kext_name} from decompressed Kernel Cache PRELINK_TEXT segment to a file named: prelinked_{kext_name}.bin')
-        amfi_group.add_argument('--kext_prelinkinfo', metavar='kext_name', nargs="?", help='Print _Prelink properties from PRELINK_INFO,__info for a give {kext_name}')
-        amfi_group.add_argument('--kmod_info', metavar='kext_name', help="Parse kmod_info structure for the given {kext_name} from Kernel Cache")
-        amfi_group.add_argument('--kext_entry', metavar='kext_name', help="Calculate the virtual memory address of the __start (entrypoint) for the given {kext_name} Kernel Extension")
-        amfi_group.add_argument('--kext_exit', metavar='kext_name', help="Calculate the virtual memory address of the __stop (exitpoint) for the given {kext_name} Kernel Extension")
-        amfi_group.add_argument('--mig', action='store_true', help="Search for MIG subsystem and prints message handlers")
         amfi_group.add_argument('--has_suid', action='store_true', help="Check if the file has SetUID bit set")
         amfi_group.add_argument('--has_sgid', action='store_true', help="Check if the file has SetGID bit set")
         amfi_group.add_argument('--has_sticky', action='store_true', help="Check if the file has sticky bit set")
@@ -3648,6 +3646,7 @@ class ArgumentParser:
         sandbox_group.add_argument('--sandbox_profile_data', action='store_true', help="Print raw bytes ofthe sandbox profile data from the sandbox container metadata")
         sandbox_group.add_argument('--dump_kext', help="Dump the kernel extension binary from the kernelcache.decompressed file", metavar='kext_name')
         sandbox_group.add_argument('--extract_sandbox_operations', action='store_true', help="Extract sandbox operations from the Sandbox.kext file")
+        sandbox_group.add_argument('--extract_sandbox_platform_profile', action='store_true', help="Extract sandbox platform profile from the Sandbox.kext file")
 
     def addTCCArgs(self):
         tcc_group = self.parser.add_argument_group('TCC ARGS')
@@ -3670,8 +3669,15 @@ class ArgumentParser:
 
     def addXNUArgs(self):
         xnu_group = self.parser.add_argument_group('XNU ARGS')
-        xnu_group.add_argument('--xnu', action='store_true', help="Print XNU related information")
         xnu_group.add_argument('--parse_mpo', metavar='mpo_addr', help="Parse mac_policy_ops at given address from Kernel Cache and print pointers in use (not zeroed)")
+        xnu_group.add_argument('--dump_prelink_info', metavar='(optional) out_name', nargs="?", const='PRELINK_info.txt', help='Dump "__PRELINK_INFO,__info" to a given file (default: "PRELINK_info.txt")')
+        xnu_group.add_argument('--dump_prelink_text', metavar='(optional) out_name', nargs="?", const='PRELINK_text.txt', help='Dump "__PRELINK_TEXT,__text" to a given file (default: "PRELINK_text.txt")')
+        xnu_group.add_argument('--dump_prelink_kext', metavar='kext_name', nargs="?", help='Dump prelinked KEXT {kext_name} from decompressed Kernel Cache PRELINK_TEXT segment to a file named: prelinked_{kext_name}.bin')
+        xnu_group.add_argument('--kext_prelinkinfo', metavar='kext_name', nargs="?", help='Print _Prelink properties from PRELINK_INFO,__info for a give {kext_name}')
+        xnu_group.add_argument('--kmod_info', metavar='kext_name', help="Parse kmod_info structure for the given {kext_name} from Kernel Cache")
+        xnu_group.add_argument('--kext_entry', metavar='kext_name', help="Calculate the virtual memory address of the __start (entrypoint) for the given {kext_name} Kernel Extension")
+        xnu_group.add_argument('--kext_exit', metavar='kext_name', help="Calculate the virtual memory address of the __stop (exitpoint) for the given {kext_name} Kernel Extension")
+        xnu_group.add_argument('--mig', action='store_true', help="Search for MIG subsystem and prints message handlers")
 
     def parseArgs(self):
         args = self.parser.parse_args()
