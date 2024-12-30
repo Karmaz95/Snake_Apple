@@ -44,7 +44,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [System Intigrity Protection](https://karol-mazurek.medium.com/system-integrity-protection-sip-140562b07fea?sk=v2%2F9c293b8f-c376-4603-b8a1-2872ba3395cf)
 * &#9745; [IX. TCC](https://karol-mazurek.medium.com/snake-apple-ix-tcc-ae822e3e2718?sk=v2%2F426ae6cf-6418-4e3f-a0ca-3aee06d6f676)
   * &#9745; [Apple UUID Finder](https://karol-mazurek.medium.com/apple-uuid-finder-a5173bdd1a8a?sk=v2%2F04bb0d32-6dc9-437d-bf72-8f65e03fed90)
-* &#9744; [X. NU]()
+* &#9745; [X. NU](https://karol-mazurek.medium.com/snake-apple-x-nu-0bc5c36170da?sk=v2%2F502ee9db-8d8a-4a1b-8655-546742a7d261)
   * &#9745; [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
   * &#9745; [Fixing an Infinite Loop](https://karol-mazurek.medium.com/fixing-an-infinite-loop-on-unix-e0a8a5501c54?sk=v2%2F140555f8-9770-4c6b-9734-d9c5b7cc9bc7)
   * &#9745; [Exceptions on macOS](https://karol-mazurek.medium.com/exceptions-on-macos-2c4bd6a9fd31?sk=v2%2Ffa7393a6-16e7-46d4-84d0-4de300260533)
@@ -697,7 +697,5 @@ Each Snake class will be a child of the previous one and infinitely "eat itself"
 * Add kernelcache parser.
 * Add `LC_FILESET_ENTRY` method to `dumpKernelExtension`.
 * Consider moving methods like `removeNullBytesAlignment`, `calcTwoComplement64` etc. to `Utils` class.
-* Move `--mig` option to Snake & Apple chapter about Mach Kernel when ready.
 * Make Thread manager class and improve the Threading.thread with tracing methods and `kill()`.
 * Reconsider moving --xattr like args to another Snake class related to filesystem.
-* Consider adding second option to dump Sandbox Operations based on this [Csaba Fitzl comment](https://x.com/theevilbit/status/1828773101041221755).
