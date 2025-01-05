@@ -34,7 +34,7 @@ class ASARPatcher:
     def extractASAR(self, app_path, output_path):
         '''Extracts {input_path} asar file to {output_path} directory.'''
         input_path = os.path.join(app_path, "Contents/Resources/app.asar")
-        status_code = os.system(f"npx asar extract {input_path} {output_path}")
+        status_code = os.system(f"npx @electron/asar extract '{input_path}' '{output_path}'")
 
         if status_code == 0:
             print(f"Extracted {input_path} to {output_path} directory.")
@@ -44,8 +44,8 @@ class ASARPatcher:
 
     def dumpEntitlements(self, app_path):
         output_path='/tmp/extracted_entitlements.xml'
-        status_code = os.system(f"codesign -d --entitlements :- {app_path} > {output_path}")
-        
+        status_code = os.system(f"codesign -d --entitlements :- '{app_path}' > '{output_path}'")
+
         if status_code == 0:
             print(f"Dumped entitlements from {app_path} to {output_path}")
 
@@ -53,7 +53,7 @@ class ASARPatcher:
             print(f"Failed to dump entitlements from {app_path} to {output_path}. Error code: {status_code}")
 
     def checkIfElectronAsarIntegrityIsUsed(self, app_path):
-        status_code = os.system(f"plutil -p {app_path}/Contents/Info.plist | grep -q ElectronAsarIntegrity")
+        status_code = os.system(f"plutil -p '{app_path}/Contents/Info.plist' | grep -q ElectronAsarIntegrity")
         if status_code == 0:
             return True
         else:
@@ -62,12 +62,12 @@ class ASARPatcher:
     def packASAR(self, input_path, app_path):
         '''Packs {input_path} directory to {output_path} asar file.
         Check if ElectronAsarIntegrity is used in Info.plist, and if so, calculate hash and replace it.
-        Codesign the 
+        Codesign the
         '''
         output_path = os.path.join(app_path, "Contents/Resources/app.asar")
         info_plist_path = os.path.join(app_path, "Contents/Info.plist")
 
-        status_code =  os.system(f"npx asar pack {input_path} {output_path}")
+        status_code =  os.system(f"npx @electron/asar pack '{input_path}' '{output_path}'")
         if status_code == 0:
             print(f"Packed {input_path} into {output_path}")
 
@@ -77,14 +77,14 @@ class ASARPatcher:
                 new_hash = asar_calculator.calcASARHeaderHash()
                 print(f"New hash: {new_hash}")
                 print("Replacing ElectronAsarIntegrity in Info.plist")
-                os.system(f"/usr/libexec/PlistBuddy -c 'Set :ElectronAsarIntegrity:Resources/app.asar:hash {new_hash}' {info_plist_path}")
+                os.system(f"/usr/libexec/PlistBuddy -c 'Set :ElectronAsarIntegrity:Resources/app.asar:hash {new_hash}' '{info_plist_path}'")
 
             print("Resigning app")
             self.dumpEntitlements(app_path)
 
-            os.system(f"codesign --force --entitlements /tmp/extracted_entitlements.xml --sign - {app_path}")
+            os.system(f"codesign --force --entitlements /tmp/extracted_entitlements.xml --sign - '{app_path}'")
             os.remove('/tmp/extracted_entitlements.xml')
-            
+
             print("Done!")
 
 def main():
