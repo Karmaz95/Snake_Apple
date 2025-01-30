@@ -1,13 +1,18 @@
 # Snake & Apple
-![alt](img/Snake_Apple.jpg)
+[![alt](img/Snake_Apple.jpg)](https://karol-mazurek95.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)
 The code repository for the `Snake&Apple` article series, which documents my research about macOS security.
 
+## PATRONS
+<a href="https://afine.com/">
+  <img src="./img/afine_banner.png" alt="AFine" width="400" height="200">
+</a>
+
+## ARTICLES
 Each article directory contains three subdirectories:
 * `mac` - source code of macOS for references and copy of presentations.
 * `custom` - code, for example, programs written for articles.
 * `python` - contains the latest CrimsonUroboros and other Python scripts created during research. 
 
-## ARTICLES
 The short introduction is written in [Snake&Apple Intro](https://karol-mazurek95.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)  
 The tags for each article are in the [Article_tags.md](Article_tags.md).  
 The table of contents showing links to all articles is below:
@@ -51,6 +56,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [MACF on macOS](https://karol-mazurek.medium.com/macf-on-macos-004b8a490e2c?sk=v2%2Fd9a61281-e230-4ac6-8608-ad062f4d2a9a)
   * &#9745; [Kernel Extensions on macOS](https://karol-mazurek.medium.com/kernel-extensions-on-macos-1b0f38b632ea?sk=v2%2Fb6920735-90f9-459c-9c10-30980247bae7)
   * &#9745; [Mach IPC Security on macOS](https://karol-mazurek.medium.com/mach-ipc-security-on-macos-63ee350cb59b?sk=v2%2F3afce264-9b59-447f-84ea-b1988606191a)
+    * &#9745; [Task Injection on macOS](https://afine.com/task-injection-on-macos/)
   * &#9745; [Drivers on macOS](https://karol-mazurek.medium.com/drivers-on-macos-26edbde370ab?sk=v2%2F8a5bbc18-aae7-4a68-b0dd-bb5ce70b5752)
 
 ## TOOLS
