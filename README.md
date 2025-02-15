@@ -69,8 +69,10 @@ The main tool created during the writing of the Snake & Apple series is called `
 Its description along with instructions for other tools from this repository are in `Tools.md`.
 
 ## WHY UROBOROS? 
-I wrote the code for each article as a class, SnakeX, where X was the article number, to make it easier for the audience to follow.  
-Each Snake class is a child of the previous one and infinitely "eats itself" (inherits methods of the last class), like Uroboros.
+I wrote the code for each article as a class `SnakeX`.  
+The `X` was the article number, to make it easier for the audience to follow.   
+Each `Snake` class is a child of the previous one.  
+It infinitely "eats itself" (inherits methods of the last class), like Uroboros.
 
 ## INSTALLATION
 ```
