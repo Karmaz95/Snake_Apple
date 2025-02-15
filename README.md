@@ -8,6 +8,8 @@ The code repository for the `Snake&Apple` article series, which documents my res
 </a>
 
 ## ARTICLES
+`THE LINKS BELOW PROVIDE FREE ACCESS TO MY MEDIUM ARTICLES — NO PAYWALL OR SUBSCRIPTION REQUIRED!`  
+
 Each article directory contains three subdirectories:
 * `mac` - source code of macOS for references and copy of presentations.
 * `custom` - code, for example, programs written for articles.
