@@ -61,9 +61,9 @@ The table of contents showing links to all articles is below:
     * &#9745; [Task Injection on macOS](https://afine.com/task-injection-on-macos/)
   * &#9745; [Drivers on macOS](https://karol-mazurek.medium.com/drivers-on-macos-26edbde370ab?sk=v2%2F8a5bbc18-aae7-4a68-b0dd-bb5ce70b5752)
     * &#9745; [Case Study: Analyzing macOS IONVMeFamily NS_01 Driver Denial of Service Issue](https://afine.com/case-study-analyzing-macos-ionvmefamily-driver-denial-of-service-issue/)
+    * &#9745; [Case Study: IOMobileFramebuffer NULL Pointer Dereference](https://afine.com/case-study-iomobileframebuffer-null-pointer-dereference/)
   * &#9745; [SLAP & FLOP: Apple Silicon’s Data Speculation Vulnerabilities](https://afine.com/slap-flop-apple-silicons-data-speculation-vulnerabilities/)
   * &#9745; [History of NULL Pointer Dereferences on macOS](https://afine.com/history-of-null-pointer-dereferences-on-macos/)
-
 
 ## CrimsonUroboros
 The main tool created during the writing of the Snake & Apple series is called `CrimsonUroboros`.  
