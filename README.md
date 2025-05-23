@@ -1,5 +1,5 @@
 # Snake & Apple
-[![alt](img/Snake_Apple.jpg)](https://karol-mazurek95.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)
+[![alt](img/Snake_Apple.jpg)](https://karol-mazurek.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)
 The code repository for the `Snake&Apple` article series, which documents my research about macOS security.
 
 ## PATRONS
@@ -15,17 +15,17 @@ Each article directory contains three subdirectories:
 * `custom` - code, for example, programs written for articles.
 * `python` - contains the latest CrimsonUroboros and other Python scripts created during research. 
 
-The short introduction is written in [Snake&Apple Intro](https://karol-mazurek95.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)  
+The short introduction is written in [Snake&Apple Intro](https://karol-mazurek.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)  
 The tags for each article are in the [Article_tags.md](Article_tags.md).  
 The table of contents showing links to all articles is below:
 * &#9745; [App Bundle Extension](https://karol-mazurek.medium.com/snake-apple-app-bundle-ext-f5c43a3c84c4?sk=v2%2F3ff105ad-f4f0-464d-b4d5-46b86c66fe14)
   * &#9745; [Cracking macOS apps](https://karol-mazurek.medium.com/cracking-macos-apps-39575dd672e0?sk=v2%2F727dce55-53ee-45f6-b051-2979e62f2ba1)
   * &#9745; [Cracking Electron Integrity](https://karol-mazurek.medium.com/cracking-electron-integrity-0a10e0d5f239?sk=v2%2F7726b99c-c6c9-4d70-8c37-da9f2f0874e8)
   * &#9745; [XPC Programming on macOS](https://karol-mazurek.medium.com/xpc-programming-on-macos-7e1918573f6d?sk=v2%2F21c4e9c7-40a5-43dd-804b-0d8f9bc4e94c)
-* &#9745; [I. Mach-O](https://karol-mazurek95.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
+* &#9745; [I. Mach-O](https://karol-mazurek.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
   * &#9745; [Optimizing Mach-O Detection](https://karol-mazurek.medium.com/optimizing-mach-o-detection-40352101bbef?sk=v2%2F3378d3f5-874b-4b82-94d5-b2ccd8522ea3)
-* &#9745; [II. Code Signing](https://karol-mazurek95.medium.com/snake-apple-ii-code-signing-f0a9967b7f02?sk=v2%2Fbbc87007-89ca-4135-91d6-668b5d2fe9ae)
-* &#9745; [III. Checksec](https://karol-mazurek95.medium.com/snake-apple-iii-checksec-ed64a4b766c1?sk=v2%2Fb4b8d637-e906-4b6b-8088-ca1f893cd787)
+* &#9745; [II. Code Signing](https://karol-mazurek.medium.com/snake-apple-ii-code-signing-f0a9967b7f02?sk=v2%2Fbbc87007-89ca-4135-91d6-668b5d2fe9ae)
+* &#9745; [III. Checksec](https://karol-mazurek.medium.com/snake-apple-iii-checksec-ed64a4b766c1?sk=v2%2Fb4b8d637-e906-4b6b-8088-ca1f893cd787)
 * &#9745; [IV. Dylibs](https://karol-mazurek.medium.com/snake-apple-iv-dylibs-2c955439b94e?sk=v2%2Fdef72b7a-121a-47a1-af89-7bf53aed1ea2)
 * &#9745; [V. Dyld](https://karol-mazurek.medium.com/snake-apple-v-dyld-8b36b674cc44?sk=v2%2F4acb16f8-fa88-41f0-8d7c-1362f4060010)
   * &#9745; [DYLD — Do You Like Death? (I)](https://karol-mazurek.medium.com/dyld-do-you-like-death-i-8199faad040e?sk=v2%2F359b081f-d944-409b-9e7c-95f7c171b969)
