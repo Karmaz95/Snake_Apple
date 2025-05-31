@@ -4,9 +4,30 @@ Here is the list of all tools in this repository:
 ***
 
 ### [CrimsonUroboros](tests/CrimsonUroboros.py)
-![alt](img/CrimsonUroboros.jpg)
 Core program resulting from the Snake&Apple article series for binary analysis. You may find older versions of this script in each article directory in this repository.
-* Usage
+
+![alt](img/CrimsonUroboros.jpg)
+
+#### WHY UROBOROS? 
+I wrote the code for each article as a class `SnakeX`. The `X` was the article number, to make it easier for the audience to follow. Each `Snake` class is a child of the previous one. It infinitely "eats itself" (inherits methods of the last class), like Uroboros.
+
+#### INSTALLATION
+```
+pip3 install -r requirements.txt
+wget https://github.com/CRKatri/trustcache/releases/download/v2.0/trustcache_macos_arm64 -O /usr/local/bin/trustcache
+chmod +x /usr/local/bin/trustcache
+xattr -d com.apple.quarantine /usr/local/bin/trustcache
+brew install keith/formulae/dyld-shared-cache-extractor
+brew install blacktop/tap/ipsw
+brew install tree
+```
+
+#### LIMITATIONS
+* Codesigning module(codesign wrapper) works only on macOS.
+* `--dylib_hijacking` needs [ipsw](https://github.com/blacktop/ipsw) to be installed.
+* `--dylibtree` needs the [dyld-shared-cache-extractor](https://github.com/keith/dyld-shared-cache-extractor) to be installed.
+
+#### Usage
 ```console
 usage: CrimsonUroboros [-h] [-p PATH] [-b BUNDLE] [--bundle_structure] [--bundle_info] [--bundle_info_syntax_check]
                        [--bundle_frameworks] [--bundle_plugins] [--bundle_id] [--file_type] [--header_flags]

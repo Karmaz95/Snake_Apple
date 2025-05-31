@@ -8,7 +8,11 @@ The code repository for the `Snake&Apple` article series, which documents my res
 </a>
 
 ## ARTICLES
-`THE LINKS BELOW PROVIDE FREE ACCESS TO MY MEDIUM ARTICLES — NO PAYWALL OR SUBSCRIPTION REQUIRED!`  
+I have been writing articles about Apple Security across different platforms for years, compiling them in this repository. Below is a brief explanation of the links you will find:
+* I am currently writing on [Patreon](https://www.patreon.com/Karol_Mazurek), where most articles are free to read—no account needed. The same goes for my pieces on the [AFINE blog](https://afine.com/blog/).
+* In 2024, I wrote only on [Medium](https://medium.com/@karol-mazurek). Those articles are paywalled, but thanks to [Monethic's](https://monethic.io/) sponsorship, you can find direct links in this repository. No Medium account is required.
+* If those links ever break, ping me on [social media](https://github.com/karmaz95#-social-media---contact) or [Patreon](https://www.patreon.com/Karol_Mazurek) for a fresh one. If you're feeling generous, the [Patron subscription](https://www.patreon.com/Karol_Mazurek/membership) gets you PDF versions of all the [Medium articles](https://www.patreon.com/Karol_Mazurek/shop/all-medium-articles-121970?source=storefront).
+* I've also been working on some exclusive content for my Elite Patrons—my "thank-you" to the folks who support me. I'm still building that out, but you can read more [about it here](https://www.patreon.com/collection/1529482).
 
 Each article directory contains three subdirectories:
 * `mac` - source code of macOS for references and copy of presentations.
@@ -22,6 +26,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [Cracking macOS apps](https://karol-mazurek.medium.com/cracking-macos-apps-39575dd672e0?sk=v2%2F727dce55-53ee-45f6-b051-2979e62f2ba1)
   * &#9745; [Cracking Electron Integrity](https://karol-mazurek.medium.com/cracking-electron-integrity-0a10e0d5f239?sk=v2%2F7726b99c-c6c9-4d70-8c37-da9f2f0874e8)
   * &#9745; [XPC Programming on macOS](https://karol-mazurek.medium.com/xpc-programming-on-macos-7e1918573f6d?sk=v2%2F21c4e9c7-40a5-43dd-804b-0d8f9bc4e94c)
+  * &#9745; [AppleScript for Vulnerability Research](https://www.patreon.com/posts/applescript-for-130305213)
 * &#9745; [I. Mach-O](https://karol-mazurek.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
   * &#9745; [Optimizing Mach-O Detection](https://karol-mazurek.medium.com/optimizing-mach-o-detection-40352101bbef?sk=v2%2F3378d3f5-874b-4b82-94d5-b2ccd8522ea3)
 * &#9745; [II. Code Signing](https://karol-mazurek.medium.com/snake-apple-ii-code-signing-f0a9967b7f02?sk=v2%2Fbbc87007-89ca-4135-91d6-668b5d2fe9ae)
@@ -67,39 +72,10 @@ The table of contents showing links to all articles is below:
   * &#9745; [History of NULL Pointer Dereferences on macOS](https://afine.com/history-of-null-pointer-dereferences-on-macos/)
 
 ## CrimsonUroboros
-The main tool created during the writing of the Snake & Apple series is called `CrimsonUroboros`.  
-Its description along with instructions for other tools from this repository are in `Tools.md`.
-
-## WHY UROBOROS? 
-I wrote the code for each article as a class `SnakeX`.  
-The `X` was the article number, to make it easier for the audience to follow.   
-Each `Snake` class is a child of the previous one.  
-It infinitely "eats itself" (inherits methods of the last class), like Uroboros.
-
-## INSTALLATION
-```
-pip3 install -r requirements.txt
-wget https://github.com/CRKatri/trustcache/releases/download/v2.0/trustcache_macos_arm64 -O /usr/local/bin/trustcache
-chmod +x /usr/local/bin/trustcache
-xattr -d com.apple.quarantine /usr/local/bin/trustcache
-brew install keith/formulae/dyld-shared-cache-extractor
-brew install blacktop/tap/ipsw
-brew install tree
-```
-
-## LIMITATIONS
-* Codesigning module(codesign wrapper) works only on macOS.
-* `--dylib_hijacking` needs [ipsw](https://github.com/blacktop/ipsw) to be installed.
-* `--dylibtree` needs the [dyld-shared-cache-extractor](https://github.com/keith/dyld-shared-cache-extractor) to be installed.
-
-## ADDITIONAL LINKS
-* [Apple Open Source](https://opensource.apple.com/releases/)
-* [XNU](https://github.com/apple-oss-distributions/xnu)
-* [dyld](https://github.com/apple-oss-distributions/dyld)
+The main tool created during the writing of the [Snake & Apple](https://karol-mazurek.medium.com/list/snakeapple-50baea541374) series is called `CrimsonUroboros`. Its description along with instructions for other tools from this repository are in `Tools.md`.
 
 ## CONTRIBUTE
-In case of any questions or ideas for improvements, please open a new issue to discuss.  
-For any changes related to the tools codebase:
+In case of any questions or ideas for improvements, please open a new issue to discuss.   For any changes related to the tools codebase:
 * Fork the repository.
 * Create a dedicated branch for your changes.
 * Make your modifications or additions.
