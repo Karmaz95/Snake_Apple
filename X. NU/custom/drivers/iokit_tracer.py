@@ -153,7 +153,15 @@ def trace_iokit(debugger, command, result, internal_dict):
             print(f"Attached to PID {pid}. IOKit tracer is active.")
             debugger.HandleCommand('continue')
         else: result.PutCString(f"Error: Failed to attach to PID {pid}")
-    else: result.PutCString("Error: Specify --pid <PID> or --executable_path <path>")
+    else:
+        # Try to use the currently selected target and process
+        target = debugger.GetSelectedTarget()
+        process = target.GetProcess() if target else None
+        if target and process and process.IsValid() and process.GetState() in [lldb.eStateStopped, lldb.eStateRunning]:
+            setup_breakpoints(target)
+            print("Using current LLDB target/process. IOKit tracer is active.")
+        else:
+            result.PutCString("Error: Specify --pid <PID> or --executable_path <path>, or attach to a process first.")
 
 def __lldb_init_module(debugger, internal_dict):
     """Registers the 'trace_iokit' command with LLDB."""
