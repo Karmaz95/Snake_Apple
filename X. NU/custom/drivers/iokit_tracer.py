@@ -109,15 +109,20 @@ def ioconnectcallmethod_hook(frame, bp_loc, internal_dict):
                 if err.Success():
                     service_name = sanitize_filename(info['service_name'])
                     type_val = info['type']
-                    fname = (
-                        f"corpus_{service_name}_{type_val}_{selector}_"
-                        f"{inputCnt}_{inputStructCnt}_{outputCnt_str}_{outputStructCnt_str}_{corpus_counter}.bin"
-                    )
-                    full_path = os.path.join(corpus_dir, fname)
+                    # Find the next available n for the filename
+                    n = 0
+                    while True:
+                        fname = (
+                            f"corpus_{service_name}_{type_val}_{selector}_"
+                            f"{inputCnt}_{inputStructCnt}_{outputCnt_str}_{outputStructCnt_str}_{n}.bin"
+                        )
+                        full_path = os.path.join(corpus_dir, fname)
+                        if not os.path.exists(full_path):
+                            break
+                        n += 1
                     with open(full_path, "wb") as f:
                         f.write(data)
                     print(f"[iokit_tracer] Dumped inputStruct ({inputStructCnt} bytes) to {full_path}")
-                    corpus_counter += 1
             except Exception as e:
                 print(f"[iokit_tracer] Error dumping inputStruct: {e}")
 
@@ -152,6 +157,19 @@ def ioconnectcallmethod_hook(frame, bp_loc, internal_dict):
         lines.append(f"outputStructCnt: {outputStructCnt_str} (capacity pointer: {hex(outputStructCnt_ptr)})")
         lines.append("----------------------------------------------------------------\n")
         print("\n".join(lines))
+        # After printing all trace info, try to get the return value from the previous frame (caller)
+        result_code = None
+        caller_frame = thread.GetFrameAtIndex(1) if thread.GetNumFrames() > 1 else None
+        if caller_frame:
+            # On macOS/ARM64, return value is in x0; on x86_64, it's rax
+            reg = caller_frame.FindRegister("x0") if caller_frame.FindRegister("x0").IsValid() else caller_frame.FindRegister("rax")
+            if reg and reg.IsValid():
+                result_code = reg.GetValueAsUnsigned()
+        # Print result code if available
+        if result_code is not None:
+            print(f"[iokit_tracer] IOConnectCallMethod return code: 0x{result_code:x} ({result_code})")
+        else:
+            print("[iokit_tracer] IOConnectCallMethod return code: <unavailable>")
     return False
 
 def trace_iokit(debugger, command, result, internal_dict):
