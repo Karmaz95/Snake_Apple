@@ -68,7 +68,8 @@ def main():
         stdout=subprocess.PIPE,
         text=True,
         bufsize=1,
-        preexec_fn=os.setsid
+        preexec_fn=os.setsid,
+        errors="replace"  # Handle decode errors gracefully
     )
 
     # Use a thread-safe event to ensure the signal handler logic runs only once.
