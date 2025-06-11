@@ -53,7 +53,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [Sandbox Detector](https://karol-mazurek.medium.com/sandbox-detector-4268ab3cd361?sk=v2%2F58fe49fb-1381-4db3-9db9-3f6309e4053a)
   * &#9745; [Sandbox Validator](https://karol-mazurek.medium.com/sandbox-validator-e760e5d88617?sk=v2%2F145ac2ef-ca06-41a0-b310-c96f4ce0037b)
   * &#9745; [App Sandbox startup](https://karol-mazurek.medium.com/app-sandbox-startup-71daf8f259d1?sk=v2%2F9f3b09a6-c7c0-445d-8613-8e25bf3f4e4d)
-  * &#9745; [System Intigrity Protection](https://karol-mazurek.medium.com/system-integrity-protection-sip-140562b07fea?sk=v2%2F9c293b8f-c376-4603-b8a1-2872ba3395cf)
+  * &#9745; [System Integrity Protection](https://karol-mazurek.medium.com/system-integrity-protection-sip-140562b07fea?sk=v2%2F9c293b8f-c376-4603-b8a1-2872ba3395cf)
 * &#9745; [IX. TCC](https://karol-mazurek.medium.com/snake-apple-ix-tcc-ae822e3e2718?sk=v2%2F426ae6cf-6418-4e3f-a0ca-3aee06d6f676)
   * &#9745; [Apple UUID Finder](https://karol-mazurek.medium.com/apple-uuid-finder-a5173bdd1a8a?sk=v2%2F04bb0d32-6dc9-437d-bf72-8f65e03fed90)
   * &#9745; [Threat of TCC Bypasses on macOS](https://afine.com/threat-of-tcc-bypasses-on-macos/)
