@@ -12,7 +12,7 @@ I have been writing articles about Apple Security across different platforms for
 * I am currently writing on [Patreon](https://www.patreon.com/Karol_Mazurek), where most articles are free to read—no account needed. The same goes for my pieces on the [AFINE blog](https://afine.com/blog/).
 * In 2024, I wrote only on [Medium](https://medium.com/@karol-mazurek). Those articles are paywalled, but thanks to [Monethic's](https://monethic.io/) sponsorship, you can find direct links in this repository. No Medium account is required.
 * If those links ever break, ping me on [social media](https://github.com/karmaz95#-social-media---contact) or [Patreon](https://www.patreon.com/Karol_Mazurek) for a fresh one. If you're feeling generous, the [Patron subscription](https://www.patreon.com/Karol_Mazurek/membership) gets you PDF versions of all the [Medium articles](https://www.patreon.com/Karol_Mazurek/shop/all-medium-articles-121970?source=storefront).
-* I've also been working on some exclusive content for my Elite Patrons—my "thank-you" to the folks who support me. I'm still building that out, but you can read more [about it here](https://www.patreon.com/collection/1529482).
+* I'm also working on [exclusive content](https://www.patreon.com/collection/1529482) for Elite Patrons—my "thank-you" to the folks who support me. These are marked with a `*`. It's a kind of self-paced academy for vulnerability researchers. Every month, you get a new guide with technical analyses of real vulnerabilities and methods to find them, along with video demos, custom tools, and practical homework.
 
 Each article directory contains three subdirectories:
 * `mac` - source code of macOS for references and copy of presentations.
@@ -26,9 +26,9 @@ The table of contents showing links to all articles is below:
   * &#9745; [Cracking macOS apps](https://karol-mazurek.medium.com/cracking-macos-apps-39575dd672e0?sk=v2%2F727dce55-53ee-45f6-b051-2979e62f2ba1)
   * &#9745; [Cracking Electron Integrity](https://karol-mazurek.medium.com/cracking-electron-integrity-0a10e0d5f239?sk=v2%2F7726b99c-c6c9-4d70-8c37-da9f2f0874e8)
   * &#9745; [XPC Programming on macOS](https://karol-mazurek.medium.com/xpc-programming-on-macos-7e1918573f6d?sk=v2%2F21c4e9c7-40a5-43dd-804b-0d8f9bc4e94c)
-  * &#9745; [AppleScript for Vulnerability Research](https://www.patreon.com/posts/applescript-for-130305213)
-  * &#9745; [LLDB for Vulnerability Research](https://www.patreon.com/posts/lldb-for-131084875)
-  * &#9745; [Scaling Vulnerability Discovery on macOS](https://www.patreon.com/posts/scaling-on-macos-131937045)
+  * &#9745; [AppleScript for Vulnerability Research](https://www.patreon.com/posts/applescript-for-130305213) `*`
+  * &#9745; [LLDB for Vulnerability Research](https://www.patreon.com/posts/lldb-for-131084875) `*`
+  * &#9745; [Scaling Vulnerability Discovery on macOS](https://www.patreon.com/posts/scaling-on-macos-131937045) `*`
 * &#9745; [I. Mach-O](https://karol-mazurek.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
   * &#9745; [Optimizing Mach-O Detection](https://karol-mazurek.medium.com/optimizing-mach-o-detection-40352101bbef?sk=v2%2F3378d3f5-874b-4b82-94d5-b2ccd8522ea3)
 * &#9745; [II. Code Signing](https://karol-mazurek.medium.com/snake-apple-ii-code-signing-f0a9967b7f02?sk=v2%2Fbbc87007-89ca-4135-91d6-668b5d2fe9ae)
