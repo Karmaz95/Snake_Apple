@@ -33,6 +33,7 @@ The table of contents showing links to all articles is below:
 * &#9745; [I. Mach-O](https://karol-mazurek.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
   * &#9745; [Optimizing Mach-O Detection](https://karol-mazurek.medium.com/optimizing-mach-o-detection-40352101bbef?sk=v2%2F3378d3f5-874b-4b82-94d5-b2ccd8522ea3)
 * &#9745; [II. Code Signing](https://karol-mazurek.medium.com/snake-apple-ii-code-signing-f0a9967b7f02?sk=v2%2Fbbc87007-89ca-4135-91d6-668b5d2fe9ae)
+  * &#9745; [To allow or not to get-task-allow, that is the question](https://afine.com/to-allow-or-not-to-get-task-allow-that-is-the-question/)
 * &#9745; [III. Checksec](https://karol-mazurek.medium.com/snake-apple-iii-checksec-ed64a4b766c1?sk=v2%2Fb4b8d637-e906-4b6b-8088-ca1f893cd787)
 * &#9745; [IV. Dylibs](https://karol-mazurek.medium.com/snake-apple-iv-dylibs-2c955439b94e?sk=v2%2Fdef72b7a-121a-47a1-af89-7bf53aed1ea2)
 * &#9745; [V. Dyld](https://karol-mazurek.medium.com/snake-apple-v-dyld-8b36b674cc44?sk=v2%2F4acb16f8-fa88-41f0-8d7c-1362f4060010)
@@ -82,7 +83,7 @@ The table of contents showing links to all articles is below:
   * &#9744; [AI-Enhanced Vulnerability Research]() `*` (scheduled to release on 01.09.2025)
 
 ## CrimsonUroboros
-The main tool created during the writing of the [Snake & Apple](https://karol-mazurek.medium.com/list/snakeapple-50baea541374) series is called `CrimsonUroboros`. Its description along with instructions for other tools from this repository are in `Tools.md`.
+The main tool created during the writing of the [Snake & Apple](https://karol-mazurek.medium.com/list/snakeapple-50baea541374) series is called `CrimsonUroboros`. Its description, along with instructions for other tools from this repository, can be found in [Tools.md](Tools.md).
 
 ## CONTRIBUTE
 In case of any questions or ideas for improvements, please open a new issue to discuss.   For any changes related to the tools codebase:
