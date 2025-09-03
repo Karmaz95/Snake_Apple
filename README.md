@@ -80,7 +80,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [History of NULL Pointer Dereferences on macOS](https://afine.com/history-of-null-pointer-dereferences-on-macos/)
 
 * &#9744; [Apple Intelligence]()
-  * &#9744; [AI-Enhanced Vulnerability Research]() `*` (scheduled to release on 01.09.2025)
+  * &#9745; [AI-Enhanced Vulnerability Research](https://www.patreon.com/posts/ai-enhanced-135545364) `*`
 
 ## CrimsonUroboros
 The main tool created during the writing of the [Snake & Apple](https://karol-mazurek.medium.com/list/snakeapple-50baea541374) series is called `CrimsonUroboros`. Its description, along with instructions for other tools from this repository, can be found in [Tools.md](Tools.md).
