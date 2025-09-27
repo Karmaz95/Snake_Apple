@@ -36,6 +36,9 @@
 #include <mach/mach_error.h> // For mach_error_string
 
 // --- Structure Definitions ---
+// IOKit has a hard limit of 16 scalar inputs/outputs maximum
+#define IOKIT_MAX_SCALAR_COUNT 16
+uint64_t scalar_inputs[IOKIT_MAX_SCALAR_COUNT] = {0};
 
 typedef struct {
     const char* driver_name;
@@ -237,7 +240,15 @@ int main(int argc, char *argv[]) {
                 y_flag_used = true;
                 unsigned long long m, si, is, so, os;
                 int items = sscanf(optarg, "%llu : [ %llu , %llu , %llu , %llu ]", &m, &si, &is, &so, &os);
-                if (items == 5) {
+                if (items == 5) { // Adding Scalar In/Out count checks - can't be more than 16
+                    if (si > IOKIT_MAX_SCALAR_COUNT) {
+                        fprintf(stderr, "Error: Scalar input count %llu exceeds IOKit maximum of %d.\n", si, IOKIT_MAX_SCALAR_COUNT);
+                        return 1;
+                    }
+                    if (so > IOKIT_MAX_SCALAR_COUNT) {
+                        fprintf(stderr, "Error: Scalar output count %llu exceeds IOKit maximum of %d.\n", so, IOKIT_MAX_SCALAR_COUNT);
+                        return 1;
+                    }
                     args.method = m;
                     args.scalar_in_size = si;
                     args.input_size = is;
@@ -255,9 +266,12 @@ int main(int argc, char *argv[]) {
             case 'b': args.byte_payload = optarg; break;
             case 'i': if (!y_flag_used) args.input_size = strtoull(optarg, NULL, 0); break;
             case 'o': if (!y_flag_used) args.output_size = strtoull(optarg, NULL, 0); break;
-            case 's':
-                if (scalar_input_idx < 16) scalar_inputs[scalar_input_idx++] = strtoull(optarg, NULL, 0);
-                else fprintf(stderr, "Exceeded maximum of 16 scalar inputs.\n");
+            case 's': // Adding Scalar In count checks - can't be more than 16
+                if (scalar_input_idx < IOKIT_MAX_SCALAR_COUNT) {
+                    scalar_inputs[scalar_input_idx++] = strtoull(optarg, NULL, 0);
+                } else {
+                    fprintf(stderr, "Exceeded IOKit maximum of %d scalar inputs.\n", IOKIT_MAX_SCALAR_COUNT);
+                }
                 break;
             case 'S': if (!y_flag_used) args.scalar_out_size = strtoull(optarg, NULL, 0); break;
             default: print_usage(argv[0]); return 1;
