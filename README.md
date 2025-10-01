@@ -1,24 +1,19 @@
 # Snake & Apple
 [![alt](img/Snake_Apple.jpg)](https://karol-mazurek.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)
-The code repository for the `Snake&Apple` article series, which documents my research about macOS security.
-
-## PATRONS
-<a href="https://afine.com/">
-  <img src="./img/afine_banner.png" alt="AFine" width="200" height="100">
-</a>
+This is the code repository for the "[Snake & Apple](https://karol-mazurek.medium.com/list/snakeapple-50baea541374)" article series, which documents my research on macOS security. The primary tool developed during the creation of the series is called `CrimsonUroboros`. You can find its description, along with instructions for other tools in this repository, in [Tools.md](Tools.md).
 
 ## ARTICLES
-I have been writing articles about Apple Security across different platforms for years, compiling them in this repository. Below is a brief explanation of the links you will find:
+I have been writing about Apple Security across different platforms for years, compiling them in this repository. Below is a brief explanation of the links you will find:
 * I am currently writing on [Patreon](https://www.patreon.com/Karol_Mazurek), where most articles are free to read—no account needed. The same goes for my pieces on the [AFINE blog](https://afine.com/blog/).
 * In 2024, I wrote only on [Medium](https://medium.com/@karol-mazurek). Those articles are paywalled, but thanks to [Monethic's](https://monethic.io/) sponsorship, you can find direct links in this repository. No Medium account is required.
 * If those links ever break, ping me on [social media](https://github.com/karmaz95#-social-media---contact) or [Patreon](https://www.patreon.com/Karol_Mazurek) for a fresh one. If you're feeling generous, the [Patron subscription](https://www.patreon.com/Karol_Mazurek/membership) gets you PDF versions of all the [Medium articles](https://www.patreon.com/Karol_Mazurek/shop/all-medium-articles-121970?source=storefront).
 * I'm also working on [exclusive content](https://www.patreon.com/collection/1529482) for Elite Patrons—my "thank-you" to the folks who support me. These are marked with a `*`. It's a kind of self-paced academy for vulnerability researchers. Every month, you get a new guide with technical analyses of real vulnerabilities and methods to find them, along with video demos, custom tools, and practical homework.
-
-Each article directory contains three subdirectories:
+---
+Each main article directory contains three subdirectories:
 * `mac` - source code of macOS for references and copy of presentations.
 * `custom` - code, for example, programs written for articles.
 * `python` - contains the latest CrimsonUroboros and other Python scripts created during research. 
-
+---
 The short introduction is written in [Snake&Apple Intro](https://karol-mazurek.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)  
 The tags for each article are in the [Article_tags.md](Article_tags.md).  
 The table of contents showing links to all articles is below:
@@ -32,6 +27,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [Applications Patch Diffing on macOS](https://www.patreon.com/posts/applications-on-131618568) `*`
 * &#9745; [I. Mach-O](https://karol-mazurek.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
   * &#9745; [Optimizing Mach-O Detection](https://karol-mazurek.medium.com/optimizing-mach-o-detection-40352101bbef?sk=v2%2F3378d3f5-874b-4b82-94d5-b2ccd8522ea3)
+  * &#9745; [Static Analysis on Decompiled Code](https://www.patreon.com/posts/static-analysis-135790081) `*`
 * &#9745; [II. Code Signing](https://karol-mazurek.medium.com/snake-apple-ii-code-signing-f0a9967b7f02?sk=v2%2Fbbc87007-89ca-4135-91d6-668b5d2fe9ae)
   * &#9745; [To allow or not to get-task-allow, that is the question](https://afine.com/to-allow-or-not-to-get-task-allow-that-is-the-question/)
 * &#9745; [III. Checksec](https://karol-mazurek.medium.com/snake-apple-iii-checksec-ed64a4b766c1?sk=v2%2Fb4b8d637-e906-4b6b-8088-ca1f893cd787)
@@ -76,20 +72,14 @@ The table of contents showing links to all articles is below:
     * &#9745; [Case Study: Analyzing macOS IONVMeFamily NS_01 Driver Denial of Service Issue](https://afine.com/case-study-analyzing-macos-ionvmefamily-driver-denial-of-service-issue/)
     * &#9745; [Case Study: IOMobileFramebuffer NULL Pointer Dereference](https://afine.com/case-study-iomobileframebuffer-null-pointer-dereference/)
     * &#9745; [A mouse move that crashed the system – Stack Buffer Overflow in Display Driver on macOS](https://afine.com/a-mouse-move-that-crashed-the-system-stack-buffer-overflow-in-display-driver-on-macos/)
-    * &#9745; [Mapping IOKit Methods Exposed to User Space on macOS](https://phrack.org/issues/72/9_md#article) #PHRACK
+    * &#9745; [Mapping IOKit Methods Exposed to User Space on macOS](https://phrack.org/issues/72/9_md#article) #PHRACK 💀
   * &#9745; [SLAP & FLOP: Apple Silicon’s Data Speculation Vulnerabilities](https://afine.com/slap-flop-apple-silicons-data-speculation-vulnerabilities/)
   * &#9745; [History of NULL Pointer Dereferences on macOS](https://afine.com/history-of-null-pointer-dereferences-on-macos/)
 
 * &#9744; [Apple Intelligence]()
   * &#9745; [AI-Enhanced Vulnerability Research](https://www.patreon.com/posts/ai-enhanced-135545364) `*`
 
-## CrimsonUroboros
-The main tool created during the writing of the [Snake & Apple](https://karol-mazurek.medium.com/list/snakeapple-50baea541374) series is called `CrimsonUroboros`. Its description, along with instructions for other tools from this repository, can be found in [Tools.md](Tools.md).
-
-## CONTRIBUTE
-In case of any questions or ideas for improvements, please open a new issue to discuss.   For any changes related to the tools codebase:
-* Fork the repository.
-* Create a dedicated branch for your changes.
-* Make your modifications or additions.
-* Open a pull request describing your changes.
-* I will review and merge if everything looks good.
+## PATRONS
+<a href="https://afine.com/">
+  <img src="./img/afine_banner.png" alt="AFine" width="200" height="100">
+</a>
