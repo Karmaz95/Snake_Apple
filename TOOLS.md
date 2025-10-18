@@ -1,6 +1,6 @@
 # TOOLS
 Here is the list of all tools in this repository:  
-[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster) • [sip_check](#sip_check) • [crimson_waccess.py](#crimson_waccesspy) • [sip_tester](#sip_tester) • [UUIDFinder](#uuidfinder)
+[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster) • [sip_check](#sip_check) • [crimson_waccess.py](#crimson_waccesspy) • [sip_tester](#sip_tester) • [UUIDFinder](#uuidfinder) • [IOVerify](#IOVerify)
 ***
 
 ### [CrimsonUroboros](tests/CrimsonUroboros.py)
@@ -624,4 +624,50 @@ Notes:
 ------
 - The tool retrieves details such as client, service, and authorization status for each entry in the TCC database.
 - The `--list_db` option helps users locate all known TCC databases on the system, sourced from `REG.db`.
+```
+
+### [IOVerify](X.%20NU/custom/drivers/IOVerify.c)
+This tool allows for direct interaction with macOS IOKit drivers using IOConnectCallMethod. It was introduced in the article I made for PHRACK - [Mapping IOKit Methods Exposed to User Space on macOS](https://phrack.org/issues/72/9_md#article). 
+```bash
+❯ ./IOVerify -h
+Usage: ./IOVerify -n <name> (-m <method> | -y <spec>) [options]
+Options:
+  -n <name>      Target driver class name (required).
+  -t <type>      Connection type (default: 0).
+  -m <id>        Method selector ID.
+  -y <spec>      Specify method and buffer sizes in one string.
+                 Format: "ID: [IN_SCA, IN_STR, OUT_SCA, OUT_STR]"
+                 Example: -y "0: [0, 96, 0, 96]"
+  -p <string>    Payload as a string.
+  -f <file>      File path for payload.
+  -b <hex_str>   Space-separated hex string payload.
+  -i <size>      Input buffer size (ignored if -y is used).
+  -o <size>      Output buffer size (ignored if -y is used).
+  -s <value>     Scalar input (uint64_t). Can be specified multiple times.
+  -S <count>     Scalar output count (ignored if -y is used).
+  -h             Show this help message.
+
+
+❯ ./IOVerify -n "H11ANEIn" -t 1 -y "0: [0,1,0,1]"
+Starting verification for driver: H11ANEIn
+
+--- [VERIFY] Event Log ---
+Driver:          H11ANEIn
+Connection Type: 1
+Method Selector: 0
+Result:          0xe00002c2 ((iokit/common) invalid argument)
+
+--- Scalar I/O ---
+Scalar In Cnt:   0
+Scalar Out Cnt:  0
+
+--- Structure I/O ---
+Input Size:  1 bytes
+Input Data:
+00
+
+Output Size: 1 bytes
+Output Data:
+00
+--- End of Log ---
 ```

@@ -3,8 +3,7 @@
  * @brief Standalone tool for IOKit driver communication verification.
  * clang IOVerify.c -o IOVerify -framework IOKit
  *
- * This tool, relevant to your work with IOKit and reverse engineering[5][7], allows for direct 
- * interaction with macOS IOKit drivers by sending structured data to specific methods.
+ * This tool allows for direct interaction with macOS IOKit drivers using IOConnectCallMethod.
  *
  * Usage:
  *   IOVerify -n <name> (-m <method> | -y <spec>) [options]

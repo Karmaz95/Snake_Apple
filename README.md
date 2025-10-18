@@ -1,13 +1,10 @@
 # Snake & Apple
 [![alt](img/Snake_Apple.jpg)](https://karol-mazurek.medium.com/snake-apple-ff87a399ecc4?sk=v2%2Fb2295773-88e6-4654-9d3d-61d73b9001e5)
-This is the code repository for the "[Snake & Apple](https://karol-mazurek.medium.com/list/snakeapple-50baea541374)" article series, which documents my research on macOS security. The primary tool developed during the creation of the series is called `CrimsonUroboros`. You can find its description, along with instructions for other tools in this repository, in [Tools.md](Tools.md).
+This is the code repository for the "[Snake & Apple](https://karol-mazurek.medium.com/list/snakeapple-50baea541374)" article series, which documents my research on macOS security. The primary tool developed during the creation of the series is called `CrimsonUroboros`. You can find its description, along with instructions for other tools in this repository, in [Tools.md](https://github.com/Karmaz95/Snake_Apple/blob/main/TOOLS.md).
 
 ## ARTICLES
-I have been writing about Apple Security across different platforms for years, compiling them in this repository. Below is a brief explanation of the links you will find:
-* I am currently writing on [Patreon](https://www.patreon.com/Karol_Mazurek), where most articles are free to read—no account needed. The same goes for my pieces on the [AFINE blog](https://afine.com/blog/).
-* In 2024, I wrote only on [Medium](https://medium.com/@karol-mazurek). Those articles are paywalled, but thanks to [Monethic's](https://monethic.io/) sponsorship, you can find direct links in this repository. No Medium account is required.
-* If those links ever break, ping me on [social media](https://github.com/karmaz95#-social-media---contact) or [Patreon](https://www.patreon.com/Karol_Mazurek) for a fresh one. If you're feeling generous, the [Patron subscription](https://www.patreon.com/Karol_Mazurek/membership) gets you PDF versions of all the [Medium articles](https://www.patreon.com/Karol_Mazurek/shop/all-medium-articles-121970?source=storefront).
-* I'm also working on [exclusive content](https://www.patreon.com/collection/1529482) for Elite Patrons—my "thank-you" to the folks who support me. These are marked with a `*`. It's a kind of self-paced academy for vulnerability researchers. Every month, you get a new guide with technical analyses of real vulnerabilities and methods to find them, along with video demos, custom tools, and practical homework.
+I have been writing about Apple Security across different platforms for years, compiling them in this repository. Currently, I am writing on [Patreon](https://www.patreon.com/Karol_Mazurek). All articles are free, except those marked with a `*`, which are [exclusive content](https://www.patreon.com/collection/1529482) for Elite Patrons—my "thank-you" to the folks who support me.
+
 ---
 Each main article directory contains three subdirectories:
 * `mac` - source code of macOS for references and copy of presentations.
@@ -78,6 +75,13 @@ The table of contents showing links to all articles is below:
 
 * &#9744; [Apple Intelligence]()
   * &#9745; [AI-Enhanced Vulnerability Research](https://www.patreon.com/posts/ai-enhanced-135545364) `*`
+
+## REFERENCES
+I have studied tons of resources, crediting other researchers and their contributions at the end of each article I wrote. Thank you all for sharing your hard-earned knowledge for free. You are all awesome! However, two individuals have significantly accelerated my progress, and I want to honor them:
+
+* **[Jonathan Levin](https://x.com/Morpheus______)** – His [*OS Internals trilogy](https://newosxbook.com/home.html) helped me rapidly learn the beauty of the macOS system. If there is a single resource I would recommend for anybody, it is the masterpiece you wrote. Thank you, Jonathan.
+
+* **[Patrick Wardle](https://x.com/patrickwardle)** – He created the [OBTS conference](https://objective-see.org/), where many brilliant minds come together to share their research. You've created something to look forward to every year. Thank you, Patrick.
 
 ## PATRONS
 <a href="https://afine.com/">
