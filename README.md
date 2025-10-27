@@ -22,6 +22,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [LLDB for Vulnerability Research](https://www.patreon.com/posts/lldb-for-131084875) `*`
   * &#9745; [Scaling Vulnerability Discovery on macOS](https://www.patreon.com/posts/scaling-on-macos-131937045) `*`
   * &#9745; [Applications Patch Diffing on macOS](https://www.patreon.com/posts/applications-on-131618568) `*`
+  * &#9745; [Threats of Unvalidated XPC Clients on macOS](https://afine.com/threats-of-unvalidated-xpc-clients-on-macos/)
 * &#9745; [I. Mach-O](https://karol-mazurek.medium.com/snake-apple-i-mach-o-a8eda4b87263?sk=v2%2Ffc1cbfa4-e2d4-4387-9a82-b27191978b5b)
   * &#9745; [Optimizing Mach-O Detection](https://karol-mazurek.medium.com/optimizing-mach-o-detection-40352101bbef?sk=v2%2F3378d3f5-874b-4b82-94d5-b2ccd8522ea3)
   * &#9745; [Static Analysis on Decompiled Code](https://www.patreon.com/posts/static-analysis-135790081) `*`
