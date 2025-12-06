@@ -1,6 +1,6 @@
 # TOOLS
 Here is the list of all tools in this repository:  
-[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster) • [sip_check](#sip_check) • [crimson_waccess.py](#crimson_waccesspy) • [sip_tester](#sip_tester) • [UUIDFinder](#uuidfinder) • [IOVerify](#IOVerify)
+[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster) • [sip_check](#sip_check) • [crimson_waccess.py](#crimson_waccesspy) • [sip_tester](#sip_tester) • [UUIDFinder](#uuidfinder) • [IOVerify](#ioverify)  • [r2_dd](#r2_dd)
 ***
 
 ### [CrimsonUroboros](tests/CrimsonUroboros.py)
@@ -670,4 +670,20 @@ Output Size: 1 bytes
 Output Data:
 00
 --- End of Log ---
+```
+### [r2_dd](I.%20Mach-O/python/r2_dd.py)
+A wrapper script that uses radare2 to dump binary data from Mach-O files between specified virtual addresses. It automatically maps virtual addresses to file offsets.
+* Usage:
+```bash
+python3 r2_dd.py BINARY_PATH START_ADDR END_ADDR OUT_FILE
+```
+
+* Example:
+```bash
+python3 r2_dd.py ./kernelcache 0xFFFFFF80002A0000 0xFFFFFF80002A0500 ./dump.bin
+```
+
+* Note: Requires `radare2` to be installed:
+```bash
+brew install radare2
 ```
