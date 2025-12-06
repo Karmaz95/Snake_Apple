@@ -4,6 +4,7 @@ import sys
 import argparse
 import struct
 from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 import stat
 
 class MachOFileFinder:
@@ -37,6 +38,7 @@ class MachOFileFinder:
         self.directory_path = directory_path
         self.recursive = recursive
         self.only_arm64 = only_arm64
+        self.print_lock = Lock()
 
     def isRegularFile(self, file_path):
         """Check if the specified file is a regular file."""
@@ -178,7 +180,8 @@ class MachOFileFinder:
             # Check if the file is a Mach-O binary or FAT binary
             file_type = self.getMachoInfo(file_path)
             if file_type:
-                print(f"{file_type}:{file_path}")
+                with self.print_lock:
+                    print(f"{file_type}:{file_path}")
 
     def processFiles(self):
         """Walk through the directory and process files using threading for faster execution."""
