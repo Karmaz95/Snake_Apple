@@ -1,6 +1,6 @@
 # TOOLS
 Here is the list of all tools in this repository:  
-[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster) • [sip_check](#sip_check) • [crimson_waccess.py](#crimson_waccesspy) • [sip_tester](#sip_tester) • [UUIDFinder](#uuidfinder) • [IOVerify](#ioverify)  • [r2_dd](#r2_dd)
+[CrimsonUroboros](#crimsonuroboros) • [MachOFileFinder](#machofilefinder) • [TrustCacheParser](#trustcacheparser) • [SignatureReader](#signaturereader) • [extract_cms.sh](#extract_cmssh) • [ModifyMachOFlags](#modifymachoflags) • [LCFinder](#lcfinder) • [MachODylibLoadCommandsFinder](#machodylibloadcommandsfinder) • [AMFI_test.sh](VI.%20AMFI/custom/AMFI_test.sh) • [make_plist](VIII.%20Sandbox/python/make_plist.py) • [sandbox_inspector](VIII.%20Sandbox/python/sandbox_inspector.py) • [spblp_compiler_wrapper](VIII.%20Sandbox/custom/sbpl_compiler_wrapper) • [make_bundle](#make_bundle) • [make_bundle_exe](#make_bundle_exe) • [make_dmg](#make_dmg) • [electron_patcher](#electron_patcher) • [sandbox_validator](#sandbox_validator) • [sandblaster](#sandblaster) • [sip_check](#sip_check) • [crimson_waccess.py](#crimson_waccesspy) • [sip_tester](#sip_tester) • [UUIDFinder](#uuidfinder) • [IOVerify](#ioverify) • [r2_dd](#r2_dd) • [find_symbol](#find_symbol)
 ***
 
 ### [CrimsonUroboros](tests/CrimsonUroboros.py)
@@ -686,4 +686,48 @@ python3 r2_dd.py ./kernelcache 0xFFFFFF80002A0000 0xFFFFFF80002A0500 ./dump.bin
 * Note: Requires `radare2` to be installed:
 ```bash
 brew install radare2
+```
+
+### [find_symbol](I.%20Mach-O/python/find_symbol.py)
+A python wrapper for searching symbols in binary files using `nm`. Recursively walks through directories to find symbol definitions and references across executables and libraries.
+```txt
+usage: find_symbol.py PATH SYMBOL
+
+Search for symbols in binary files within a directory
+
+Arguments:
+  PATH             Directory to search recursively
+  SYMBOL           Symbol name to search for
+
+Examples:
+---------
+
+1. Find _sandbox_check function across extracted libraries from Dyld Shared Cache:
+   find_symbol.py . _sandbox_check
+
+2. Search for a specific symbol in system libraries:
+   find_symbol.py /usr/lib _malloc
+
+3. Locate symbol references in a framework:
+   find_symbol.py /System/Library/Frameworks/Security.framework SecItemAdd
+
+Sample Output:
+--------------
+./usr/lib/libspindump.dylib
+                 U _sandbox_check
+----
+./usr/lib/dyld
+0000000180141a6c T _sandbox_check
+0000000180141b4c t _sandbox_check_common
+----
+./usr/lib/libnetworkextension.dylib
+                 U _sandbox_check
+----
+
+Notes:
+------
+- The tool uses `nm` to extract symbol information from binary files
+- Symbol types: T (text/code), U (undefined/external reference), t (local text)
+- Can be imported as a module: `from find_symbol import find_symbol`
+- Skips files that `nm` cannot process (non-binary files are silently ignored)
 ```
