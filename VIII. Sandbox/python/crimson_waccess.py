@@ -20,7 +20,7 @@ class Waccess:
         elif os.path.isfile(path):
             self.check_file_write_permission(path, output_path)
         else:
-            sys.stderr.write(f"Path {path} does not exist.")
+            sys.stderr.write(f"Path {path} does not exist.\n")
 
     def check_directory_write_permission(self, directory_path, output_path):
         '''Check if a directory is writable by attempting to create a test file.'''
