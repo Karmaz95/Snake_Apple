@@ -1,6 +1,7 @@
 _hook_iokit_check_get_property
 _hook_iokit_check_filter_properties
 _hook_vnode_notify_link
+_hook_proc_check_proc_info
 _hook_kext_check_unload
 _hook_kext_check_load
 _hook_pty_notify_close
@@ -96,6 +97,7 @@ _hook_socket_check_create
 _hook_socket_check_connect
 _hook_socket_check_bind
 _hook_proc_check_signal
+_hook_proc_check_iopolicy
 _hook_proc_check_setauid
 _hook_proc_check_setaudit
 _hook_proc_check_sched
@@ -138,13 +140,17 @@ _hook_mount_check_mount
 _hook_mount_check_fsctl
 _hook_mount_check_quotactl
 _hook_vnode_check_copyfile
+_hook_vnode_check_swap
 _hook_vnode_notify_unlink
+_hook_vnode_notify_swap
 _hook_proc_check_set_task_special_port
 _hook_proc_check_get_task_special_port
 _hook_vnode_notify_setflags
 _hook_vnode_notify_setextattr
 _hook_necp_check_client_action
 _hook_necp_check_open
+_hook_proc_check_set_thread_exception_port
+_hook_proc_check_set_task_exception_port
 _hook_file_check_set
 _hook_file_check_mmap
 _hook_file_check_lock
