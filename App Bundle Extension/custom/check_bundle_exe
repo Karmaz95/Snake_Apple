@@ -1,13 +1,7 @@
 #!/bin/bash
 
-# ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║                           CHECK BUNDLE EXECUTABLE                            ║
-# ║                                                                              ║
-# ║  A tool for extracting executable names from macOS app bundles Info.plist    ║
-# ║                                                                              ║
-# ║  Author: Karol Mazurek @karmaz95                                             ║
-# ║  GitHub: https://github.com/karmaz95                                         ║
-# ╚══════════════════════════════════════════════════════════════════════════════╝
+# CHECK BUNDLE EXECUTABLE
+# A tool for extracting executable names from macOS app bundles Info.plist
 
 get_executable_name() {
     local plist="$1"
