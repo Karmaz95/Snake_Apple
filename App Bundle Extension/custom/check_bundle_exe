@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║                           CHECK BUNDLE EXECUTABLE                            ║
+# ║                                                                              ║
+# ║  A tool for extracting executable names from macOS app bundles Info.plist    ║
+# ║                                                                              ║
+# ║  Author: Karol Mazurek @karmaz95                                             ║
+# ║  GitHub: https://github.com/karmaz95                                         ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+get_executable_name() {
+    local plist="$1"
+    local value
+
+    value=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$plist" 2>/dev/null)
+    if [ $? -eq 0 ] && [ -n "$value" ]; then
+        echo "$value"
+        return 0
+    fi
+
+    local app_dir
+    app_dir=$(dirname "$(dirname "$plist")")
+    local app_name
+    app_name=$(basename "$app_dir" .app)
+    if [ -n "$app_name" ] && [ "$app_name" != "Contents" ]; then
+        echo "$app_name"
+        return 0
+    fi
+
+    echo "UNKNOWN"
+    return 1
+}
+
+process_app() {
+    local app_path="$1"
+    local exec_name="UNKNOWN"
+    local plist
+    local found=false
+
+    app_path="${app_path%/}"
+
+    if [[ "$app_path" =~ /Wrapper/.*\.app$ ]]; then
+        return
+    fi
+
+    if [ -d "$app_path" ]; then
+        plist="$app_path/Contents/Info.plist"
+        if [ -f "$plist" ]; then
+            exec_name=$(get_executable_name "$plist")
+            if [ "$exec_name" != "UNKNOWN" ]; then
+                found=true
+            fi
+        fi
+
+        if [ "$found" = false ]; then
+            local wrapped_bundle="$app_path/WrappedBundle"
+            if [ -L "$wrapped_bundle" ] && [ -d "$wrapped_bundle" ]; then
+                plist="$wrapped_bundle/Contents/Info.plist"
+                if [ -f "$plist" ]; then
+                    exec_name=$(get_executable_name "$plist")
+                    if [ "$exec_name" != "UNKNOWN" ]; then
+                        found=true
+                    fi
+                fi
+            fi
+        fi
+
+        if [ "$found" = false ]; then
+            while IFS= read -r nested_plist; do
+                exec_name=$(get_executable_name "$nested_plist")
+                if [ "$exec_name" != "UNKNOWN" ]; then
+                    found=true
+                    break
+                fi
+            done < <(find "$app_path" -name "Info.plist" -path "*/Wrapper/*.app/Contents/Info.plist" 2>/dev/null)
+        fi
+
+        if [ "$found" = false ]; then
+            while IFS= read -r nested_plist; do
+                exec_name=$(get_executable_name "$nested_plist")
+                if [ "$exec_name" != "UNKNOWN" ]; then
+                    found=true
+                    break
+                fi
+            done < <(find "$app_path" -name "Info.plist" -maxdepth 3 2>/dev/null | grep -E "($app_path/Info.plist|$app_path/Wrapper/.*Info.plist)")
+        fi
+
+        echo "$exec_name"
+    else
+        echo "UNKNOWN" >&2
+    fi
+}
+
+if [ "$#" -ge 1 ]; then
+    for app in "$@"; do
+        process_app "$app"
+    done
+else
+    while IFS= read -r line; do
+        process_app "$line"
+    done
+fi
+
+
