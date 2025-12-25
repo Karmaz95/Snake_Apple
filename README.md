@@ -89,3 +89,6 @@ I have studied tons of resources, crediting other researchers and their contribu
 <a href="https://afine.com/">
   <img src="./img/afine_banner.png" alt="AFine" width="200" height="100">
 </a>
+
+## Repository popularity
+[![Star History Chart](https://api.star-history.com/svg?repos=Karmaz95/Snake_Apple&type=Date)](https://star-history.com/#Karmaz95/Snake_Apple)
