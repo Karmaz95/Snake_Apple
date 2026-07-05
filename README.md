@@ -87,6 +87,3 @@ I have studied tons of resources, crediting other researchers and their contribu
 * **[Jonathan Levin](https://x.com/Morpheus______)** – His [*OS Internals trilogy](https://newosxbook.com/home.html) helped me rapidly learn the beauty of the macOS system. If there is a single resource I would recommend for anybody, it is the masterpiece you wrote. Thank you!
 
 * **[Patrick Wardle](https://x.com/patrickwardle)** – He created the [OBTS conference](https://objective-see.org/), where many brilliant minds come together to share their research. You've created something to look forward to every year. Thank you!
-
-## Repository popularity
-[![Star History Chart](https://api.star-history.com/svg?repos=Karmaz95/Snake_Apple&type=Date)](https://star-history.com/#Karmaz95/Snake_Apple)
