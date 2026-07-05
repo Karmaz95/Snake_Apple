@@ -60,6 +60,7 @@ The table of contents showing links to all articles is below:
   * &#9745; [TCC Bypass in Visual Studio Code via misconfigured Node fuses](https://afine.com/tcc-bypass-in-microsoft-visual-studio-code-via-misconfigured-node-fuses/)
   * &#9745; [Reverse Engineering Apple’s TCC Daemon: When Decompiled Code Lies](https://afine.com/reverse-engineering-apples-tcc-daemon-when-decompiled-code-lies/)
   * &#9745; [Design vulnerabilities in TCC - PART 1](https://www.patreon.com/posts/design-in-tcc-1-156954408) `*`
+  * &#9745; [Fuzzing TCC over XPC on macOS](https://www.patreon.com/Karol_Mazurek/posts/fuzzing-tcc-over-136935550) `*`
 * &#9745; [X. NU](https://karol-mazurek.medium.com/snake-apple-x-nu-0bc5c36170da?sk=v2%2F502ee9db-8d8a-4a1b-8655-546742a7d261)
   * &#9745; [Kernel Debugging Setup on MacOS](https://karol-mazurek.medium.com/kernel-debugging-setup-on-macos-07dd8c86cdb6?sk=v2%2F782bf539-a057-4f14-bbe7-f8e1ace26701)
   * &#9745; [Fixing an Infinite Loop](https://karol-mazurek.medium.com/fixing-an-infinite-loop-on-unix-e0a8a5501c54?sk=v2%2F140555f8-9770-4c6b-9734-d9c5b7cc9bc7)
@@ -75,6 +76,7 @@ The table of contents showing links to all articles is below:
     * &#9745; [Mapping IOKit Methods Exposed to User Space on macOS](https://phrack.org/issues/72/9_md#article) #PHRACK 💀
   * &#9745; [SLAP & FLOP: Apple Silicon’s Data Speculation Vulnerabilities](https://afine.com/slap-flop-apple-silicons-data-speculation-vulnerabilities/)
   * &#9745; [History of NULL Pointer Dereferences on macOS](https://afine.com/history-of-null-pointer-dereferences-on-macos/)
+  * &#9745; [Kernel Memory Leak in AppleJPEGDriver](https://www.patreon.com/Karol_Mazurek/posts/kernel-memory-in-158327560) `*`
 
 * &#9744; [Apple Intelligence]()
   * &#9745; [AI-Enhanced Vulnerability Research](https://www.patreon.com/posts/ai-enhanced-135545364) `*`
