@@ -74,12 +74,14 @@ The table of contents showing links to all articles is below:
     * &#9745; [Case Study: IOMobileFramebuffer NULL Pointer Dereference](https://afine.com/case-study-iomobileframebuffer-null-pointer-dereference/)
     * &#9745; [A mouse move that crashed the system – Stack Buffer Overflow in Display Driver on macOS](https://afine.com/a-mouse-move-that-crashed-the-system-stack-buffer-overflow-in-display-driver-on-macos/)
     * &#9745; [Mapping IOKit Methods Exposed to User Space on macOS](https://phrack.org/issues/72/9_md#article) #PHRACK 💀
+    * &#9745; [AppleKeyStore and SEP Panic disclosure](https://www.patreon.com/Karol_Mazurek/posts/applekeystore-170535790) `*`
   * &#9745; [SLAP & FLOP: Apple Silicon’s Data Speculation Vulnerabilities](https://afine.com/slap-flop-apple-silicons-data-speculation-vulnerabilities/)
   * &#9745; [History of NULL Pointer Dereferences on macOS](https://afine.com/history-of-null-pointer-dereferences-on-macos/)
   * &#9745; [Kernel Memory Leak in AppleJPEGDriver](https://www.patreon.com/Karol_Mazurek/posts/kernel-memory-in-158327560) `*`
 
 * &#9744; [Apple Intelligence]()
   * &#9745; [AI-Enhanced Vulnerability Research](https://www.patreon.com/posts/ai-enhanced-135545364) `*`
+  * &#9745;[Mapping Attack Surface and a few words about using AI](https://www.patreon.com/Karol_Mazurek/posts/mapping-attack-169287742) `*`
 
 ## REFERENCES
 I have studied tons of resources, crediting other researchers and their contributions at the end of each article I wrote. Thank you all for sharing your hard-earned knowledge for free. You are all awesome! However, two individuals have significantly accelerated my progress, and I want to honor them:
